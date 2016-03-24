@@ -1,0 +1,29 @@
+{
+  "name": "parse-server-s3-adapter",
+  "version": "1.0.0",
+  "description": "AWS S3 adapter for parse-server",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/parse-server-modules/parse-server-s3-adapter.git"
+  },
+  "keywords": [
+    "parse-server",
+    "AWS",
+    "S3"
+  ],
+  "author": "Parse",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/parse-server-modules/parse-server-s3-adapter/issues"
+  },
+  "homepage": "https://github.com/parse-server-modules/parse-server-s3-adapter#readme",
+  "dependencies": {
+    "aws-sdk": "^2.2.46",
+    "jasmine": "^2.4.1",
+    "parse-server-conformance-tests": "^1.0.0"
+  }
+}
