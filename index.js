@@ -56,9 +56,9 @@ function S3Adapter() {
   let s3Options = {
     accessKeyId: options.accessKey,
     secretAccessKey: options.secretKey,
-    params: { Bucket: this._bucket }
+    params: { Bucket: this._bucket },
+    region: this._region
   };
-  AWS.config._region = this._region;
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
 }
