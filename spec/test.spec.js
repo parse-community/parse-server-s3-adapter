@@ -34,6 +34,16 @@ describe('S3Adapter tests', () => {
     expect(() => {
       var s3 = new S3Adapter({ accessKey: 'accessKey' , secretKey: 'secretKey', bucket: 'bucket'});
     }).not.toThrow()
+
+    var s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', {directAccess: true});
+    expect(s3._directAccess).toBe(true);
+    expect(s3._region).toBe('us-east-1');
+    expect(s3.getFileLocation({}, 'file.txt')).toEqual('https://myBucket.s3.amazonaws.com/file.txt')
+
+    s3 = new S3Adapter({'accessKey':'accessKey', 'secretKey': 'secretKey', 'bucket': 'myBucket', directAccess: false, 'region': 'us-east-2'});
+    expect(s3._directAccess).toBe(false);
+    expect(s3._region).toBe('us-east-2');
+    expect(s3.getFileLocation({mount: 'http://my.server.com/parse', applicationId: 'xxxx'}, 'file.txt')).toEqual('http://my.server.com/parse/files/xxxx/file.txt')
   })
 
   if (process.env.TEST_S3_ACCESS_KEY && process.env.TEST_S3_SECRET_KEY && process.env.TEST_S3_BUCKET) {

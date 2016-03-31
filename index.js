@@ -38,7 +38,7 @@ function optionsFromArguments(args) {
   options = requiredOrFromEnvironment(options, 'secretKey', 'S3_SECRET_KEY');
   options = requiredOrFromEnvironment(options, 'bucket', 'S3_BUCKET');
   options = fromEnvironmentOrDefault(options, 'bucketPrefix', 'S3_BUCKET_PREFIX', '');
-  options = fromEnvironmentOrDefault(options, 'region', 'S3_REGION', false);
+  options = fromEnvironmentOrDefault(options, 'region', 'S3_REGION', DEFAULT_S3_REGION);
   options = fromEnvironmentOrDefault(options, 'directAccess', 'S3_DIRECT_ACCESS', false);
   return options;
 }
