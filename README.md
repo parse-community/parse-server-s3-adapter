@@ -84,7 +84,7 @@ var s3Options = {
    	"secretKey": "secretKey",
    	"bucket": "my_bucket",
    	// optional:
-   	"region": 'US_EAST_2', // default value
+   	"region": 'us-east-1', // default value
    	"bucketPrefix": '', // default value
    	"directAccess": false // default value
 } 
