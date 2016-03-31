@@ -24,7 +24,7 @@ parse-server adapter for AWS S3
       "secretKey": "secretKey",
       "bucket": "my_bucket",
       // optional:
-      "region": 'US_EAST_2', // default value
+      "region": 'us-east-1', // default value
       "bucketPrefix": '', // default value
       "directAccess": false // default value
     } 
@@ -62,7 +62,7 @@ var S3Adapter = require('parse-server-s3-adapter');
 var s3Adapter = new S3Adapter('accessKey', 
 								'secretKey', 
 								'bucket' , {
-								    region: 'US_EAST_2'
+								    region: 'us-east-1'
 									bucketPrefix: '',
 									directAccess: false
 								});
