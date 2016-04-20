@@ -40,6 +40,11 @@ describe('S3Adapter tests', () => {
     expect(s3._region).toBe('us-east-1');
     expect(s3.getFileLocation({}, 'file.txt')).toEqual('https://myBucket.s3.amazonaws.com/file.txt')
 
+    s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', {directAccess: true, baseUrl: 'http://images.example.com'});
+    expect(s3._directAccess).toBe(true);
+    expect(s3._region).toBe('us-east-1');
+    expect(s3.getFileLocation({}, 'file.txt')).toEqual('http://images.example.com/file.txt')
+
     s3 = new S3Adapter({'accessKey':'accessKey', 'secretKey': 'secretKey', 'bucket': 'myBucket', directAccess: false, 'region': 'us-east-2'});
     expect(s3._directAccess).toBe(false);
     expect(s3._region).toBe('us-east-2');

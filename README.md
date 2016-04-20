@@ -26,8 +26,9 @@ parse-server adapter for AWS S3
       // optional:
       "region": 'us-east-1', // default value
       "bucketPrefix": '', // default value
-      "directAccess": false // default value
-    } 
+      "directAccess": false, // default value
+      "baseUrl": null // default value
+    }
   }
 }
 ```
@@ -59,12 +60,13 @@ And update your config / options
 ```
 var S3Adapter = require('parse-server-s3-adapter');
 
-var s3Adapter = new S3Adapter('accessKey', 
-								'secretKey', 
+var s3Adapter = new S3Adapter('accessKey',
+								'secretKey',
 								'bucket' , {
-								    region: 'us-east-1'
+								  region: 'us-east-1'
 									bucketPrefix: '',
-									directAccess: false
+									directAccess: false,
+                  baseUrl: 'http://images.example.com'
 								});
 
 var api = new ParseServer({
@@ -86,8 +88,9 @@ var s3Options = {
    	// optional:
    	"region": 'us-east-1', // default value
    	"bucketPrefix": '', // default value
-   	"directAccess": false // default value
-} 
+   	"directAccess": false, // default value
+    "baseUrl": null // default value
+}
 
 var s3Adapter = new S3Adapter(s3Options);
 
@@ -97,5 +100,3 @@ var api = new ParseServer({
 	filesAdapter: s3Adapter
 })
 ```
-
-
