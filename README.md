@@ -61,13 +61,13 @@ And update your config / options
 var S3Adapter = require('parse-server-s3-adapter');
 
 var s3Adapter = new S3Adapter('accessKey',
-								'secretKey',
-								'bucket' , {
-								  region: 'us-east-1'
-									bucketPrefix: '',
-									directAccess: false,
-                  baseUrl: 'http://images.example.com'
-								});
+                  'secretKey',
+                  'bucket' , {
+                    region: 'us-east-1'
+                    bucketPrefix: '',
+                    directAccess: false,
+                    baseUrl: 'http://images.example.com'
+                  });
 
 var api = new ParseServer({
 	appId: 'my_app',
@@ -82,21 +82,21 @@ or with an options hash
 var S3Adapter = require('parse-server-s3-adapter');
 
 var s3Options = {
-	"accessKey": "accessKey",
-   	"secretKey": "secretKey",
-   	"bucket": "my_bucket",
-   	// optional:
-   	"region": 'us-east-1', // default value
-   	"bucketPrefix": '', // default value
-   	"directAccess": false, // default value
-    "baseUrl": null // default value
+  "accessKey": "accessKey",
+  "secretKey": "secretKey",
+  "bucket": "my_bucket",
+  // optional:
+  "region": 'us-east-1', // default value
+  "bucketPrefix": '', // default value
+  "directAccess": false, // default value
+  "baseUrl": null // default value
 }
 
 var s3Adapter = new S3Adapter(s3Options);
 
 var api = new ParseServer({
-	appId: 'my_app',
-	masterKey: 'master_key',
-	filesAdapter: s3Adapter
+  appId: 'my_app',
+  masterKey: 'master_key',
+  filesAdapter: s3Adapter
 })
 ```
