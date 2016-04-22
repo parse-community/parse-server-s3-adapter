@@ -30,6 +30,7 @@ function optionsFromArguments(args) {
     if (otherOptions) {
       options.bucketPrefix = otherOptions.bucketPrefix;
       options.directAccess = otherOptions.directAccess;
+      options.baseUrl = otherOptions.baseUrl;
     }
   } else {
     options = accessKeyOrOptions || {};
@@ -40,6 +41,7 @@ function optionsFromArguments(args) {
   options = fromEnvironmentOrDefault(options, 'bucketPrefix', 'S3_BUCKET_PREFIX', '');
   options = fromEnvironmentOrDefault(options, 'region', 'S3_REGION', DEFAULT_S3_REGION);
   options = fromEnvironmentOrDefault(options, 'directAccess', 'S3_DIRECT_ACCESS', false);
+  options = fromEnvironmentOrDefault(options, 'baseUrl', 'S3_BASE_URL', null);
   return options;
 }
 
@@ -52,6 +54,7 @@ function S3Adapter() {
   this._bucket = options.bucket;
   this._bucketPrefix = options.bucketPrefix;
   this._directAccess = options.directAccess;
+  this._baseUrl = options.baseUrl;
 
   let s3Options = {
     accessKeyId: options.accessKey,
@@ -143,7 +146,11 @@ S3Adapter.prototype.getFileData = function(filename) {
 // The location is the direct S3 link if the option is set, otherwise we serve the file through parse-server
 S3Adapter.prototype.getFileLocation = function(config, filename) {
   if (this._directAccess) {
-    return `https://${this._bucket}.s3.amazonaws.com/${this._bucketPrefix + filename}`;
+    if (this._baseUrl) {
+      return `${this._baseUrl}/${this._bucketPrefix + filename}`;
+    } else {
+      return `https://${this._bucket}.s3.amazonaws.com/${this._bucketPrefix + filename}`;
+    }
   }
   return (config.mount + '/files/' + config.applicationId + '/' + encodeURIComponent(filename));
 }
