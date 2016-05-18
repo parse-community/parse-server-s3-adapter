@@ -31,6 +31,7 @@ function optionsFromArguments(args) {
       options.bucketPrefix = otherOptions.bucketPrefix;
       options.directAccess = otherOptions.directAccess;
       options.baseUrl = otherOptions.baseUrl;
+      options.signatureVersion = otherOptions.signatureVersion;
     }
   } else {
     options = accessKeyOrOptions || {};
@@ -42,6 +43,7 @@ function optionsFromArguments(args) {
   options = fromEnvironmentOrDefault(options, 'region', 'S3_REGION', DEFAULT_S3_REGION);
   options = fromEnvironmentOrDefault(options, 'directAccess', 'S3_DIRECT_ACCESS', false);
   options = fromEnvironmentOrDefault(options, 'baseUrl', 'S3_BASE_URL', null);
+  options = fromEnvironmentOrDefault(options, 'signatureVersion', 'S3_SIGNATURE_VERSION', '');
   return options;
 }
 
