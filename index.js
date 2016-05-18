@@ -31,6 +31,7 @@ function optionsFromArguments(args) {
       options.bucketPrefix = otherOptions.bucketPrefix;
       options.directAccess = otherOptions.directAccess;
       options.baseUrl = otherOptions.baseUrl;
+      options.signatureVersion = otherOptions.signatureVersion;
     }
   } else {
     options = accessKeyOrOptions || {};
@@ -42,6 +43,7 @@ function optionsFromArguments(args) {
   options = fromEnvironmentOrDefault(options, 'region', 'S3_REGION', DEFAULT_S3_REGION);
   options = fromEnvironmentOrDefault(options, 'directAccess', 'S3_DIRECT_ACCESS', false);
   options = fromEnvironmentOrDefault(options, 'baseUrl', 'S3_BASE_URL', null);
+  options = fromEnvironmentOrDefault(options, 'signatureVersion', 'S3_SIGNATURE_VERSION', '');
   return options;
 }
 
@@ -55,12 +57,14 @@ function S3Adapter() {
   this._bucketPrefix = options.bucketPrefix;
   this._directAccess = options.directAccess;
   this._baseUrl = options.baseUrl;
+  this._signatureVersion = options.signatureVersion;
 
   let s3Options = {
     accessKeyId: options.accessKey,
     secretAccessKey: options.secretKey,
     params: { Bucket: this._bucket },
-    region: this._region
+    region: this._region,
+    signatureVersion: this._signatureVersion
   };
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
