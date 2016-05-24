@@ -27,7 +27,8 @@ parse-server adapter for AWS S3
       "region": 'us-east-1', // default value
       "bucketPrefix": '', // default value
       "directAccess": false, // default value
-      "baseUrl": null // default value
+      "baseUrl": null, // default value
+      "baseUrlDirect": false // default value
     }
   }
 }
