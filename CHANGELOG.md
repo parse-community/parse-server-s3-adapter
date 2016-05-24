@@ -1,11 +1,11 @@
 # Change Log
 
-## [Unreleased](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/HEAD)
-
-[Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.2...HEAD)
+## [v1.0.3](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.3) (2016-05-24)
+[Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.2...v1.0.3)
 
 **Merged pull requests:**
 
+- Updates changelog and version [\#10](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/10) ([flovilmart](https://github.com/flovilmart))
 - Adding ability to ignore bucketPrefix for public URLs [\#9](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/9) ([blacha](https://github.com/blacha))
 
 ## [v1.0.2](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.2) (2016-04-25)
