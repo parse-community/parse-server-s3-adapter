@@ -28,7 +28,8 @@ parse-server adapter for AWS S3
       "bucketPrefix": '', // default value
       "directAccess": false, // default value
       "baseUrl": null, // default value
-      "baseUrlDirect": false // default value
+      "baseUrlDirect": false, // default value
+      "signatureVersion": 'v4' // default value
     }
   }
 }
@@ -42,6 +43,7 @@ Set your environment variables:
 S3_ACCESS_KEY=accessKey
 S3_SECRET_KEY=secretKey
 S3_BUCKET=bucketName
+S3_SIGNATURE_VERSION=v4
 ```
 
 And update your config / options
@@ -67,7 +69,8 @@ var s3Adapter = new S3Adapter('accessKey',
                     region: 'us-east-1'
                     bucketPrefix: '',
                     directAccess: false,
-                    baseUrl: 'http://images.example.com'
+                    baseUrl: 'http://images.example.com',
+                    signatureVersion: 'v4'
                   });
 
 var api = new ParseServer({
@@ -90,7 +93,8 @@ var s3Options = {
   "region": 'us-east-1', // default value
   "bucketPrefix": '', // default value
   "directAccess": false, // default value
-  "baseUrl": null // default value
+  "baseUrl": null // default value,
+  "signatureVersion": 'v4' // default value
 }
 
 var s3Adapter = new S3Adapter(s3Options);
