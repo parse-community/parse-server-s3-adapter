@@ -1,5 +1,13 @@
 # Change Log
 
+## [v1.0.4](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.4) (2016-07-18)
+[Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.3...v1.0.4)
+
+**Merged pull requests:**
+
+- get signature version from environment or default [\#12](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/12) ([ststroppel](https://github.com/ststroppel))
+- Updates changelog [\#11](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/11) ([flovilmart](https://github.com/flovilmart))
+
 ## [v1.0.3](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.3) (2016-05-24)
 [Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.2...v1.0.3)
 
