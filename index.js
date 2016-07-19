@@ -33,6 +33,7 @@ function optionsFromArguments(args) {
       options.baseUrl = otherOptions.baseUrl;
       options.baseUrlDirect = otherOptions.baseUrlDirect;
       options.signatureVersion = otherOptions.signatureVersion;
+      options.globalCacheControl = otherOptions.globalCacheControl;
     }
   } else {
     options = accessKeyOrOptions || {};
@@ -46,6 +47,7 @@ function optionsFromArguments(args) {
   options = fromEnvironmentOrDefault(options, 'baseUrl', 'S3_BASE_URL', null);
   options = fromEnvironmentOrDefault(options, 'baseUrlDirect', 'S3_BASE_URL_DIRECT', false);
   options = fromEnvironmentOrDefault(options, 'signatureVersion', 'S3_SIGNATURE_VERSION', 'v4');
+  options = fromEnvironmentOrDefault(options, 'globalCacheControl', 'S3_GLOBAL_CACHE_CONTROL', null);
 
   return options;
 }
@@ -62,13 +64,15 @@ function S3Adapter() {
   this._baseUrl = options.baseUrl;
   this._baseUrlDirect = options.baseUrlDirect;
   this._signatureVersion = options.signatureVersion;
+  this._globalCacheControl = options.globalCacheControl;
 
   let s3Options = {
     accessKeyId: options.accessKey,
     secretAccessKey: options.secretKey,
     params: { Bucket: this._bucket },
     region: this._region,
-    signatureVersion: this._signatureVersion
+    signatureVersion: this._signatureVersion,
+    globalCacheControl: this._globalCacheControl
   };
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
@@ -101,6 +105,9 @@ S3Adapter.prototype.createFile = function(filename, data, contentType) {
   }
   if (contentType) {
     params.ContentType = contentType;
+  }
+  if(this._globalCacheControl) {
+    params.CacheControl = this._globalCacheControl;
   }
   return this.createBucket().then(() => {
     return new Promise((resolve, reject) => {
