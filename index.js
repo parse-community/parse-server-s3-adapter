@@ -21,11 +21,11 @@ function fromEnvironmentOrDefault(options, key, env, defaultValue) {
 
 function optionsFromArguments(args) {
   let options = {};
-  let accessKeyOrOptions = args[0];
-  if (typeof accessKeyOrOptions == 'string') {
-    options.accessKey = accessKeyOrOptions;
-    options.secretKey = args[1];
-    options.bucket = args[2];
+  let bucketOrOptions = args[0];
+  if (typeof bucketOrOptions == 'string') {
+    options.bucket = bucketOrOptions;
+    options.accessKey = args[1];
+    options.secretKey = args[2];
     let otherOptions = args[3];
     if (otherOptions) {
       options.bucketPrefix = otherOptions.bucketPrefix;
@@ -36,18 +36,19 @@ function optionsFromArguments(args) {
       options.globalCacheControl = otherOptions.globalCacheControl;
     }
   } else {
-    options = accessKeyOrOptions || {};
+    options = bucketOrOptions || {};
   }
-  options = requiredOrFromEnvironment(options, 'accessKey', 'S3_ACCESS_KEY');
-  options = requiredOrFromEnvironment(options, 'secretKey', 'S3_SECRET_KEY');
   options = requiredOrFromEnvironment(options, 'bucket', 'S3_BUCKET');
+  options = fromEnvironmentOrDefault(options, 'accessKey', 'S3_ACCESS_KEY', null);
+  options = fromEnvironmentOrDefault(options, 'secretKey', 'S3_SECRET_KEY', null);
   options = fromEnvironmentOrDefault(options, 'bucketPrefix', 'S3_BUCKET_PREFIX', '');
   options = fromEnvironmentOrDefault(options, 'region', 'S3_REGION', DEFAULT_S3_REGION);
   options = fromEnvironmentOrDefault(options, 'directAccess', 'S3_DIRECT_ACCESS', false);
   options = fromEnvironmentOrDefault(options, 'baseUrl', 'S3_BASE_URL', null);
   options = fromEnvironmentOrDefault(options, 'baseUrlDirect', 'S3_BASE_URL_DIRECT', false);
   options = fromEnvironmentOrDefault(options, 'signatureVersion', 'S3_SIGNATURE_VERSION', 'v4');
-  options = fromEnvironmentOrDefault(options, 'globalCacheControl', 'S3_GLOBAL_CACHE_CONTROL', null);
+  options = fromEnvironmentOrDefault(
+    options, 'globalCacheControl', 'S3_GLOBAL_CACHE_CONTROL', null);
 
   return options;
 }
@@ -67,13 +68,17 @@ function S3Adapter() {
   this._globalCacheControl = options.globalCacheControl;
 
   let s3Options = {
-    accessKeyId: options.accessKey,
-    secretAccessKey: options.secretKey,
     params: { Bucket: this._bucket },
     region: this._region,
     signatureVersion: this._signatureVersion,
     globalCacheControl: this._globalCacheControl
   };
+
+  if (options.accessKey && options.secretKey) {
+    options.accessKeyId = options.accessKey;
+    options.secretAccessKey = options.secretKey;
+  }
+
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
 }
@@ -147,7 +152,7 @@ S3Adapter.prototype.getFileData = function(filename) {
         if (err !== null) {
           return reject(err);
         }
-        // Something happend here...
+        // Something happened here...
         if (data && !data.Body) {
           return reject(data);
         }

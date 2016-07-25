@@ -8,19 +8,12 @@ describe('S3Adapter tests', () => {
   it('should throw when not initialized properly', () => {
     expect(() => {
       var s3 = new S3Adapter();
-    }).toThrow("S3Adapter requires option 'accessKey' or env. variable S3_ACCESS_KEY")
-
-    expect(() => {
-      var s3 = new S3Adapter('accessKey');
-    }).toThrow("S3Adapter requires option 'secretKey' or env. variable S3_SECRET_KEY")
+    }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
 
     expect(() => {
       var s3 = new S3Adapter('accessKey', 'secretKey');
     }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
 
-    expect(() => {
-      var s3 = new S3Adapter({ accessKey: 'accessKey'});
-    }).toThrow("S3Adapter requires option 'secretKey' or env. variable S3_SECRET_KEY")
     expect(() => {
       var s3 = new S3Adapter({ accessKey: 'accessKey' , secretKey: 'secretKey'});
     }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
@@ -28,11 +21,11 @@ describe('S3Adapter tests', () => {
 
   it('should not throw when initialized properly', () => {
     expect(() => {
-      var s3 = new S3Adapter('accessKey', 'secretKey', 'bucket');
+      var s3 = new S3Adapter('bucket');
     }).not.toThrow()
 
     expect(() => {
-      var s3 = new S3Adapter({ accessKey: 'accessKey' , secretKey: 'secretKey', bucket: 'bucket'});
+      var s3 = new S3Adapter({ bucket: 'bucket'});
     }).not.toThrow()
   });
 

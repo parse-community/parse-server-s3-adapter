@@ -8,6 +8,12 @@ parse-server adapter for AWS S3
 
 `npm install --save parse-server-s3-adapter`
 
+# aws credentials
+
+AWS credentials can be explicitly configured through an options object or environment variables.
+
+If no AWS credentials are configured, the AWS SDK will look for credentials in the standard locations used by all AWS SDKs and the AWS CLI. More info can be found in [the docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).
+
 # usage with parse-server
 
 ### using a config file
@@ -20,10 +26,10 @@ parse-server adapter for AWS S3
   "filesAdapter": {
     "module": "parse-server-s3-adapter",
     "options": {
-      "accessKey": "accessKey",
-      "secretKey": "secretKey",
       "bucket": "my_bucket",
       // optional:
+      "accessKey": "accessKey",
+      "secretKey": "secretKey",
       "region": 'us-east-1', // default value
       "bucketPrefix": '', // default value
       "directAccess": false, // default value
@@ -64,9 +70,8 @@ And update your config / options
 ```
 var S3Adapter = require('parse-server-s3-adapter');
 
-var s3Adapter = new S3Adapter('accessKey',
-                  'secretKey',
-                  'bucket' , {
+var s3Adapter = new S3Adapter('bucket', ['accessKey',
+                  'secretKey',] {
                     region: 'us-east-1'
                     bucketPrefix: '',
                     directAccess: false,
@@ -88,14 +93,14 @@ or with an options hash
 var S3Adapter = require('parse-server-s3-adapter');
 
 var s3Options = {
-  "accessKey": "accessKey",
-  "secretKey": "secretKey",
   "bucket": "my_bucket",
   // optional:
+  "accessKey": null, // default value
+  "secretKey": null, // default value
   "region": 'us-east-1', // default value
   "bucketPrefix": '', // default value
   "directAccess": false, // default value
-  "baseUrl": null // default value,
+  "baseUrl": null // default value
   "signatureVersion": 'v4', // default value
   "globalCacheControl": null // default value. Or 'public, max-age=86400000' for 24 hrs Cache-Control
 }
