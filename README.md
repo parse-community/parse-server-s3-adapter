@@ -10,9 +10,11 @@ parse-server adapter for AWS S3
 
 # aws credentials
 
-AWS credentials can be explicitly configured through an options object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
+Although it is not recommended, AWS credentials can be explicitly configured through an options
+object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
+This option is provided for backward compatibility.
 
-If no AWS credentials are configured, the AWS SDK will look for credentials in the standard locations used by all AWS SDKs and the AWS CLI. More info can be found in [the docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).
+The preferred method is to use the default AWS credentials pattern.  If no AWS credentials are explicitly configured, the AWS SDK will look for credentials in the standard locations used by all AWS SDKs and the AWS CLI. More info can be found in [the docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).  For more information on AWS best practices, see [IAM Best Practices User Guide](http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html).
 
 # usage with parse-server
 
@@ -47,9 +49,14 @@ If no AWS credentials are configured, the AWS SDK will look for credentials in t
 Set your environment variables:
 
 ```
+S3_BUCKET=bucketName
+```
+
+the following optional configurations can be set by environment variables too:
+
+```
 S3_ACCESS_KEY=accessKey
 S3_SECRET_KEY=secretKey
-S3_BUCKET=bucketName
 S3_SIGNATURE_VERSION=v4
 ```
 
@@ -69,8 +76,8 @@ And update your config / options
 ```
 var S3Adapter = require('parse-server-s3-adapter');
 
-var s3Adapter = new S3Adapter('bucket', ['accessKey',
-                  'secretKey',] {
+var s3Adapter = new S3Adapter(['accessKey',
+                  'secretKey',] bucket, {
                     region: 'us-east-1'
                     bucketPrefix: '',
                     directAccess: false,
