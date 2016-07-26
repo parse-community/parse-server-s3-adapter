@@ -10,7 +10,7 @@ parse-server adapter for AWS S3
 
 # aws credentials
 
-AWS credentials can be explicitly configured through an options object or environment variables.
+AWS credentials can be explicitly configured through an options object or environment variables ([see below](#using-a-config-file)).
 
 If no AWS credentials are configured, the AWS SDK will look for credentials in the standard locations used by all AWS SDKs and the AWS CLI. More info can be found in [the docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).
 

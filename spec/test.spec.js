@@ -11,7 +11,7 @@ describe('S3Adapter tests', () => {
     }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
 
     expect(() => {
-      var s3 = new S3Adapter('accessKey', 'secretKey');
+      var s3 = new S3Adapter(null, 'accessKey', 'secretKey');
     }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
 
     expect(() => {
@@ -64,7 +64,7 @@ describe('S3Adapter tests', () => {
 
     it('should go directly to amazon', () => {
       delete options.baseUrl;
-      var s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      var s3 = new S3Adapter('myBucket', 'accessKey', 'secretKey', options);
       expect(s3.getFileLocation(config, 'test.png')).toEqual('https://myBucket.s3.amazonaws.com/foo/bar/test.png');
     });
   });
