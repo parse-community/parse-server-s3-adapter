@@ -2,6 +2,7 @@
 let filesAdapterTests = require('parse-server-conformance-tests').files;
 
 let S3Adapter = require('../index.js');
+let optionsFromArguments = require('../lib/optionsFromArguments');
 
 describe('S3Adapter tests', () => {
 
@@ -10,9 +11,9 @@ describe('S3Adapter tests', () => {
       var s3 = new S3Adapter();
     }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
 
-    expect(() => {
-      var s3 = new S3Adapter(null, 'accessKey', 'secretKey');
-    }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
+    expect(() =>  {
+      var s3 = new S3Adapter('accessKey', 'secretKey', {});
+    }).toThrow();
 
     expect(() => {
       var s3 = new S3Adapter({ accessKey: 'accessKey' , secretKey: 'secretKey'});
@@ -29,6 +30,39 @@ describe('S3Adapter tests', () => {
     }).not.toThrow()
   });
 
+  describe('to find the right arg in the right place', () => {
+    it('should accept just bucket as first string arg', () => {
+      var args = ['bucket'];
+      var options = optionsFromArguments(args);
+      expect(options.bucket).toEqual('bucket');
+    });
+
+    it('should accept bucket and options', () => {
+      var confObj = { bucketPrefix: 'test/' };
+      var args = ['bucket', confObj];
+      var options = optionsFromArguments(args);
+      expect(options.bucket).toEqual('bucket');
+      expect(options.bucketPrefix).toEqual('test/');
+    });
+
+    it('should accept key, secret, and bucket as args', () => {
+      var args = ['key', 'secret', 'bucket'];
+      var options = optionsFromArguments(args);
+      expect(options.accessKey).toEqual('key');
+      expect(options.secretKey).toEqual('secret');
+      expect(options.bucket).toEqual('bucket');
+    });
+
+    it('should accept key, secret, bucket, and options object as args', () => {
+      var confObj = { bucketPrefix: 'test/' };
+      var args = ['key', 'secret', 'bucket', confObj];
+      var options = optionsFromArguments(args);
+      expect(options.accessKey).toEqual('key');
+      expect(options.secretKey).toEqual('secret');
+      expect(options.bucket).toEqual('bucket');
+      expect(options.bucketPrefix).toEqual('test/');
+    });
+  });
 
   describe('getFileLocation', () => {
     var config = {
@@ -64,7 +98,7 @@ describe('S3Adapter tests', () => {
 
     it('should go directly to amazon', () => {
       delete options.baseUrl;
-      var s3 = new S3Adapter('myBucket', 'accessKey', 'secretKey', options);
+      var s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
       expect(s3.getFileLocation(config, 'test.png')).toEqual('https://myBucket.s3.amazonaws.com/foo/bar/test.png');
     });
   });

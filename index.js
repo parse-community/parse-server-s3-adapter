@@ -4,54 +4,7 @@
 // Stores Parse files in AWS S3.
 
 var AWS = require('aws-sdk');
-const DEFAULT_S3_REGION = "us-east-1";
-
-function requiredOrFromEnvironment(options, key, env) {
-  options[key] = options[key] || process.env[env];
-  if (!options[key]) {
-    throw `S3Adapter requires option '${key}' or env. variable ${env}`;
-  }
-  return options;
-}
-
-function fromEnvironmentOrDefault(options, key, env, defaultValue) {
-  options[key] = options[key] || process.env[env] || defaultValue;
-  return options;
-}
-
-function optionsFromArguments(args) {
-  let options = {};
-  let bucketOrOptions = args[0];
-  if (typeof bucketOrOptions == 'string') {
-    options.bucket = bucketOrOptions;
-    options.accessKey = args[1];
-    options.secretKey = args[2];
-    let otherOptions = args[3];
-    if (otherOptions) {
-      options.bucketPrefix = otherOptions.bucketPrefix;
-      options.directAccess = otherOptions.directAccess;
-      options.baseUrl = otherOptions.baseUrl;
-      options.baseUrlDirect = otherOptions.baseUrlDirect;
-      options.signatureVersion = otherOptions.signatureVersion;
-      options.globalCacheControl = otherOptions.globalCacheControl;
-    }
-  } else {
-    options = bucketOrOptions || {};
-  }
-  options = requiredOrFromEnvironment(options, 'bucket', 'S3_BUCKET');
-  options = fromEnvironmentOrDefault(options, 'accessKey', 'S3_ACCESS_KEY', null);
-  options = fromEnvironmentOrDefault(options, 'secretKey', 'S3_SECRET_KEY', null);
-  options = fromEnvironmentOrDefault(options, 'bucketPrefix', 'S3_BUCKET_PREFIX', '');
-  options = fromEnvironmentOrDefault(options, 'region', 'S3_REGION', DEFAULT_S3_REGION);
-  options = fromEnvironmentOrDefault(options, 'directAccess', 'S3_DIRECT_ACCESS', false);
-  options = fromEnvironmentOrDefault(options, 'baseUrl', 'S3_BASE_URL', null);
-  options = fromEnvironmentOrDefault(options, 'baseUrlDirect', 'S3_BASE_URL_DIRECT', false);
-  options = fromEnvironmentOrDefault(options, 'signatureVersion', 'S3_SIGNATURE_VERSION', 'v4');
-  options = fromEnvironmentOrDefault(
-    options, 'globalCacheControl', 'S3_GLOBAL_CACHE_CONTROL', null);
-
-  return options;
-}
+var optionsFromArguments = require('./lib/optionsFromArguments');
 
 // Creates an S3 session.
 // Providing AWS access, secret keys and bucket are mandatory
