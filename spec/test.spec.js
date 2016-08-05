@@ -13,7 +13,7 @@ describe('S3Adapter tests', () => {
 
     expect(() =>  {
       var s3 = new S3Adapter('accessKey', 'secretKey', {});
-    }).toThrow();
+    }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
 
     expect(() => {
       var s3 = new S3Adapter({ accessKey: 'accessKey' , secretKey: 'secretKey'});
