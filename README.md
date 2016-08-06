@@ -8,6 +8,14 @@ parse-server adapter for AWS S3
 
 `npm install --save parse-server-s3-adapter`
 
+# aws credentials
+
+Although it is not recommended, AWS credentials can be explicitly configured through an options
+object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
+This option is provided for backward compatibility.
+
+The preferred method is to use the default AWS credentials pattern.  If no AWS credentials are explicitly configured, the AWS SDK will look for credentials in the standard locations used by all AWS SDKs and the AWS CLI. More info can be found in [the docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).  For more information on AWS best practices, see [IAM Best Practices User Guide](http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html).
+
 # usage with parse-server
 
 ### using a config file
@@ -20,10 +28,10 @@ parse-server adapter for AWS S3
   "filesAdapter": {
     "module": "parse-server-s3-adapter",
     "options": {
-      "accessKey": "accessKey",
-      "secretKey": "secretKey",
       "bucket": "my_bucket",
       // optional:
+      "accessKey": "accessKey",
+      "secretKey": "secretKey",
       "region": 'us-east-1', // default value
       "bucketPrefix": '', // default value
       "directAccess": false, // default value
@@ -41,9 +49,14 @@ parse-server adapter for AWS S3
 Set your environment variables:
 
 ```
+S3_BUCKET=bucketName
+```
+
+the following optional configurations can be set by environment variables too:
+
+```
 S3_ACCESS_KEY=accessKey
 S3_SECRET_KEY=secretKey
-S3_BUCKET=bucketName
 S3_SIGNATURE_VERSION=v4
 ```
 
@@ -60,13 +73,11 @@ And update your config / options
 
 
 ### passing as an instance
-
 ```
 var S3Adapter = require('parse-server-s3-adapter');
 
 var s3Adapter = new S3Adapter('accessKey',
-                  'secretKey',
-                  'bucket' , {
+                  'secretKey', bucket, {
                     region: 'us-east-1'
                     bucketPrefix: '',
                     directAccess: false,
@@ -81,6 +92,15 @@ var api = new ParseServer({
 	filesAdapter: s3adapter
 })
 ```
+**Note:** there are a few ways you can pass arguments:
+
+```
+S3Adapter("bucket")
+S3Adapter("bucket", options)
+S3Adapter("key", "secret", "bucket")
+S3Adapter("key", "secret", "bucket", options)
+S3Adapter(options) // where options must contain bucket.
+```
 
 or with an options hash
 
@@ -88,14 +108,14 @@ or with an options hash
 var S3Adapter = require('parse-server-s3-adapter');
 
 var s3Options = {
-  "accessKey": "accessKey",
-  "secretKey": "secretKey",
   "bucket": "my_bucket",
   // optional:
+  "accessKey": null, // default value
+  "secretKey": null, // default value
   "region": 'us-east-1', // default value
   "bucketPrefix": '', // default value
   "directAccess": false, // default value
-  "baseUrl": null // default value,
+  "baseUrl": null // default value
   "signatureVersion": 'v4', // default value
   "globalCacheControl": null // default value. Or 'public, max-age=86400000' for 24 hrs Cache-Control
 }
