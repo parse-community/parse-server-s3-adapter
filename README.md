@@ -76,8 +76,8 @@ And update your config / options
 ```
 var S3Adapter = require('parse-server-s3-adapter');
 
-var s3Adapter = new S3Adapter(['accessKey',
-                  'secretKey',] bucket, {
+var s3Adapter = new S3Adapter('accessKey',
+                  'secretKey', bucket, {
                     region: 'us-east-1'
                     bucketPrefix: '',
                     directAccess: false,
