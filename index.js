@@ -28,8 +28,8 @@ function S3Adapter() {
   };
 
   if (options.accessKey && options.secretKey) {
-    options.accessKeyId = options.accessKey;
-    options.secretAccessKey = options.secretKey;
+    s3Options.accessKeyId = options.accessKey;
+    s3Options.secretAccessKey = options.secretKey;
   }
 
   this._s3Client = new AWS.S3(s3Options);
