@@ -38,7 +38,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "baseUrl": null, // default value
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value
-      "globalCacheControl": null // default value. Or 'public, max-age=86400000' for 24 hrs Cache-Control
+      "globalCacheControl": null // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
     }
   }
 }
@@ -83,7 +83,7 @@ var s3Adapter = new S3Adapter('accessKey',
                     directAccess: false,
                     baseUrl: 'http://images.example.com',
                     signatureVersion: 'v4',
-                    globalCacheControl: 'public, max-age=86400000'  // 24 hrs Cache-Control.
+                    globalCacheControl: 'public, max-age=86400'  // 24 hrs Cache-Control.
                   });
 
 var api = new ParseServer({
@@ -117,7 +117,7 @@ var s3Options = {
   "directAccess": false, // default value
   "baseUrl": null // default value
   "signatureVersion": 'v4', // default value
-  "globalCacheControl": null // default value. Or 'public, max-age=86400000' for 24 hrs Cache-Control
+  "globalCacheControl": null // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
 }
 
 var s3Adapter = new S3Adapter(s3Options);
