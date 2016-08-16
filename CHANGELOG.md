@@ -1,5 +1,17 @@
 # Change Log
 
+## [v1.0.5](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.5) (2016-08-16)
+[Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.4...v1.0.5)
+
+**Closed issues:**
+- Use AWS SDK & CLI standard configuration [\#14](https://github.com/parse-server-modules/parse-server-s3-adapter/issues/14)
+
+**Merged pull requests:**
+- 24 hours in seconds is 86400, not 86400000 [\#21](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/21) ([joeyslack](https://github.com/joeyslack))
+- Fix bug that put credentials on the wrong object. [\#19](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/19) ([acinader](https://github.com/acinader))
+- Use default AWS credential provider. [\#15](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/19) ([acinader](https://github.com/acinader))
+- Add an optional global cache control for all s3 uploaded files. [\#13](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/13) ([KBog](https://github.com/KBog))
+
 ## [v1.0.4](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.4) (2016-07-18)
 [Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.3...v1.0.4)
 
