@@ -23,6 +23,8 @@ function S3Adapter() {
   let s3Options = {
     params: { Bucket: this._bucket },
     region: this._region,
+    endpoint: this._baseUrl,
+    s3BucketEndpoint: !!this._baseUrl,
     signatureVersion: this._signatureVersion,
     globalCacheControl: this._globalCacheControl
   };
