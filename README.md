@@ -100,7 +100,11 @@ S3Adapter("bucket", options)
 S3Adapter("key", "secret", "bucket")
 S3Adapter("key", "secret", "bucket", options)
 S3Adapter(options) // where options must contain bucket.
+S3Adapter(options, s3overrides)
 ```
+If you use the last form, `s3overrides` are the parameters passed to [AWS.S3](http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property).
+
+In this form if you set `s3overrides.params`, you must set at least `s3overrides.params.Bucket`
 
 or with an options hash
 

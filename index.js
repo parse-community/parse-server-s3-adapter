@@ -34,6 +34,8 @@ function S3Adapter() {
     s3Options.secretAccessKey = options.secretKey;
   }
 
+  Object.assign(s3Options, options.s3overrides);
+
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
 }
