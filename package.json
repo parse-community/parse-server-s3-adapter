@@ -22,7 +22,8 @@
   },
   "homepage": "https://github.com/parse-server-modules/parse-server-s3-adapter#readme",
   "dependencies": {
-    "aws-sdk": "^2.2.46"
+    "aws-sdk": "^2.2.46",
+    "s3-ls": "^1.0.1"
   },
   "devDependencies": {
     "codecov": "^1.0.1",
