@@ -11,31 +11,31 @@ describe('S3Adapter tests', () => {
     delete process.env.S3_REGION;
   });
 
-  it('should throw when not initialized properly', () => {
-    expect(() => {
-      var s3 = new S3Adapter();
+  it('should throw when not initialized properly', () => {
+    expect(() => {
+      new S3Adapter();
     }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET");
 
-    expect(() =>  {
-      var s3 = new S3Adapter('accessKey', 'secretKey', {});
+    expect(() => {
+      new S3Adapter('accessKey', 'secretKey', {});
     }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
 
-    expect(() => {
-      var s3 = new S3Adapter({ accessKey: 'accessKey' , secretKey: 'secretKey'});
+    expect(() => {
+      new S3Adapter({ accessKey: 'accessKey' , secretKey: 'secretKey'});
     }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
   })
 
-  it('should not throw when initialized properly', () => {
-    expect(() => {
-      var s3 = new S3Adapter('bucket');
-    }).not.toThrow()
-
-    expect(() => {
-      var s3 = new S3Adapter({ bucket: 'bucket'});
+  it('should not throw when initialized properly', () => {
+    expect(() => {
+      new S3Adapter('bucket');
     }).not.toThrow()
 
     expect(() => {
-      var s3 = new S3Adapter({}, { params:{ Bucket: 'bucket'}});
+      new S3Adapter({ bucket: 'bucket'});
+    }).not.toThrow()
+
+    expect(() => {
+      new S3Adapter({}, { params:{ Bucket: 'bucket'}});
     }).not.toThrow()
   });
 
@@ -50,13 +50,13 @@ describe('S3Adapter tests', () => {
     describe('not initialized properly', () => {
       it('should fail with two string arguments', () => {
         expect(() => {
-          var s3 = new S3Adapter(config.get('accessKey'), config.get('secretKey'), {});
+          new S3Adapter(config.get('accessKey'), config.get('secretKey'), {});
         }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
       });
 
       it('should fail when passed an object without a bucket', () => {
         expect(() => {
-          var s3 = new S3Adapter(config.get('insufficientOptions'));
+          new S3Adapter(config.get('insufficientOptions'));
         }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
       });
     });
@@ -64,20 +64,20 @@ describe('S3Adapter tests', () => {
 
     describe('should not throw when initialized properly', () => {
       it('should accept a string bucket', () => {
-        expect(() => {
-          var s3 = new S3Adapter(config.get('bucket'));
+        expect(() => {
+          new S3Adapter(config.get('bucket'));
         }).not.toThrow()
       });
 
       it('should accept an object with a bucket', () => {
-        expect(() =>  {
-          var s3 = new S3Adapter(config.get('objectWithBucket'));
+        expect(() => {
+          new S3Adapter(config.get('objectWithBucket'));
         }).not.toThrow()
       });
 
       it('should accept a second argument of object with a params object with a bucket', () => {
         expect(() => {
-          var s3 = new S3Adapter(config.get('emptyObject'), config.get('paramsObjectWBucket'));
+          new S3Adapter(config.get('emptyObject'), config.get('paramsObjectWBucket'));
         }).not.toThrow()
       });
 

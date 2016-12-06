@@ -1,0 +1,20 @@
+{
+    "root": true,
+    "extends": "eslint:recommended",
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module"
+    },
+    "rules": {
+        "indent": ["error", 2],
+        "linebreak-style": ["error", "unix"],
+        "no-trailing-spaces": 2,
+        "eol-last": 2,
+        "space-in-parens": ["error", "never"],
+        "no-multiple-empty-lines": 1
+    }
+}
