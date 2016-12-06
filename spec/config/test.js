@@ -7,12 +7,12 @@ module.exports = {
   },
   bucket: 'bucket',
   objectWithBucket: {
-      bucket: 'bucket',
+    bucket: 'bucket',
   },
   emptyObject: {},
   paramsObjectWBucket: {
-      params: {
-          Bucket: 'bucket',
-      },
+    params: {
+      Bucket: 'bucket',
+    },
   },
 };
