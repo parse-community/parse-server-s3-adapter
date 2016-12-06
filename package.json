@@ -4,7 +4,7 @@
   "description": "AWS S3 adapter for parse-server",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_CONFIG_DIR=./spec/config istanbul cover -x **/spec/** jasmine --captureExceptions"
+    "test": "NODE_ENV=test NODE_CONFIG_DIR=./spec/config istanbul cover -x **/spec/** jasmine --captureExceptions"
   },
   "repository": {
     "type": "git",

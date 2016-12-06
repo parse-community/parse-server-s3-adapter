@@ -8,7 +8,7 @@ const optionsFromArguments = require('../lib/optionsFromArguments');
 describe('S3Adapter tests', () => {
   beforeEach(() => {
     delete process.env.S3_BUCKET;
-    delete process.env.S3_REGION
+    delete process.env.S3_REGION;
   });
 
   it('should throw when not initialized properly', () => {
