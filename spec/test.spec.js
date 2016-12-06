@@ -1,15 +1,20 @@
 'use strict';
-let filesAdapterTests = require('parse-server-conformance-tests').files;
 
-let S3Adapter = require('../index.js');
-let optionsFromArguments = require('../lib/optionsFromArguments');
+const config = require('config');
+const filesAdapterTests = require('parse-server-conformance-tests').files;
+const S3Adapter = require('../index.js');
+const optionsFromArguments = require('../lib/optionsFromArguments');
 
-describe('S3Adapter tests', () => {
+describe('S3Adapter tests', () => {
+  beforeEach(() => {
+    delete process.env.S3_BUCKET;
+    delete process.env.S3_REGION
+  });
 
   it('should throw when not initialized properly', () => {
     expect(() => {
       var s3 = new S3Adapter();
-    }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
+    }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET");
 
     expect(() =>  {
       var s3 = new S3Adapter('accessKey', 'secretKey', {});
@@ -32,6 +37,57 @@ describe('S3Adapter tests', () => {
     expect(() => {
       var s3 = new S3Adapter({}, { params:{ Bucket: 'bucket'}});
     }).not.toThrow()
+  });
+
+  it('should accept environment for required', () => {
+    const TEST_BUCKET = 'testBucket';
+    process.env.S3_BUCKET = TEST_BUCKET;
+    const s3 = new S3Adapter();
+    expect(s3._bucket).toBe(TEST_BUCKET);
+  });
+
+  describe('configured with immutable values', () => {
+    describe('not initialized properly', () => {
+      it('should fail with two string arguments', () => {
+        expect(() => {
+          var s3 = new S3Adapter(config.get('accessKey'), config.get('secretKey'), {});
+        }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
+      });
+
+      it('should fail when passed an object without a bucket', () => {
+        expect(() => {
+          var s3 = new S3Adapter(config.get('insufficientOptions'));
+        }).toThrow("S3Adapter requires option 'bucket' or env. variable S3_BUCKET")
+      });
+    });
+
+
+    describe('should not throw when initialized properly', () => {
+      it('should accept a string bucket', () => {
+        expect(() => {
+          var s3 = new S3Adapter(config.get('bucket'));
+        }).not.toThrow()
+      });
+
+      it('should accept an object with a bucket', () => {
+        expect(() =>  {
+          var s3 = new S3Adapter(config.get('objectWithBucket'));
+        }).not.toThrow()
+      });
+
+      it('should accept a second argument of object with a params object with a bucket', () => {
+        expect(() => {
+          var s3 = new S3Adapter(config.get('emptyObject'), config.get('paramsObjectWBucket'));
+        }).not.toThrow()
+      });
+
+      it('should accept environment over default', () => {
+        const TEST_REGION = 'test';
+        process.env.S3_REGION = TEST_REGION;
+        const s3 = new S3Adapter(config.get('bucket'));
+        expect(s3._region).toBe(TEST_REGION);
+      });
+    });
   });
 
   describe('to find the right arg in the right place', () => {
