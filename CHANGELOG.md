@@ -1,15 +1,38 @@
 # Change Log
 
+## [v1.0.6](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.6) (2016-12-6)
+
+[Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.5...v1.0.6)
+
+**Closed issues:**
+
+- commit bb933cc breaks adapter for me [\#31](https://github.com/parse-server-modules/parse-server-s3-adapter/issues/31)
+- getFileLocation does not URI encode filename in directAccess cases [\#28](https://github.com/parse-server-modules/parse-server-s3-adapter/issues/28)
+- Ability to Resize Images [\#27](https://github.com/parse-server-modules/parse-server-s3-adapter/issues/27)
+
+**Merged pull requests:**
+
+- Add lint to project. [\#34](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/34) ([acinader](https://github.com/acinader))
+- Handle immutable configuration [\#33](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/33) ([acinader](https://github.com/acinader))
+- Revert "also using base url as endpoint in order to use aws s3 compat… [\#32](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/32) ([acinader](https://github.com/acinader))
+- Encode File URI [\#30](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/30) ([davimacedo](https://github.com/davimacedo))
+- Add s3overrides option format [\#24](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/24) ([viawest-davidsix](https://github.com/viawest-davidsix))
+- Use baseUrl as S3 endpoint [\#23](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/23) ([dpoetzsch](https://github.com/dpoetzsch))
+- v1.0.5 - changelog [\#22](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/22) ([acinader](https://github.com/acinader))
+
 ## [v1.0.5](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.5) (2016-08-16)
 [Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.4...v1.0.5)
 
 **Closed issues:**
+
+- Files are not deleted on AWS S3 after being deleted on Parse-Dashboard. [\#17](https://github.com/parse-server-modules/parse-server-s3-adapter/issues/17)
 - Use AWS SDK & CLI standard configuration [\#14](https://github.com/parse-server-modules/parse-server-s3-adapter/issues/14)
 
 **Merged pull requests:**
+
 - 24 hours in seconds is 86400, not 86400000 [\#21](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/21) ([joeyslack](https://github.com/joeyslack))
 - Fix bug that put credentials on the wrong object. [\#19](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/19) ([acinader](https://github.com/acinader))
-- Use default AWS credential provider. [\#15](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/19) ([acinader](https://github.com/acinader))
+- Use default AWS credential provider. [\#15](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/15) ([acinader](https://github.com/acinader))
 - Add an optional global cache control for all s3 uploaded files. [\#13](https://github.com/parse-server-modules/parse-server-s3-adapter/pull/13) ([KBog](https://github.com/KBog))
 
 ## [v1.0.4](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.4) (2016-07-18)

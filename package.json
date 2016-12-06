@@ -1,6 +1,6 @@
 {
   "name": "parse-server-s3-adapter",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "AWS S3 adapter for parse-server",
   "main": "index.js",
   "scripts": {
