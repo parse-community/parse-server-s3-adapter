@@ -122,6 +122,7 @@ S3Adapter.prototype.getFileData = function(filename) {
 // Generates and returns the location of a file stored in S3 for the given request and filename
 // The location is the direct S3 link if the option is set, otherwise we serve the file through parse-server
 S3Adapter.prototype.getFileLocation = function(config, filename) {
+  filename = encodeURIComponent(filename);
   if (this._directAccess) {
     if (this._baseUrl && this._baseUrlDirect) {
       return `${this._baseUrl}/${filename}`;
@@ -131,7 +132,7 @@ S3Adapter.prototype.getFileLocation = function(config, filename) {
       return `https://${this._bucket}.s3.amazonaws.com/${this._bucketPrefix + filename}`;
     }
   }
-  return (config.mount + '/files/' + config.applicationId + '/' + encodeURIComponent(filename));
+  return (config.mount + '/files/' + config.applicationId + '/' + filename);
 }
 
 module.exports = S3Adapter;
