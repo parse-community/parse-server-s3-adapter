@@ -71,13 +71,9 @@ S3Adapter.prototype.createFile = function(filename, data, contentType) {
   }
   return this.createBucket().then(() => {
     return new Promise((resolve, reject) => {
-      params.ACL = "hi"
-      console.log(JSON.stringify(params));
-      
       this._s3Client.upload(params, (err, data) => {
         if (err !== null) {
-          delete params.Body;
-          return reject(" Error: " + err + "params " + JSON.stringify(params));
+          return reject("Error creating  file: " + err);
         }
         resolve(data);
       });
