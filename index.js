@@ -73,7 +73,7 @@ S3Adapter.prototype.createFile = function(filename, data, contentType) {
     return new Promise((resolve, reject) => {
       this._s3Client.upload(params, (err, data) => {
         if (err !== null) {
-          return reject("Error creating  file: " + err);
+          return reject("Error creating file: " + err);
         }
         resolve(data);
       });
