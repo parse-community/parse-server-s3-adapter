@@ -50,8 +50,10 @@ S3Adapter.prototype.createBucket = function() {
       this._s3Client.createBucket(params, (err, data) => {
         if (err !== null) {
           console.log("Error creating bucket: " + err);
+        }else{
+          this._hasBucket = true;
         }
-        this._hasBucket = true;
+        
         resolve();
       });
     });
