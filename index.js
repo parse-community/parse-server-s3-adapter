@@ -49,7 +49,7 @@ S3Adapter.prototype.createBucket = function() {
     promise = new Promise((resolve) => {
       this._s3Client.createBucket(params, (err, data) => {
         if (err !== null) {
-          console.log("Error creating file: " + err);
+          console.log("Error creating bucket: " + err);
         }
         this._hasBucket = true;
         resolve();
