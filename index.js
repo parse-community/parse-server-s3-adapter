@@ -39,12 +39,18 @@ function S3Adapter() {
 }
 
 S3Adapter.prototype.createBucket = function() {
+  var params = {
+  Bucket: this._bucket, /* required */
+  }
   var promise;
   if (this._hasBucket) {
     promise = Promise.resolve();
   } else {
     promise = new Promise((resolve) => {
-      this._s3Client.createBucket(() => {
+      this._s3Client.createBucket(params, (err, data) => {
+        if (err !== null) {
+          console.log("Error creating file: " + err);
+        }
         this._hasBucket = true;
         resolve();
       });
