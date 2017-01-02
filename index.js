@@ -34,6 +34,8 @@ function S3Adapter() {
 
   Object.assign(s3Options, options.s3overrides);
 
+  console.log("final override options: " + s3Options)
+  
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
 }
