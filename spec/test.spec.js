@@ -132,6 +132,16 @@ describe('S3Adapter tests', () => {
       expect(s3._s3Client.config.params.Bucket).toEqual('bucket-2');
       expect(s3._bucketPrefix).toEqual('test/');
     });
+
+    it('should accept overrides without params', () => {
+      var confObj = { bucketPrefix: 'test/', bucket: 'bucket-1', secretKey: 'secret-1', accessKey: 'key-1' };
+      var overridesObj = { secretAccessKey: 'secret-2'};
+      var s3 = new S3Adapter(confObj, overridesObj);
+      expect(s3._s3Client.config.accessKeyId).toEqual('key-1');
+      expect(s3._s3Client.config.secretAccessKey).toEqual('secret-2');
+      expect(s3._s3Client.config.params.Bucket).toEqual('bucket-1');
+      expect(s3._bucketPrefix).toEqual('test/');
+    });
   });
 
   describe('getFileLocation', () => {
