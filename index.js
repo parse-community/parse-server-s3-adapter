@@ -34,22 +34,17 @@ function S3Adapter() {
 
   Object.assign(s3Options, options.s3overrides);
 
-  console.log("final override options: " + s3Options)
-  
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
 }
 
 S3Adapter.prototype.createBucket = function() {
-  var params = {
-  Bucket: this._bucket, /* required */
-  }
   var promise;
   if (this._hasBucket) {
     promise = Promise.resolve();
   } else {
     promise = new Promise((resolve) => {
-      this._s3Client.createBucket(params, (err, data) => {
+      this._s3Client.createBucket(() => {
         this._hasBucket = true;
         resolve();
       });
@@ -78,7 +73,7 @@ S3Adapter.prototype.createFile = function(filename, data, contentType) {
     return new Promise((resolve, reject) => {
       this._s3Client.upload(params, (err, data) => {
         if (err !== null) {
-          return reject("Error creating file: " + err);
+          return reject(err);
         }
         resolve(data);
       });
