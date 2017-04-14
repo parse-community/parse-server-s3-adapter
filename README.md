@@ -1,4 +1,6 @@
 # parse-server-s3-adapter
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/parse-server-modules/parse-server-s3-adapter.svg)](https://greenkeeper.io/)
 [![codecov.io](https://codecov.io/github/parse-server-modules/parse-server-s3-adapter/coverage.svg?branch=master)](https://codecov.io/github/parse-server-modules/parse-server-s3-adapter?branch=master)
 [![Build Status](https://travis-ci.org/parse-server-modules/parse-server-s3-adapter.svg?branch=master)](https://travis-ci.org/parse-server-modules/parse-server-s3-adapter)
 
