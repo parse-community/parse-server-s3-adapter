@@ -5,6 +5,7 @@
 
 var AWS = require('aws-sdk');
 var optionsFromArguments = require('./lib/optionsFromArguments');
+// var kms = require('aws-sdk').KMS;
 
 // Creates an S3 session.
 // Providing AWS access, secret keys and bucket are mandatory
@@ -19,6 +20,7 @@ function S3Adapter() {
   this._baseUrlDirect = options.baseUrlDirect;
   this._signatureVersion = options.signatureVersion;
   this._globalCacheControl = options.globalCacheControl;
+  this._ecnryption = options.ServerSideEncryption;
 
   let s3Options = {
     params: { Bucket: this._bucket },
@@ -31,8 +33,17 @@ function S3Adapter() {
     s3Options.accessKeyId = options.accessKey;
     s3Options.secretAccessKey = options.secretKey;
   }
+  if (options.encrypt === true){
+    console.log('encrypting!')
+    s3Options.ServerSideEncryption = options.ServerSideEncryption;
+    console.log(s3Options.ServerSideEncryption)
+    if(options.encryptAlgorithm === 'aws:kms'){
+        options.test = 'test';
+    }
+  }
 
   Object.assign(s3Options, options.s3overrides);
+  console.log(s3Options)
 
   this._s3Client = new AWS.S3(s3Options);
   this._hasBucket = false;
@@ -68,6 +79,9 @@ S3Adapter.prototype.createFile = function(filename, data, contentType) {
   }
   if(this._globalCacheControl) {
     params.CacheControl = this._globalCacheControl;
+  }
+  if(this._ecnryption == 'AES256' || this._ecnryption == 'aws:kms'){
+      params.ServerSideEncryption = this._ecnryption
   }
   return this.createBucket().then(() => {
     return new Promise((resolve, reject) => {
