@@ -4,6 +4,7 @@
 // Stores Parse files in AWS S3.
 
 var AWS = require('aws-sdk');
+var s3ls = require('s3-ls');
 var optionsFromArguments = require('./lib/optionsFromArguments');
 
 // Creates an S3 session.
@@ -135,6 +136,14 @@ S3Adapter.prototype.getFileLocation = function(config, filename) {
     }
   }
   return (config.mount + '/files/' + config.applicationId + '/' + filename);
+}
+
+S3Adapter.prototype.getFilesList = function() {
+  var lister = s3ls({bucket: this._bucket, s3: this._s3Client});
+  lister.ls('/', function (error, data) {
+    if (error) throw error;
+    return (data.files);
+  });
 }
 
 module.exports = S3Adapter;
