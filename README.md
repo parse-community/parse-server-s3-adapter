@@ -40,7 +40,8 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "baseUrl": null, // default value
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value
-      "globalCacheControl": null // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+      "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+      "ServerSideEncryption": 'AES256|aws:kms' //AES256 or aws:kms, or if you do not pass this, encryption won't be done
     }
   }
 }

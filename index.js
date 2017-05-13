@@ -19,6 +19,7 @@ function S3Adapter() {
   this._baseUrlDirect = options.baseUrlDirect;
   this._signatureVersion = options.signatureVersion;
   this._globalCacheControl = options.globalCacheControl;
+  this._encryption = options.ServerSideEncryption;
 
   let s3Options = {
     params: { Bucket: this._bucket },
@@ -68,6 +69,9 @@ S3Adapter.prototype.createFile = function(filename, data, contentType) {
   }
   if(this._globalCacheControl) {
     params.CacheControl = this._globalCacheControl;
+  }
+  if(this._encryption == 'AES256' || this._encryption == 'aws:kms'){
+    params.ServerSideEncryption = this._encryption;
   }
   return this.createBucket().then(() => {
     return new Promise((resolve, reject) => {
