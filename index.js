@@ -9,7 +9,7 @@ var optionsFromArguments = require('./lib/optionsFromArguments');
 // Creates an S3 session.
 // Providing AWS access, secret keys and bucket are mandatory
 // Region will use sane defaults if omitted
-function S3Adapter() {
+function S3Adapter(arguments) {
   var options = optionsFromArguments(arguments);
   this._region = options.region;
   this._bucket = options.bucket;
