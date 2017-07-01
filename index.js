@@ -6,6 +6,12 @@
 var AWS = require('aws-sdk');
 var optionsFromArguments = require('./lib/optionsFromArguments');
 
+const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
+  // eslint-disable-next-line no-console
+  console.warn('Passing AWS credentials to this adapter is now DEPRECATED and will be removed in a future version',
+    'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details');
+}
+
 // Creates an S3 session.
 // Providing AWS access, secret keys and bucket are mandatory
 // Region will use sane defaults if omitted
@@ -29,6 +35,7 @@ function S3Adapter() {
   };
 
   if (options.accessKey && options.secretKey) {
+    awsCredentialsDeprecationNotice();
     s3Options.accessKeyId = options.accessKey;
     s3Options.secretAccessKey = options.secretKey;
   }
