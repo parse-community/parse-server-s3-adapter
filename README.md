@@ -10,11 +10,14 @@ parse-server adapter for AWS S3
 
 `npm install --save parse-server-s3-adapter`
 
-# aws credentials
+# AWS Credentials
+
+## Deprecation Notice -- AWS Credentials
+ *the ability to explicitly pass credentials to this adapter is deprecated and will be removed in a future release.*
 
 Although it is not recommended, AWS credentials can be explicitly configured through an options
 object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
-This option is provided for backward compatibility.
+This option is provided for backward compatibility and will be removed in the forthcoming version 2.0 of this adapter.
 
 The preferred method is to use the default AWS credentials pattern.  If no AWS credentials are explicitly configured, the AWS SDK will look for credentials in the standard locations used by all AWS SDKs and the AWS CLI. More info can be found in [the docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).  For more information on AWS best practices, see [IAM Best Practices User Guide](http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html).
 
@@ -32,8 +35,6 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
     "options": {
       "bucket": "my_bucket",
       // optional:
-      "accessKey": "accessKey",
-      "secretKey": "secretKey",
       "region": 'us-east-1', // default value
       "bucketPrefix": '', // default value
       "directAccess": false, // default value
@@ -55,11 +56,9 @@ Set your environment variables:
 S3_BUCKET=bucketName
 ```
 
-the following optional configurations can be set by environment variables too:
+the following optional configuration can be set by environment variable too:
 
 ```
-S3_ACCESS_KEY=accessKey
-S3_SECRET_KEY=secretKey
 S3_SIGNATURE_VERSION=v4
 ```
 
@@ -100,8 +99,8 @@ var api = new ParseServer({
 ```
 S3Adapter("bucket")
 S3Adapter("bucket", options)
-S3Adapter("key", "secret", "bucket")
-S3Adapter("key", "secret", "bucket", options)
+S3Adapter("key", "secret", "bucket") -- Deprecated, see notice above
+S3Adapter("key", "secret", "bucket", options) -- Deprecated, see notice above
 S3Adapter(options) // where options must contain bucket.
 S3Adapter(options, s3overrides)
 ```
@@ -117,8 +116,6 @@ var S3Adapter = require('parse-server-s3-adapter');
 var s3Options = {
   "bucket": "my_bucket",
   // optional:
-  "accessKey": null, // default value
-  "secretKey": null, // default value
   "region": 'us-east-1', // default value
   "bucketPrefix": '', // default value
   "directAccess": false, // default value
