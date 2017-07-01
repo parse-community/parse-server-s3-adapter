@@ -1,9 +1,6 @@
 module.exports = {
-  accessKey: 'accessKey',
-  secretKey: 'secretKey',
   insufficientOptions: {
-    accessKey: 'accessKey',
-    secretKey: 'secretKey',
+    random: 'key',
   },
   bucket: 'bucket',
   objectWithBucket: {

@@ -7,7 +7,7 @@ var AWS = require('aws-sdk');
 var optionsFromArguments = require('./lib/optionsFromArguments');
 
 // Creates an S3 session.
-// Providing AWS access, secret keys and bucket are mandatory
+// Providing AWS bucket is mandatory
 // Region will use sane defaults if omitted
 function S3Adapter() {
   var options = optionsFromArguments(arguments);
@@ -27,11 +27,6 @@ function S3Adapter() {
     signatureVersion: this._signatureVersion,
     globalCacheControl: this._globalCacheControl
   };
-
-  if (options.accessKey && options.secretKey) {
-    s3Options.accessKeyId = options.accessKey;
-    s3Options.secretAccessKey = options.secretKey;
-  }
 
   Object.assign(s3Options, options.s3overrides);
 
