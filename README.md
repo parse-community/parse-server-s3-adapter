@@ -15,6 +15,22 @@ parse-server adapter for AWS S3
 ## Deprecation Notice -- AWS Credentials
  *the ability to explicitly pass credentials to this adapter is deprecated and will be removed in a future release.*
 
+You may already be compatible with this change.  If you have not explicitly set an `accessKey` and `secretKey` then the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are configuring your sdk.  This will continue to work as is.
+
+If explicitly configured the `accessKey` and `secretKey` in your adapter configuration, then you'll need to...
+
+For non AWS hosts:
+
+*  Run `aws configure` in a terminal which will step you through configuring credentials for the AWS SDK and CLI
+
+For an AWS host:
+
+*  Ensure that the role that your host is running as has permissions for your s3 bucket
+
+Then
+
+*  remove the `accessKey` and `secretKey` from your configuration
+
 Although it is not recommended, AWS credentials can be explicitly configured through an options
 object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
 This option is provided for backward compatibility and will be removed in the forthcoming version 2.0 of this adapter.
