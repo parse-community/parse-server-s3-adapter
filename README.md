@@ -22,7 +22,7 @@ If you explicitly configured the environment variables `S3_ACCESS_KEY`
 
 *OR*
 
-If you explicitly configured the `accessKey` and `secretKey` in your adapter configuration or your have set the , then you'll need to...
+If you explicitly configured the `accessKey` and `secretKey` in your adapter configuration, then you'll need to...
 
 For non AWS hosts:
 
