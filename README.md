@@ -36,6 +36,8 @@ For an AWS host:
 
 *  remove the `accessKey` and `secretKey` from your configuration
 
+If for some reason you really need to be able to set the key and secret explicitly, you can still do it using `s3overrides` as described below and setting `accessKeyId` and `secretAccessKey` in the `s3Overrides` object.
+
 # Deprecated Configuration
 Although it is not recommended, AWS credentials can be explicitly configured through an options
 object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
