@@ -27,7 +27,7 @@
     "aws-sdk": "^2.59.0"
   },
   "devDependencies": {
-    "codecov": "^2.1.0",
+    "codecov": "^3.0.0",
     "config": "^1.24.0",
     "eslint": "^4.1.0",
     "istanbul": "^0.4.2",
