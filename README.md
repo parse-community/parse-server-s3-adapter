@@ -8,7 +8,7 @@ parse-server adapter for AWS S3
 
 # installation
 
-`npm install --save parse-server-s3-adapter`
+`npm install --save @parse/s3-files-adapter`
 
 # AWS Credentials
 
@@ -55,7 +55,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
   "masterKey": 'my_master_key',
   // other options
   "filesAdapter": {
-    "module": "parse-server-s3-adapter",
+    "module": "@parse/s3-files-adapter",
     "options": {
       "bucket": "my_bucket",
       // optional:
@@ -93,14 +93,14 @@ And update your config / options
   "appId": 'my_app_id',
   "masterKey": 'my_master_key',
   // other options
-  "filesAdapter": "parse-server-s3-adapter"
+  "filesAdapter": "@parse/s3-files-adapter"
 }
 ```
 
 
 ### passing as an instance
 ```
-var S3Adapter = require('parse-server-s3-adapter');
+var S3Adapter = require('@parse/s3-files-adapter');
 
 var s3Adapter = new S3Adapter('accessKey',
                   'secretKey', bucket, {
@@ -135,7 +135,7 @@ In this form if you set `s3overrides.params`, you must set at least `s3overrides
 or with an options hash
 
 ```
-var S3Adapter = require('parse-server-s3-adapter');
+var S3Adapter = require('@parse/s3-files-adapter');
 
 var s3Options = {
   "bucket": "my_bucket",
