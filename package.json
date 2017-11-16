@@ -1,6 +1,6 @@
 {
   "name": "@parse/s3-files-adapter",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "AWS S3 adapter for parse-server",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/parse-server-modules/parse-server-s3-adapter.git"
+    "url": "git+https://github.com/parse-community/parse-server-s3-adapter.git"
   },
   "keywords": [
     "parse-server",
@@ -20,9 +20,9 @@
   "author": "Parse",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/parse-server-modules/parse-server-s3-adapter/issues"
+    "url": "https://github.com/parse-community/parse-server-s3-adapter/issues"
   },
-  "homepage": "https://github.com/parse-server-modules/parse-server-s3-adapter#readme",
+  "homepage": "https://github.com/parse-community/parse-server-s3-adapter#readme",
   "dependencies": {
     "aws-sdk": "^2.59.0"
   },
