@@ -156,3 +156,39 @@ var api = new ParseServer({
   filesAdapter: s3Adapter
 })
 ```
+### Usage with Digital Ocean Spaces 
+
+```
+var S3Adapter = require("@parse/s3-files-adapter");
+var AWS = require("aws-sdk");
+
+//Configure Digital Ocean Spaces EndPoint
+const spacesEndpoint = new AWS.Endpoint(process.env.SPACES_ENDPOINT);
+var s3Options = {
+  bucket: process.env.SPACES_BUCKET_NAME,
+  baseUrl: process.env.SPACES_BASE_URL, 
+  region: process.env.SPACES_REGION,
+  directAccess: true,
+  globalCacheControl: "public, max-age=31536000", 
+  bucketPrefix: process.env.SPACES_BUCKET_PREFIX,
+  s3overrides: {
+    accessKeyId: process.env.SPACES_ACCESS_KEY,
+    secretAccessKey: process.env.SPACES_SECRET_KEY,
+    endpoint: spacesEndpoint
+  }
+};
+
+var s3Adapter = new S3Adapter(s3Options);
+
+var api = new ParseServer({
+  databaseURI: process.env.DATABASE_URI || "mongodb://localhost:27017/dev",
+  cloud: process.env.CLOUD_CODE_MAIN || __dirname + "/cloud/main.js",
+  appId: process.env.APP_ID || "myAppId",
+  masterKey: process.env.MASTER_KEY || "", 
+  serverURL: process.env.SERVER_URL || "http://localhost:1337/parse", 
+  logLevel: process.env.LOG_LEVEL || "info",
+  allowClientClassCreation: false,
+  filesAdapter: s3Adapter,
+  }
+});
+```
