@@ -1,7 +1,7 @@
 # Change Log
 
 ## 1.2.2
-[Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.6...1.2.2))
+[Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.6...1.2.2)
 Security Updates
 
 ## [v1.0.6](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.6) (2016-12-6)
