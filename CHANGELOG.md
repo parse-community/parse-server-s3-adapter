@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.2.3
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.2.2...master)
+- Another attempt at getting travis/npm working together [#69](https://github.com/parse-community/parse-server-s3-adapter/pull/69)
+
 ## 1.2.2
 [Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.6...1.2.2)
 - Dependency Security Updates
