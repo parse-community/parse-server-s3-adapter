@@ -2,7 +2,8 @@
 
 ## 1.2.2
 [Full Changelog](https://github.com/parse-server-modules/parse-server-s3-adapter/compare/v1.0.6...1.2.2)
-Security Updates
+- Dependency Security Updates
+- Fix tests [#69](https://github.com/parse-community/parse-server-s3-adapter/pull/68) thanks to [davimacedo](https://github.com/davimacedo)
 
 ## [v1.0.6](https://github.com/parse-server-modules/parse-server-s3-adapter/tree/v1.0.6) (2016-12-6)
 
