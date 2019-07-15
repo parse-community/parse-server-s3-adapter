@@ -192,14 +192,74 @@ describe('S3Adapter tests', () => {
     });
   });
 
+  let s3;
 
   if (process.env.TEST_S3_ACCESS_KEY && process.env.TEST_S3_SECRET_KEY && process.env.TEST_S3_BUCKET) {
     // Should be initialized from the env
-    let s3 = new S3Adapter({
+    s3 = new S3Adapter({
       accessKey: process.env.TEST_S3_ACCESS_KEY,
       secretKey: process.env.TEST_S3_SECRET_KEY,
       bucket: process.env.TEST_S3_BUCKET
     });
-    filesAdapterTests.testAdapter("S3Adapter", s3);
+  } else {
+    const bucket = 'FAKE_BUCKET';
+
+    s3 = new S3Adapter({
+      accessKey: 'FAKE_ACCESS_KEY',
+      secretKey: 'FAKE_SECRET_KEY',
+      bucket,
+    });
+
+    const objects = {};
+
+    s3._s3Client = {
+      createBucket: callback => setTimeout(callback, 100),
+      upload: (params, callback) => setTimeout(
+        () => {
+          const { Key, Body } = params;
+
+          objects[Key] = Body;
+
+          callback(
+            null,
+            {
+              Location: `https://${bucket}.s3.amazonaws.com/${Key}`
+            }
+          );
+        },
+        100
+      ),
+      deleteObject: (params, callback) => setTimeout(
+        () => {
+          const { Key } = params;
+
+          delete objects[Key];
+
+          callback(null, {});
+        },
+        100
+      ),
+      getObject: (params, callback) => setTimeout(
+        () => {
+          const { Key } = params;
+
+          if (objects[Key]) {
+            callback(
+              null,
+              {
+                Body: Buffer.from(objects[Key], 'utf8')
+              }
+            );
+          } else {
+            callback(
+              new Error('Not found')
+            );
+          }
+        },
+        100
+      )
+    };
   }
+
+  filesAdapterTests.testAdapter("S3Adapter", s3);
 })
