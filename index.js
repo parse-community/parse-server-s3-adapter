@@ -144,24 +144,31 @@ S3Adapter.prototype.getFileLocation = function(config, filename) {
   return (config.mount + '/files/' + config.applicationId + '/' + filename);
 }
 
-S3Adapter.prototype.getFileStream = async function(filename, req, res) {
+S3Adapter.prototype.getFileStream = function (filename, req, res) {
   const params = {
     Key: this._bucketPrefix + filename,
     Range: req.get('Range'),
   };
-  await this.createBucket();
-  this._s3Client.getObject(params, (error, data) => {
-    if (error !== null || (data && !data.Body)) {
-      return res.sendStatus(404);
-    }
-    res.writeHead(206, {
-      'Accept-Ranges': data.AcceptRanges,
-      'Content-Length': data.ContentLength,
-      'Content-Range': data.ContentRange,
-      'Content-Type': data.ContentType,
+  return this.createBucket().then(() => {
+    return new Promise((resolve, reject) => {
+      this._s3Client.getObject(params, (error, data) => {
+        if (error !== null) {
+          return reject(error);
+        }
+        if (data && !data.Body) {
+          return reject(data);
+        }
+        res.writeHead(206, {
+          'Accept-Ranges': data.AcceptRanges,
+          'Content-Length': data.ContentLength,
+          'Content-Range': data.ContentRange,
+          'Content-Type': data.ContentType,
+        });
+        res.write(data.Body);
+        res.end();
+        resolve(data.Body);
+      });
     });
-    res.write(data.Body);
-    res.end();
   });
 }
 
