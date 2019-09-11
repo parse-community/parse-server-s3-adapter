@@ -177,7 +177,7 @@ describe('S3Adapter tests', () => {
         write: jasmine.createSpy('write'),
         end: jasmine.createSpy('end'),
       };
-      s3.getFileStream('test.mov', req, resp).then((data) => {
+      s3.handleFileStream('test.mov', req, resp).then((data) => {
         expect(data.toString('utf8')).toBe('hello world');
         expect(resp.writeHead).toHaveBeenCalled();
         expect(resp.write).toHaveBeenCalled();
@@ -201,7 +201,7 @@ describe('S3Adapter tests', () => {
         write: jasmine.createSpy('write'),
         end: jasmine.createSpy('end'),
       };
-      s3.getFileStream('test.mov', req, resp).catch((error) => {
+      s3.handleFileStream('test.mov', req, resp).catch((error) => {
         expect(error).toBe('FileNotFound');
         expect(resp.writeHead).not.toHaveBeenCalled();
         expect(resp.write).not.toHaveBeenCalled();
@@ -226,7 +226,7 @@ describe('S3Adapter tests', () => {
         write: jasmine.createSpy('write'),
         end: jasmine.createSpy('end'),
       };
-      s3.getFileStream('test.mov', req, resp).catch((error) => {
+      s3.handleFileStream('test.mov', req, resp).catch((error) => {
         expect(error).toBe(data);
         expect(resp.writeHead).not.toHaveBeenCalled();
         expect(resp.write).not.toHaveBeenCalled();

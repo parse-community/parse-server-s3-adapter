@@ -144,7 +144,7 @@ S3Adapter.prototype.getFileLocation = function(config, filename) {
   return (config.mount + '/files/' + config.applicationId + '/' + filename);
 }
 
-S3Adapter.prototype.getFileStream = function (filename, req, res) {
+S3Adapter.prototype.handleFileStream = function (filename, req, res) {
   const params = {
     Key: this._bucketPrefix + filename,
     Range: req.get('Range'),
