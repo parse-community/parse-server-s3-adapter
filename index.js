@@ -144,5 +144,33 @@ S3Adapter.prototype.getFileLocation = function(config, filename) {
   return (config.mount + '/files/' + config.applicationId + '/' + filename);
 }
 
+S3Adapter.prototype.handleFileStream = function (filename, req, res) {
+  const params = {
+    Key: this._bucketPrefix + filename,
+    Range: req.get('Range'),
+  };
+  return this.createBucket().then(() => {
+    return new Promise((resolve, reject) => {
+      this._s3Client.getObject(params, (error, data) => {
+        if (error !== null) {
+          return reject(error);
+        }
+        if (data && !data.Body) {
+          return reject(data);
+        }
+        res.writeHead(206, {
+          'Accept-Ranges': data.AcceptRanges,
+          'Content-Length': data.ContentLength,
+          'Content-Range': data.ContentRange,
+          'Content-Type': data.ContentType,
+        });
+        res.write(data.Body);
+        res.end();
+        resolve(data.Body);
+      });
+    });
+  });
+}
+
 module.exports = S3Adapter;
 module.exports.default = S3Adapter;

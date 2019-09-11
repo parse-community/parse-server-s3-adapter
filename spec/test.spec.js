@@ -153,6 +153,88 @@ describe('S3Adapter tests', () => {
     });
   });
 
+  describe('getFileStream', () => {
+    it('should handle range bytes', () => {
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket');
+      s3._s3Client = {
+        createBucket: callback => callback(),
+        getObject: (params, callback) => {
+          const { Range } = params;
+
+          expect(Range).toBe('bytes=0-1');
+
+          const data = {
+            Body: Buffer.from('hello world', 'utf8'),
+          };
+          callback(null, data);
+        },
+      };
+      const req = {
+        get: () => 'bytes=0-1',
+      };
+      const resp = {
+        writeHead: jasmine.createSpy('writeHead'),
+        write: jasmine.createSpy('write'),
+        end: jasmine.createSpy('end'),
+      };
+      s3.handleFileStream('test.mov', req, resp).then((data) => {
+        expect(data.toString('utf8')).toBe('hello world');
+        expect(resp.writeHead).toHaveBeenCalled();
+        expect(resp.write).toHaveBeenCalled();
+        expect(resp.end).toHaveBeenCalled();
+      });
+    });
+
+    it('should handle range bytes error', () => {
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket');
+      s3._s3Client = {
+        createBucket: callback => callback(),
+        getObject: (params, callback) => {
+          callback('FileNotFound', null);
+        },
+      };
+      const req = {
+        get: () => 'bytes=0-1',
+      };
+      const resp = {
+        writeHead: jasmine.createSpy('writeHead'),
+        write: jasmine.createSpy('write'),
+        end: jasmine.createSpy('end'),
+      };
+      s3.handleFileStream('test.mov', req, resp).catch((error) => {
+        expect(error).toBe('FileNotFound');
+        expect(resp.writeHead).not.toHaveBeenCalled();
+        expect(resp.write).not.toHaveBeenCalled();
+        expect(resp.end).not.toHaveBeenCalled();
+      });
+    });
+
+    it('should handle range bytes no data', () => {
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket');
+      const data = { Error: 'NoBody' };
+      s3._s3Client = {
+        createBucket: callback => callback(),
+        getObject: (params, callback) => {
+          callback(null, data);
+        },
+      };
+      const req = {
+        get: () => 'bytes=0-1',
+      };
+      const resp = {
+        writeHead: jasmine.createSpy('writeHead'),
+        write: jasmine.createSpy('write'),
+        end: jasmine.createSpy('end'),
+      };
+      s3.handleFileStream('test.mov', req, resp).catch((error) => {
+        expect(error).toBe(data);
+        expect(resp.writeHead).not.toHaveBeenCalled();
+        expect(resp.write).not.toHaveBeenCalled();
+        expect(resp.end).not.toHaveBeenCalled();
+      });
+    });
+  });
+
   describe('getFileLocation', () => {
     var config = {
       mount: 'http://my.server.com/parse',
