@@ -18,7 +18,6 @@
         "no-multiple-empty-lines": 1,
         "no-underscore-dangle": 0,
         "no-new": 0,
-        "func-names": 0,
         "prefer-destructuring": 0,
         "prefer-object-spread": 0
     }
