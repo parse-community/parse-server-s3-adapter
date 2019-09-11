@@ -6,7 +6,8 @@
   "scripts": {
     "pretest": "npm run lint",
     "test": "NODE_ENV=test NODE_CONFIG_DIR=./spec/config istanbul cover -x **/spec/** jasmine --captureExceptions",
-    "lint": "eslint --cache ./"
+    "lint": "eslint --cache ./",
+    "lint:fix": "eslint --fix --cache ./"
   },
   "repository": {
     "type": "git",
@@ -29,7 +30,9 @@
   "devDependencies": {
     "codecov": "^3.0.0",
     "config": "^1.24.0",
-    "eslint": "^4.1.0",
+    "eslint": "6.3.0",
+    "eslint-config-airbnb-base": "14.0.0",
+    "eslint-plugin-import": "2.18.2",
     "istanbul": "^0.4.2",
     "jasmine": "^2.4.1",
     "parse-server-conformance-tests": "^1.0.0"
