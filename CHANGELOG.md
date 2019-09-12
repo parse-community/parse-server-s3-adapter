@@ -1,7 +1,13 @@
 # Change Log
 
+## 1.3.0
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.3.0...master)
+- CHANGE: Conform to FilesAdapter Interface [#73](https://github.com/parse-community/parse-server/pull/73). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- CHANGE: Add airbnb style guide to linter [#72](https://github.com/parse-community/parse-server/pull/72). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- NEW: Support byte range requests [#71](https://github.com/parse-community/parse-server/pull/71). Thanks to [Diamond Lewis](https://github.com/dplewis)
+
 ## 1.2.3
-[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.2.2...master)
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.2.2...1.3.0)
 - Another attempt at getting travis/npm working together [#69](https://github.com/parse-community/parse-server-s3-adapter/pull/69)
 
 ## 1.2.2
