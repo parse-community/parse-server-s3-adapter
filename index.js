@@ -30,6 +30,7 @@ class S3Adapter extends FilesAdapter {
     this._globalCacheControl = options.globalCacheControl;
     this._encryption = options.ServerSideEncryption;
     this._fileNameCheck = options.fileNameCheck;
+    this._preserveFileName = options.preserveFileName;
 
     const s3Options = {
       params: { Bucket: this._bucket },
@@ -69,9 +70,24 @@ class S3Adapter extends FilesAdapter {
   // Returns a promise containing the S3 object creation response
   createFile(filename, data, contentType) {
     const params = {
-      Key: this._bucketPrefix + filename,
+      Key: this._bucketPrefix,
       Body: data,
     };
+
+    let prefix = '';
+    const lastSlash = filename.lastIndexOf('/');
+    if (this._preserveFileName === 'never' || (this._preserveFileName === 'haspath' && lastSlash === -1)) {
+      prefix = `${Date.now()}_`;
+    }
+
+    if (lastSlash > 0) {
+      // put the prefix before the last component of the filename
+      params.Key += filename.substring(0, lastSlash + 1) + prefix
+          + filename.substring(lastSlash + 1);
+    } else {
+      params.Key += prefix + filename;
+    }
+
     if (this._directAccess) {
       params.ACL = 'public-read';
     }

@@ -67,11 +67,13 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
       "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
-      "fileNameCheck": 'strict' // safe, strict or loose.   
+      "fileNameCheck": 'strict', // safe, strict or loose.   
+      "preserveFileName": 'always' // never, haspath, always (default always)
     }
   }
 }
 ```
+***Note*** By default Parse.FilesController.preserveFileName will prefix all filenames with a random hex code.   You will want to disable that if you enable it here or wish to use S3 "directories".
 
 ### using environment variables
 
@@ -112,6 +114,7 @@ var s3Adapter = new S3Adapter('accessKey',
                     signatureVersion: 'v4',
                     globalCacheControl: 'public, max-age=86400',  // 24 hrs Cache-Control.
                     fileNameCheck: 'safe' // allow "directory" creation
+                    preserveFileName: 'haspath' // keep the filename if there's a / (directory) in the name
                   });
 
 var api = new ParseServer({
@@ -149,6 +152,7 @@ var s3Options = {
   "signatureVersion": 'v4', // default value
   "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
   "fileNameCheck": 'loose' // anything goes
+  "preserveFileName": 'never' // Ensure Parse.FileController.preserveFileName is true!
 }
 
 var s3Adapter = new S3Adapter(s3Options);
@@ -172,6 +176,8 @@ var s3Options = {
   baseUrl: process.env.SPACES_BASE_URL, 
   region: process.env.SPACES_REGION,
   directAccess: true,
+  preserveFilename: "always",
+  fileNameCheck: "safe",
   globalCacheControl: "public, max-age=31536000", 
   bucketPrefix: process.env.SPACES_BUCKET_PREFIX,
   s3overrides: {
