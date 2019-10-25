@@ -66,7 +66,8 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
-      "ServerSideEncryption": 'AES256|aws:kms' //AES256 or aws:kms, or if you do not pass this, encryption won't be done
+      "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
+      "fileNameCheck": 'strict' // safe, strict or loose.   
     }
   }
 }
@@ -109,7 +110,8 @@ var s3Adapter = new S3Adapter('accessKey',
                     directAccess: false,
                     baseUrl: 'http://images.example.com',
                     signatureVersion: 'v4',
-                    globalCacheControl: 'public, max-age=86400'  // 24 hrs Cache-Control.
+                    globalCacheControl: 'public, max-age=86400',  // 24 hrs Cache-Control.
+                    fileNameCheck: 'safe' // allow "directory" creation
                   });
 
 var api = new ParseServer({
@@ -145,7 +147,8 @@ var s3Options = {
   "directAccess": false, // default value
   "baseUrl": null // default value
   "signatureVersion": 'v4', // default value
-  "globalCacheControl": null // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+  "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+  "fileNameCheck": 'loose' // anything goes
 }
 
 var s3Adapter = new S3Adapter(s3Options);

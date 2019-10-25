@@ -299,6 +299,40 @@ describe('S3Adapter tests', () => {
     });
   });
 
+  describe('validateFilename', () => {
+    let options;
+
+    beforeEach(() => {
+      options = {
+        fileNameCheck: 'strict',
+      };
+    });
+
+    it('should not allow directories when strict', () => {
+      options.fileNameCheck = 'strict';
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      expect(s3.validateFilename('foo/bar')).not.toBe(null);
+    });
+
+    it('should allow directories when safe', () => {
+      options.fileNameCheck = 'safe';
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      expect(s3.validateFilename('foo/bar')).toBe(null);
+    });
+
+    it('should allow not allow emojis when safe', () => {
+      options.fileNameCheck = 'safe';
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      expect(s3.validateFilename('foo🛒/bar')).not.toBe(null);
+    });
+
+    it('should allow allow emojis when loose', () => {
+      options.fileNameCheck = 'loose';
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      expect(s3.validateFilename('foo🛒/bar')).toBe(null);
+    });
+  });
+
   let s3;
 
   if (

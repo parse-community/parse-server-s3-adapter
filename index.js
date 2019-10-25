@@ -2,6 +2,8 @@
 //
 // Stores Parse files in AWS S3.
 
+const FilesAdapter = require('parse-server/lib/Adapters/Files/FilesAdapter').FilesAdapter;
+const Parse = require('parse/lib/node/Parse').Parse;
 const AWS = require('aws-sdk');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
@@ -11,11 +13,12 @@ const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice
     'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details');
 };
 
-class S3Adapter {
+class S3Adapter extends FilesAdapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
   // Region will use sane defaults if omitted
   constructor(...args) {
+    super();
     const options = optionsFromArguments(args);
     this._region = options.region;
     this._bucket = options.bucket;
@@ -26,6 +29,7 @@ class S3Adapter {
     this._signatureVersion = options.signatureVersion;
     this._globalCacheControl = options.globalCacheControl;
     this._encryption = options.ServerSideEncryption;
+    this._fileNameCheck = options.fileNameCheck;
 
     const s3Options = {
       params: { Bucket: this._bucket },
@@ -162,6 +166,36 @@ class S3Adapter {
         return resolve(data.Body);
       });
     }));
+  }
+
+  validateFilename(filename) {
+    let regex;
+
+    if (filename.length > 1024) {
+      return new Parse.Error(Parse.Error.INVALID_FILE_NAME, 'Filename too long.');
+    }
+
+    // From https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html#object-keys
+    switch (this._fileNameCheck) {
+    case 'loose':
+      // Just don't start with a /
+      regex = /[^/].*$/;
+      break;
+    case 'safe':
+      // eslint-disable-next-line no-control-regex
+      regex = /^[_a-zA-Z0-9][a-zA-Z0-9@. ~_\-/$&\x00-\x1F\x7F=;:+,?]*$/;
+      break;
+    case 'strict':
+    default:
+      regex = /^[_a-zA-Z0-9][a-zA-Z0-9@. ~_-]*$/;
+      break;
+    }
+
+    if (!filename.match(regex)) {
+      return new Parse.Error(Parse.Error.INVALID_FILE_NAME, 'Filename contains invalid characters.');
+    }
+
+    return null;
   }
 }
 
