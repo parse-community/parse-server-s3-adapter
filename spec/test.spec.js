@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
+const Parse = require('parse/node').Parse;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 
@@ -311,7 +312,7 @@ describe('S3Adapter tests', () => {
     it('should not allow directories when strict', () => {
       options.fileNameCheck = 'strict';
       const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.validateFilename('foo/bar')).not.toBe(null);
+      expect(s3.validateFilename('foo/bar') instanceof Parse.Error).toBe(true);
     });
 
     it('should allow directories when safe', () => {
@@ -323,7 +324,7 @@ describe('S3Adapter tests', () => {
     it('should allow not allow emojis when safe', () => {
       options.fileNameCheck = 'safe';
       const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.validateFilename('foo🛒/bar')).not.toBe(null);
+      expect(s3.validateFilename('foo🛒/bar') instanceof Parse.Error).toBe(true);
     });
 
     it('should allow allow emojis when loose', () => {
