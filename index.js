@@ -2,8 +2,7 @@
 //
 // Stores Parse files in AWS S3.
 
-const FilesAdapter = require('parse-server/lib/Adapters/Files/FilesAdapter').FilesAdapter;
-const Parse = require('parse/lib/node/Parse').Parse;
+const Parse = require('parse/node').Parse;
 const AWS = require('aws-sdk');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
@@ -13,12 +12,11 @@ const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice
     'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details');
 };
 
-class S3Adapter extends FilesAdapter {
+class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
   // Region will use sane defaults if omitted
   constructor(...args) {
-    super();
     const options = optionsFromArguments(args);
     this._region = options.region;
     this._bucket = options.bucket;
