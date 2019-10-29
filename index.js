@@ -143,7 +143,7 @@ class S3Adapter {
   // The location is the direct S3 link if the option is set,
   // otherwise we serve the file through parse-server
   getFileLocation(config, filename) {
-    const fileName = encodeURIComponent(filename);
+    const fileName = filename.split('/').map(encodeURIComponent).join('/');
     if (this._directAccess) {
       if (this._baseUrl && this._baseUrlDirect) {
         return `${this._baseUrl}/${fileName}`;
