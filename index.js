@@ -2,7 +2,6 @@
 //
 // Stores Parse files in AWS S3.
 
-const Parse = require('parse/node').Parse;
 const AWS = require('aws-sdk');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
@@ -186,7 +185,7 @@ class S3Adapter {
     let regex;
 
     if (filename.length > 1024) {
-      return new Parse.Error(Parse.Error.INVALID_FILE_NAME, 'Filename too long.');
+      return 'Filename too long.';
     }
 
     // From https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html#object-keys
@@ -206,7 +205,7 @@ class S3Adapter {
     }
 
     if (!filename.match(regex)) {
-      return new Parse.Error(Parse.Error.INVALID_FILE_NAME, 'Filename contains invalid characters.');
+      return 'Filename contains invalid characters.';
     }
 
     return null;
