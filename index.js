@@ -196,7 +196,7 @@ class S3Adapter {
       break;
     case 'safe':
       // eslint-disable-next-line no-control-regex
-      regex = /^[_a-zA-Z0-9][a-zA-Z0-9@. ~_\-/$&\x00-\x1F\x7F=;:+,?]*$/;
+      regex = /^[_a-zA-Z0-9][a-zA-Z0-9@. ~_\-/$&\x00-\x1F\x7F=;:+,?%]*$/;
       break;
     case 'strict':
     default:
