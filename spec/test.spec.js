@@ -333,7 +333,7 @@ describe('S3Adapter tests', () => {
     });
   });
 
-  function makeS3Adaptor(options) {
+  function makeS3Adapter(options) {
     let s3;
 
     if (
@@ -400,7 +400,7 @@ describe('S3Adapter tests', () => {
 
     it('should add a unique timestamp to the file name when the preserveFileName option is never', () => {
       options.preserveFileName = 'never';
-      const s3 = makeS3Adaptor(options);
+      const s3 = makeS3Adapter(options);
       const fileName = 'randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
@@ -411,7 +411,7 @@ describe('S3Adapter tests', () => {
 
     it('should not add unique timestamp to the file name when the preserveFileName option is hasPath and there is a path', () => {
       options.preserveFileName = 'hasPath';
-      const s3 = makeS3Adaptor(options);
+      const s3 = makeS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
@@ -422,7 +422,7 @@ describe('S3Adapter tests', () => {
 
     it('should add unique timestamp to the file name after the last directory when the preserveFileName option is never and there is a path', () => {
       options.preserveFileName = 'never';
-      const s3 = makeS3Adaptor(options);
+      const s3 = makeS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
@@ -435,5 +435,5 @@ describe('S3Adapter tests', () => {
     afterAll(() => Promise.all(promises));
   });
 
-  filesAdapterTests.testAdapter('S3Adapter', makeS3Adaptor({}));
+  filesAdapterTests.testAdapter('S3Adapter', makeS3Adapter({}));
 });
