@@ -1,3 +1,4 @@
+const AWS = require('aws-sdk');
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
 const S3Adapter = require('../index.js');
@@ -131,6 +132,25 @@ describe('S3Adapter tests', () => {
       expect(s3._s3Client.config.secretAccessKey).toEqual('secret-2');
       expect(s3._s3Client.config.params.Bucket).toEqual('bucket-2');
       expect(s3._bucketPrefix).toEqual('test/');
+    });
+
+    it('should accept endpoint as an override option in args', () => {
+      const otherEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+      const confObj = {
+        bucketPrefix: 'test/',
+        bucket: 'bucket-1',
+        secretKey: 'secret-1',
+        accessKey: 'key-1',
+        s3overrides: { endpoint: otherEndpoint },
+      };
+      const s3 = new S3Adapter(confObj);
+      expect(s3._s3Client.endpoint.protocol).toEqual(otherEndpoint.protocol);
+      expect(s3._s3Client.endpoint.host).toEqual(otherEndpoint.host);
+      expect(s3._s3Client.endpoint.port).toEqual(otherEndpoint.port);
+      expect(s3._s3Client.endpoint.hostname).toEqual(otherEndpoint.hostname);
+      expect(s3._s3Client.endpoint.pathname).toEqual(otherEndpoint.pathname);
+      expect(s3._s3Client.endpoint.path).toEqual(otherEndpoint.path);
+      expect(s3._s3Client.endpoint.href).toEqual(otherEndpoint.href);
     });
 
     it('should accept options and overrides as args', () => {
