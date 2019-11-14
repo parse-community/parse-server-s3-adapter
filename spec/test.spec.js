@@ -1,3 +1,4 @@
+const AWS = require('aws-sdk');
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
 const S3Adapter = require('../index.js');
@@ -131,6 +132,19 @@ describe('S3Adapter tests', () => {
       expect(s3._s3Client.config.secretAccessKey).toEqual('secret-2');
       expect(s3._s3Client.config.params.Bucket).toEqual('bucket-2');
       expect(s3._bucketPrefix).toEqual('test/');
+    });
+
+    it('should accept endpoint as an override option in args', () => {
+      const otherEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+      const confObj = {
+        bucketPrefix: 'test/',
+        bucket: 'bucket-1',
+        secretKey: 'secret-1',
+        accessKey: 'key-1',
+        s3overrides: { endpoint: otherEndpoint },
+      };
+      const s3 = new S3Adapter(confObj);
+      expect(s3._s3Client.endpoint).toEqual(otherEndpoint);
     });
 
     it('should accept options and overrides as args', () => {
