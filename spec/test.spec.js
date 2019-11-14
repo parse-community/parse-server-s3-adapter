@@ -144,7 +144,13 @@ describe('S3Adapter tests', () => {
         s3overrides: { endpoint: otherEndpoint },
       };
       const s3 = new S3Adapter(confObj);
-      expect(s3._s3Client.endpoint).toEqual(otherEndpoint);
+      expect(s3._s3Client.endpoint.protocol).toEqual(otherEndpoint.protocol);
+      expect(s3._s3Client.endpoint.host).toEqual(otherEndpoint.host);
+      expect(s3._s3Client.endpoint.port).toEqual(otherEndpoint.port);
+      expect(s3._s3Client.endpoint.hostname).toEqual(otherEndpoint.hostname);
+      expect(s3._s3Client.endpoint.pathname).toEqual(otherEndpoint.pathname);
+      expect(s3._s3Client.endpoint.path).toEqual(otherEndpoint.path);
+      expect(s3._s3Client.endpoint.href).toEqual(otherEndpoint.href);
     });
 
     it('should accept options and overrides as args', () => {
