@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
+const Parse = require('parse').Parse;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 
@@ -304,32 +305,27 @@ describe('S3Adapter tests', () => {
 
     beforeEach(() => {
       options = {
-        fileNameCheck: 'strict',
+        validateFilename: null,
       };
     });
 
-    it('should not allow directories when strict', () => {
-      options.fileNameCheck = 'strict';
+    it('should be null by default', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.validateFilename('foo/bar')).toBe('Filename contains invalid characters.');
+      expect(s3.validateFilename === null).toBe(true);
     });
 
-    it('should allow directories when safe', () => {
-      options.fileNameCheck = 'safe';
+    it('should not allow directories when overridden', () => {
+      options.validateFilename = (filename) => {
+        if (filename.indexOf('/') !== -1) {
+          return new Parse.Error(
+            Parse.Error.INVALID_FILE_NAME,
+            'Filename contains invalid characters.',
+          );
+        }
+        return null;
+      };
       const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.validateFilename('foo/bar')).toBe(null);
-    });
-
-    it('should allow not allow emojis when safe', () => {
-      options.fileNameCheck = 'safe';
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.validateFilename('foo🛒/bar')).toBe('Filename contains invalid characters.');
-    });
-
-    it('should allow allow emojis when loose', () => {
-      options.fileNameCheck = 'loose';
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.validateFilename('foo🛒/bar')).toBe(null);
+      expect(s3.validateFilename('foo/bar') instanceof Parse.Error).toBe(true);
     });
   });
 
@@ -387,19 +383,30 @@ describe('S3Adapter tests', () => {
     return s3;
   }
 
-  describe('preserveFilename', () => {
+  describe('generateKey', () => {
     let options;
     const promises = [];
 
     beforeEach(() => {
       options = {
-        fileNameCheck: 'loose',
-        preserveFileName: 'never',
+        bucketPrefix: 'test/',
+        generateKey: (filename) => {
+          let key = '';
+          const lastSlash = filename.lastIndexOf('/');
+          const prefix = `${Date.now()}_`;
+          if (lastSlash > 0) {
+            // put the prefix before the last component of the filename
+            key += filename.substring(0, lastSlash + 1) + prefix
+                + filename.substring(lastSlash + 1);
+          } else {
+            key += prefix + filename;
+          }
+          return key;
+        },
       };
     });
 
-    it('should add a unique timestamp to the file name when the preserveFileName option is never', () => {
-      options.preserveFileName = 'never';
+    it('should return a file with a date stamp inserted in the path', () => {
       const s3 = makeS3Adapter(options);
       const fileName = 'randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
@@ -409,24 +416,23 @@ describe('S3Adapter tests', () => {
       promises.push(response);
     });
 
-    it('should not add unique timestamp to the file name when the preserveFileName option is hasPath and there is a path', () => {
-      options.preserveFileName = 'hasPath';
+    it('should do nothing when null', () => {
+      options.generateKey = null;
       const s3 = makeS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
-        expect(url.pathname.substring(1)).toEqual(fileName);
+        expect(url.pathname.substring(1)).toEqual(options.bucketPrefix + fileName);
       });
       promises.push(response);
     });
 
-    it('should add unique timestamp to the file name after the last directory when the preserveFileName option is never and there is a path', () => {
-      options.preserveFileName = 'never';
+    it('should add unique timestamp to the file name after the last directory when there is a path', () => {
       const s3 = makeS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
-        expect(url.pathname.indexOf('foo/')).toEqual(1);
+        expect(url.pathname.indexOf('foo/')).toEqual(6);
         expect(url.pathname.indexOf('random') > 13).toBe(true);
       });
       promises.push(response);

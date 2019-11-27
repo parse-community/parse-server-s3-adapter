@@ -67,8 +67,8 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
       "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
-      "fileNameCheck": 'strict', // safe, strict or loose.   
-      "preserveFileName": 'always' // never, haspath, always (default always)
+      "validateFilename": null, // Default to parse-server FilesAdapter::validateFilename.   
+      "generateKey": null // Will default to Parse.FilesController.preserveFileName
     }
   }
 }
@@ -113,8 +113,18 @@ var s3Adapter = new S3Adapter('accessKey',
                     baseUrl: 'http://images.example.com',
                     signatureVersion: 'v4',
                     globalCacheControl: 'public, max-age=86400',  // 24 hrs Cache-Control.
-                    fileNameCheck: 'safe' // allow "directory" creation
-                    preserveFileName: 'haspath' // keep the filename if there's a / (directory) in the name
+                    validateFilename: (filename) => {
+                      if (filename.length > 1024) {
+                         return new Parse.Error(
+                            Parse.Error.INVALID_FILE_NAME,
+                                'Filename too long.',
+                          );
+                       }
+                       return null; // Return null on success
+                    },
+                    generateKey: (filename) => {
+                        return `${Date.now()}_${filename}`; // unique prefix for every filename
+                    }
                   });
 
 var api = new ParseServer({
@@ -151,8 +161,8 @@ var s3Options = {
   "baseUrl": null // default value
   "signatureVersion": 'v4', // default value
   "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
-  "fileNameCheck": 'loose' // anything goes
-  "preserveFileName": 'never' // Ensure Parse.FileController.preserveFileName is true!
+  "validateFilename": () => null, // Anything goes!
+  "generateKey": (filename) => filename,  // Ensure Parse.FilesController.preserveFileName is true!
 }
 
 var s3Adapter = new S3Adapter(s3Options);
@@ -176,8 +186,6 @@ var s3Options = {
   baseUrl: process.env.SPACES_BASE_URL, 
   region: process.env.SPACES_REGION,
   directAccess: true,
-  preserveFilename: "always",
-  fileNameCheck: "safe",
   globalCacheControl: "public, max-age=31536000", 
   bucketPrefix: process.env.SPACES_BUCKET_PREFIX,
   s3overrides: {

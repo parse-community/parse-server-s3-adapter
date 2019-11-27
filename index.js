@@ -26,8 +26,9 @@ class S3Adapter {
     this._signatureVersion = options.signatureVersion;
     this._globalCacheControl = options.globalCacheControl;
     this._encryption = options.ServerSideEncryption;
-    this._fileNameCheck = options.fileNameCheck;
-    this._preserveFileName = options.preserveFileName;
+    this._generateKey = options.generateKey;
+    // Optional FilesAdaptor method
+    this.validateFilename = options.validateFilename;
 
     const s3Options = {
       params: { Bucket: this._bucket },
@@ -67,22 +68,12 @@ class S3Adapter {
   // Returns a promise containing the S3 object creation response
   createFile(filename, data, contentType) {
     const params = {
-      Key: this._bucketPrefix,
+      Key: this._bucketPrefix + filename,
       Body: data,
     };
 
-    let prefix = '';
-    const lastSlash = filename.lastIndexOf('/');
-    if (this._preserveFileName === 'never' || (this._preserveFileName === 'haspath' && lastSlash === -1)) {
-      prefix = `${Date.now()}_`;
-    }
-
-    if (lastSlash > 0) {
-      // put the prefix before the last component of the filename
-      params.Key += filename.substring(0, lastSlash + 1) + prefix
-          + filename.substring(lastSlash + 1);
-    } else {
-      params.Key += prefix + filename;
+    if (this._generateKey instanceof Function) {
+      params.Key = this._bucketPrefix + this._generateKey(filename);
     }
 
     if (this._directAccess) {
@@ -179,36 +170,6 @@ class S3Adapter {
         return resolve(data.Body);
       });
     }));
-  }
-
-  validateFilename(filename) {
-    let regex;
-
-    if (filename.length > 1024) {
-      return 'Filename too long.';
-    }
-
-    // From https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html#object-keys
-    switch (this._fileNameCheck) {
-    case 'loose':
-      // Just don't start with a /
-      regex = /[^/].*$/;
-      break;
-    case 'safe':
-      // eslint-disable-next-line no-control-regex
-      regex = /^[_a-zA-Z0-9][a-zA-Z0-9@. ~_\-/$&\x00-\x1F\x7F=;:+,?%]*$/;
-      break;
-    case 'strict':
-    default:
-      regex = /^[_a-zA-Z0-9][a-zA-Z0-9@. ~_-]*$/;
-      break;
-    }
-
-    if (!filename.match(regex)) {
-      return 'Filename contains invalid characters.';
-    }
-
-    return null;
   }
 }
 
