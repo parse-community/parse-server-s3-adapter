@@ -115,10 +115,7 @@ var s3Adapter = new S3Adapter('accessKey',
                     globalCacheControl: 'public, max-age=86400',  // 24 hrs Cache-Control.
                     validateFilename: (filename) => {
                       if (filename.length > 1024) {
-                         return new Parse.Error(
-                            Parse.Error.INVALID_FILE_NAME,
-                                'Filename too long.',
-                          );
+                         return 'Filename too long.';
                        }
                        return null; // Return null on success
                     },
