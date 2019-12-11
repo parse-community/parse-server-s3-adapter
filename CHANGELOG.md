@@ -1,7 +1,12 @@
 # Change Log
 
+## 1.4.0
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.4.0...master)
+- NEW: Support endpoint in S3Overrides [#79](https://github.com/parse-community/parse-server/pull/79). Thanks to [Kyle Barron](https://github.com/kylebarron)
+- NEW: Support filename validation and AWS directories [#76](https://github.com/parse-community/parse-server/pull/76). Thanks to [Mike Patnode](https://github.com/mpatnode)
+
 ## 1.3.0
-[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.3.0...master)
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.3.0...1.4.0)
 - CHANGE: Conform to FilesAdapter Interface [#73](https://github.com/parse-community/parse-server/pull/73). Thanks to [Diamond Lewis](https://github.com/dplewis)
 - CHANGE: Add airbnb style guide to linter [#72](https://github.com/parse-community/parse-server/pull/72). Thanks to [Diamond Lewis](https://github.com/dplewis)
 - NEW: Support byte range requests [#71](https://github.com/parse-community/parse-server/pull/71). Thanks to [Diamond Lewis](https://github.com/dplewis)
