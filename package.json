@@ -1,6 +1,6 @@
 {
   "name": "@parse/s3-files-adapter",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "AWS S3 adapter for parse-server",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/parse-community/parse-server-s3-adapter#readme",
   "dependencies": {
-    "aws-sdk": "^2.59.0"
+    "aws-sdk": "^2.59.0",
+    "parse": "^2.9.1"
   },
   "devDependencies": {
     "codecov": "^3.0.0",

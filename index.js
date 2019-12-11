@@ -26,6 +26,9 @@ class S3Adapter {
     this._signatureVersion = options.signatureVersion;
     this._globalCacheControl = options.globalCacheControl;
     this._encryption = options.ServerSideEncryption;
+    this._generateKey = options.generateKey;
+    // Optional FilesAdaptor method
+    this.validateFilename = options.validateFilename;
 
     const s3Options = {
       params: { Bucket: this._bucket },
@@ -68,6 +71,11 @@ class S3Adapter {
       Key: this._bucketPrefix + filename,
       Body: data,
     };
+
+    if (this._generateKey instanceof Function) {
+      params.Key = this._bucketPrefix + this._generateKey(filename);
+    }
+
     if (this._directAccess) {
       params.ACL = 'public-read';
     }
@@ -126,7 +134,7 @@ class S3Adapter {
   // The location is the direct S3 link if the option is set,
   // otherwise we serve the file through parse-server
   getFileLocation(config, filename) {
-    const fileName = encodeURIComponent(filename);
+    const fileName = filename.split('/').map(encodeURIComponent).join('/');
     if (this._directAccess) {
       if (this._baseUrl && this._baseUrlDirect) {
         return `${this._baseUrl}/${fileName}`;

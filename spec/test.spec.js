@@ -1,6 +1,7 @@
 const AWS = require('aws-sdk');
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
+const Parse = require('parse').Parse;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 
@@ -299,60 +300,146 @@ describe('S3Adapter tests', () => {
     });
   });
 
-  let s3;
+  describe('validateFilename', () => {
+    let options;
 
-  if (
-    process.env.TEST_S3_ACCESS_KEY
-    && process.env.TEST_S3_SECRET_KEY
-    && process.env.TEST_S3_BUCKET) {
-    // Should be initialized from the env
-    s3 = new S3Adapter({
-      accessKey: process.env.TEST_S3_ACCESS_KEY,
-      secretKey: process.env.TEST_S3_SECRET_KEY,
-      bucket: process.env.TEST_S3_BUCKET,
-    });
-  } else {
-    const bucket = 'FAKE_BUCKET';
-
-    s3 = new S3Adapter({
-      accessKey: 'FAKE_ACCESS_KEY',
-      secretKey: 'FAKE_SECRET_KEY',
-      bucket,
+    beforeEach(() => {
+      options = {
+        validateFilename: null,
+      };
     });
 
-    const objects = {};
+    it('should be null by default', () => {
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      expect(s3.validateFilename === null).toBe(true);
+    });
 
-    s3._s3Client = {
-      createBucket: (callback) => setTimeout(callback, 100),
-      upload: (params, callback) => setTimeout(() => {
-        const { Key, Body } = params;
-
-        objects[Key] = Body;
-
-        callback(null, {
-          Location: `https://${bucket}.s3.amazonaws.com/${Key}`,
-        });
-      }, 100),
-      deleteObject: (params, callback) => setTimeout(() => {
-        const { Key } = params;
-
-        delete objects[Key];
-
-        callback(null, {});
-      }, 100),
-      getObject: (params, callback) => setTimeout(() => {
-        const { Key } = params;
-
-        if (objects[Key]) {
-          callback(null, {
-            Body: Buffer.from(objects[Key], 'utf8'),
-          });
-        } else {
-          callback(new Error('Not found'));
+    it('should not allow directories when overridden', () => {
+      options.validateFilename = (filename) => {
+        if (filename.indexOf('/') !== -1) {
+          return new Parse.Error(
+            Parse.Error.INVALID_FILE_NAME,
+            'Filename contains invalid characters.',
+          );
         }
-      }, 100),
-    };
+        return null;
+      };
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      expect(s3.validateFilename('foo/bar') instanceof Parse.Error).toBe(true);
+    });
+  });
+
+  function makeS3Adapter(options) {
+    let s3;
+
+    if (
+      process.env.TEST_S3_ACCESS_KEY
+      && process.env.TEST_S3_SECRET_KEY
+      && process.env.TEST_S3_BUCKET) {
+      // Should be initialized from the env
+      s3 = new S3Adapter(Object.assign({
+        accessKey: process.env.TEST_S3_ACCESS_KEY,
+        secretKey: process.env.TEST_S3_SECRET_KEY,
+        bucket: process.env.TEST_S3_BUCKET,
+      }, options));
+    } else {
+      const bucket = 'FAKE_BUCKET';
+
+      s3 = new S3Adapter('FAKE_ACCESS_KEY', 'FAKE_SECRET_KEY', bucket, options);
+
+      const objects = {};
+
+      s3._s3Client = {
+        createBucket: (callback) => setTimeout(callback, 100),
+        upload: (params, callback) => setTimeout(() => {
+          const { Key, Body } = params;
+
+          objects[Key] = Body;
+
+          callback(null, {
+            Location: `https://${bucket}.s3.amazonaws.com/${Key}`,
+          });
+        }, 100),
+        deleteObject: (params, callback) => setTimeout(() => {
+          const { Key } = params;
+
+          delete objects[Key];
+
+          callback(null, {});
+        }, 100),
+        getObject: (params, callback) => setTimeout(() => {
+          const { Key } = params;
+
+          if (objects[Key]) {
+            callback(null, {
+              Body: Buffer.from(objects[Key], 'utf8'),
+            });
+          } else {
+            callback(new Error('Not found'));
+          }
+        }, 100),
+      };
+    }
+    return s3;
   }
 
-  filesAdapterTests.testAdapter('S3Adapter', s3);
+  describe('generateKey', () => {
+    let options;
+    const promises = [];
+
+    beforeEach(() => {
+      options = {
+        bucketPrefix: 'test/',
+        generateKey: (filename) => {
+          let key = '';
+          const lastSlash = filename.lastIndexOf('/');
+          const prefix = `${Date.now()}_`;
+          if (lastSlash > 0) {
+            // put the prefix before the last component of the filename
+            key += filename.substring(0, lastSlash + 1) + prefix
+                + filename.substring(lastSlash + 1);
+          } else {
+            key += prefix + filename;
+          }
+          return key;
+        },
+      };
+    });
+
+    it('should return a file with a date stamp inserted in the path', () => {
+      const s3 = makeS3Adapter(options);
+      const fileName = 'randomFileName.txt';
+      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
+        const url = new URL(value.Location);
+        expect(url.pathname.indexOf(fileName) > 13).toBe(true);
+      });
+      promises.push(response);
+    });
+
+    it('should do nothing when null', () => {
+      options.generateKey = null;
+      const s3 = makeS3Adapter(options);
+      const fileName = 'foo/randomFileName.txt';
+      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
+        const url = new URL(value.Location);
+        expect(url.pathname.substring(1)).toEqual(options.bucketPrefix + fileName);
+      });
+      promises.push(response);
+    });
+
+    it('should add unique timestamp to the file name after the last directory when there is a path', () => {
+      const s3 = makeS3Adapter(options);
+      const fileName = 'foo/randomFileName.txt';
+      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
+        const url = new URL(value.Location);
+        expect(url.pathname.indexOf('foo/')).toEqual(6);
+        expect(url.pathname.indexOf('random') > 13).toBe(true);
+      });
+      promises.push(response);
+    });
+
+    afterAll(() => Promise.all(promises));
+  });
+
+  filesAdapterTests.testAdapter('S3Adapter', makeS3Adapter({}));
 });

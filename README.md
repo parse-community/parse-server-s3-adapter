@@ -66,11 +66,14 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
-      "ServerSideEncryption": 'AES256|aws:kms' //AES256 or aws:kms, or if you do not pass this, encryption won't be done
+      "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
+      "validateFilename": null, // Default to parse-server FilesAdapter::validateFilename.   
+      "generateKey": null // Will default to Parse.FilesController.preserveFileName
     }
   }
 }
 ```
+***Note*** By default Parse.FilesController.preserveFileName will prefix all filenames with a random hex code.   You will want to disable that if you enable it here or wish to use S3 "directories".
 
 ### using environment variables
 
@@ -109,7 +112,16 @@ var s3Adapter = new S3Adapter('accessKey',
                     directAccess: false,
                     baseUrl: 'http://images.example.com',
                     signatureVersion: 'v4',
-                    globalCacheControl: 'public, max-age=86400'  // 24 hrs Cache-Control.
+                    globalCacheControl: 'public, max-age=86400',  // 24 hrs Cache-Control.
+                    validateFilename: (filename) => {
+                      if (filename.length > 1024) {
+                         return 'Filename too long.';
+                       }
+                       return null; // Return null on success
+                    },
+                    generateKey: (filename) => {
+                        return `${Date.now()}_${filename}`; // unique prefix for every filename
+                    }
                   });
 
 var api = new ParseServer({
@@ -145,7 +157,9 @@ var s3Options = {
   "directAccess": false, // default value
   "baseUrl": null // default value
   "signatureVersion": 'v4', // default value
-  "globalCacheControl": null // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+  "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+  "validateFilename": () => null, // Anything goes!
+  "generateKey": (filename) => filename,  // Ensure Parse.FilesController.preserveFileName is true!
 }
 
 var s3Adapter = new S3Adapter(s3Options);
