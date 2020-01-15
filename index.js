@@ -11,6 +11,16 @@ const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice
     'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details');
 };
 
+const serialize = (obj) => {
+  const str = [];
+  Object.keys(obj).forEach((key) => {
+    if (obj[key]) {
+      str.push(`${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`);
+    }
+  });
+  return str.join('&');
+};
+
 class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
@@ -66,7 +76,7 @@ class S3Adapter {
 
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
-  createFile(filename, data, contentType) {
+  createFile(filename, data, contentType, options = {}) {
     const params = {
       Key: this._bucketPrefix + filename,
       Body: data,
@@ -87,6 +97,13 @@ class S3Adapter {
     }
     if (this._encryption === 'AES256' || this._encryption === 'aws:kms') {
       params.ServerSideEncryption = this._encryption;
+    }
+    if (options.metadata && typeof options.metadata === 'object') {
+      params.Metadata = options.metadata;
+    }
+    if (options.tags && typeof options.tags === 'object') {
+      const serializedTags = serialize(options.tags);
+      params.Tagging = serializedTags;
     }
     return this.createBucket().then(() => new Promise((resolve, reject) => {
       this._s3Client.upload(params, (err, response) => {
