@@ -441,5 +441,44 @@ describe('S3Adapter tests', () => {
     afterAll(() => Promise.all(promises));
   });
 
+  describe('createFile', () => {
+    let options;
+    beforeEach(() => {
+      options = {
+        bucketPrefix: 'test/',
+      };
+    });
+
+    it('should save a file with metadata added', async () => {
+      const s3 = makeS3Adapter(options);
+      s3._s3Client.upload = (params, callback) => {
+        const { Metadata } = params;
+        expect(Metadata).toEqual({ foo: 'bar' });
+        const data = {
+          Body: Buffer.from('hello world', 'utf8'),
+        };
+        callback(null, data);
+      };
+      const fileName = 'randomFileName.txt';
+      const metadata = { foo: 'bar' };
+      await s3.createFile(fileName, 'hello world', 'text/utf8', { metadata });
+    });
+
+    it('should save a file with tags added', async () => {
+      const s3 = makeS3Adapter(options);
+      s3._s3Client.upload = (params, callback) => {
+        const { Tagging } = params;
+        expect(Tagging).toEqual('foo=bar&baz=bin');
+        const data = {
+          Body: Buffer.from('hello world', 'utf8'),
+        };
+        callback(null, data);
+      };
+      const fileName = 'randomFileName.txt';
+      const tags = { foo: 'bar', baz: 'bin' };
+      await s3.createFile(fileName, 'hello world', 'text/utf8', { tags });
+    });
+  });
+
   filesAdapterTests.testAdapter('S3Adapter', makeS3Adapter({}));
 });
