@@ -67,7 +67,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
       "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
-      "validateFilename": null, // Default to parse-server FilesAdapter::validateFilename.   
+      "validateFilename": null, // Default to parse-server FilesAdapter::validateFilename.
       "generateKey": null // Will default to Parse.FilesController.preserveFileName
     }
   }
@@ -170,7 +170,7 @@ var api = new ParseServer({
   filesAdapter: s3Adapter
 })
 ```
-### Usage with Digital Ocean Spaces 
+### Usage with Digital Ocean Spaces
 
 ```
 var S3Adapter = require("@parse/s3-files-adapter");
@@ -180,10 +180,10 @@ var AWS = require("aws-sdk");
 const spacesEndpoint = new AWS.Endpoint(process.env.SPACES_ENDPOINT);
 var s3Options = {
   bucket: process.env.SPACES_BUCKET_NAME,
-  baseUrl: process.env.SPACES_BASE_URL, 
+  baseUrl: process.env.SPACES_BASE_URL,
   region: process.env.SPACES_REGION,
   directAccess: true,
-  globalCacheControl: "public, max-age=31536000", 
+  globalCacheControl: "public, max-age=31536000",
   bucketPrefix: process.env.SPACES_BUCKET_PREFIX,
   s3overrides: {
     accessKeyId: process.env.SPACES_ACCESS_KEY,
@@ -198,11 +198,40 @@ var api = new ParseServer({
   databaseURI: process.env.DATABASE_URI || "mongodb://localhost:27017/dev",
   cloud: process.env.CLOUD_CODE_MAIN || __dirname + "/cloud/main.js",
   appId: process.env.APP_ID || "myAppId",
-  masterKey: process.env.MASTER_KEY || "", 
-  serverURL: process.env.SERVER_URL || "http://localhost:1337/parse", 
+  masterKey: process.env.MASTER_KEY || "",
+  serverURL: process.env.SERVER_URL || "http://localhost:1337/parse",
   logLevel: process.env.LOG_LEVEL || "info",
   allowClientClassCreation: false,
   filesAdapter: s3Adapter,
   }
 });
 ```
+
+### Adding Metadata and Tags
+
+Use the optional options argument to add [Metadata](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html) and/or [Tags](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-tags.html) to S3 objects
+
+```
+
+
+const S3Adapter = require('@parse/s3-files-adapter');
+
+const s3Options = {}; // Add correct options
+const s3Adapter = new S3Adapter(s3Options);
+
+const filename = 'Fictional_Characters.txt';
+const data = 'That\'s All Folks!';
+const contentType = 'text/plain';
+const tags = {
+  createdBy: 'Elmer Fudd',
+  owner: 'Popeye'
+};
+const metadata = {
+  source: 'Mickey Mouse'
+};
+const options = { tags, metadata };
+s3Adapter.createFile(filename, data, contentType, options);
+
+```
+
+**Note:** This adapter will **automatically** add the "x-amz-meta-" prefix to the beginning of metadata tags as stated in [S3 Documentation](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html).
