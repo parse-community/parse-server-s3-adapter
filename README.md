@@ -209,7 +209,7 @@ var api = new ParseServer({
 
 ### Adding Metadata and Tags
 
-Use the options argument to add [Metadata](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html) and/or [Tags](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-tags.html) to S3 objects
+Use the optional options argument to add [Metadata](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html) and/or [Tags](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-tags.html) to S3 objects
 
 ```
 
@@ -234,4 +234,4 @@ s3Adapter.createFile(filename, data, contentType, options);
 
 ```
 
-**Note** This adapter will **automatically** add the "x-amz-meta-" prefix to the beginning of metadata tags as stated in [S3 Documentation](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html).
+**Note:** This adapter will **automatically** add the "x-amz-meta-" prefix to the beginning of metadata tags as stated in [S3 Documentation](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html).
