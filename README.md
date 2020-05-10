@@ -52,8 +52,8 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
 *(This list is still incomplete and in the works, in the meantime find more descriptions in the chapters below.)*
 
 | Parameter | Optional | Default value | Environment variable | Description |
-|-----------|----------|----------|----------|
-| fileAcl | yes | undefined | S3_FILE_ACL | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `none` causes any ACL parameter to be removed that would otherwise be set. |
+|-----------|----------|---------------|----------------------|-------------|
+| `fileAcl` | yes | `undefined` | S3_FILE_ACL | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `'none'` causes any ACL parameter to be removed that would otherwise be set. |
 
 ### Using a config file
 
