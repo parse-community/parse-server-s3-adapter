@@ -31,6 +31,7 @@ class S3Adapter {
     this._bucket = options.bucket;
     this._bucketPrefix = options.bucketPrefix;
     this._directAccess = options.directAccess;
+    this._fileAcl = options.fileAcl;
     this._baseUrl = options.baseUrl;
     this._baseUrlDirect = options.baseUrlDirect;
     this._signatureVersion = options.signatureVersion;
@@ -85,8 +86,13 @@ class S3Adapter {
     if (this._generateKey instanceof Function) {
       params.Key = this._bucketPrefix + this._generateKey(filename);
     }
-
-    if (this._directAccess) {
+    if (this._fileAcl) {
+      if (this._fileAcl === 'none') {
+        delete params.ACL;
+      } else {
+        params.ACL = this._fileAcl;
+      }
+    } else if (this._directAccess) {
       params.ACL = 'public-read';
     }
     if (contentType) {

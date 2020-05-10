@@ -45,9 +45,17 @@ This option is provided for backward compatibility and will be removed in the fo
 
 The preferred method is to use the default AWS credentials pattern.  If no AWS credentials are explicitly configured, the AWS SDK will look for credentials in the standard locations used by all AWS SDKs and the AWS CLI. More info can be found in [the docs](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#config-settings-and-precedence).  For more information on AWS best practices, see [IAM Best Practices User Guide](http://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html).
 
-# usage with parse-server
+# Usage with Parse Server
 
-### using a config file
+### Parameters
+
+*(This list is still incomplete and in the works, in the meantime find more descriptions in the chapters below.)*
+
+| Parameter | Optional | Default value | Environment variable | Description |
+|-----------|----------|----------|----------|
+| fileAcl | yes | undefined | S3_FILE_ACL | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `none` causes any ACL parameter to be removed that would otherwise be set. |
+
+### Using a config file
 
 ```
 {
@@ -62,6 +70,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "region": 'us-east-1', // default value
       "bucketPrefix": '', // default value
       "directAccess": false, // default value
+      "fileAcl": null, // default value
       "baseUrl": null, // default value
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value

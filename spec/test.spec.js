@@ -6,6 +6,60 @@ const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 
 describe('S3Adapter tests', () => {
+  function makeS3Adapter(options) {
+    let s3;
+
+    if (
+      process.env.TEST_S3_ACCESS_KEY
+      && process.env.TEST_S3_SECRET_KEY
+      && process.env.TEST_S3_BUCKET) {
+      // Should be initialized from the env
+      s3 = new S3Adapter(Object.assign({
+        accessKey: process.env.TEST_S3_ACCESS_KEY,
+        secretKey: process.env.TEST_S3_SECRET_KEY,
+        bucket: process.env.TEST_S3_BUCKET,
+      }, options));
+    } else {
+      const bucket = 'FAKE_BUCKET';
+
+      s3 = new S3Adapter('FAKE_ACCESS_KEY', 'FAKE_SECRET_KEY', bucket, options);
+
+      const objects = {};
+
+      s3._s3Client = {
+        createBucket: (callback) => setTimeout(callback, 100),
+        upload: (params, callback) => setTimeout(() => {
+          const { Key, Body } = params;
+
+          objects[Key] = Body;
+
+          callback(null, {
+            Location: `https://${bucket}.s3.amazonaws.com/${Key}`,
+          });
+        }, 100),
+        deleteObject: (params, callback) => setTimeout(() => {
+          const { Key } = params;
+
+          delete objects[Key];
+
+          callback(null, {});
+        }, 100),
+        getObject: (params, callback) => setTimeout(() => {
+          const { Key } = params;
+
+          if (objects[Key]) {
+            callback(null, {
+              Body: Buffer.from(objects[Key], 'utf8'),
+            });
+          } else {
+            callback(new Error('Not found'));
+          }
+        }, 100),
+      };
+    }
+    return s3;
+  }
+
   beforeEach(() => {
     delete process.env.S3_BUCKET;
     delete process.env.S3_REGION;
@@ -329,60 +383,6 @@ describe('S3Adapter tests', () => {
     });
   });
 
-  function makeS3Adapter(options) {
-    let s3;
-
-    if (
-      process.env.TEST_S3_ACCESS_KEY
-      && process.env.TEST_S3_SECRET_KEY
-      && process.env.TEST_S3_BUCKET) {
-      // Should be initialized from the env
-      s3 = new S3Adapter(Object.assign({
-        accessKey: process.env.TEST_S3_ACCESS_KEY,
-        secretKey: process.env.TEST_S3_SECRET_KEY,
-        bucket: process.env.TEST_S3_BUCKET,
-      }, options));
-    } else {
-      const bucket = 'FAKE_BUCKET';
-
-      s3 = new S3Adapter('FAKE_ACCESS_KEY', 'FAKE_SECRET_KEY', bucket, options);
-
-      const objects = {};
-
-      s3._s3Client = {
-        createBucket: (callback) => setTimeout(callback, 100),
-        upload: (params, callback) => setTimeout(() => {
-          const { Key, Body } = params;
-
-          objects[Key] = Body;
-
-          callback(null, {
-            Location: `https://${bucket}.s3.amazonaws.com/${Key}`,
-          });
-        }, 100),
-        deleteObject: (params, callback) => setTimeout(() => {
-          const { Key } = params;
-
-          delete objects[Key];
-
-          callback(null, {});
-        }, 100),
-        getObject: (params, callback) => setTimeout(() => {
-          const { Key } = params;
-
-          if (objects[Key]) {
-            callback(null, {
-              Body: Buffer.from(objects[Key], 'utf8'),
-            });
-          } else {
-            callback(new Error('Not found'));
-          }
-        }, 100),
-      };
-    }
-    return s3;
-  }
-
   describe('generateKey', () => {
     let options;
     const promises = [];
@@ -477,6 +477,67 @@ describe('S3Adapter tests', () => {
       const fileName = 'randomFileName.txt';
       const tags = { foo: 'bar', baz: 'bin' };
       await s3.createFile(fileName, 'hello world', 'text/utf8', { tags });
+    });
+
+    it('should save a file with proper ACL with direct access', async () => {
+      // Create adapter
+      options.directAccess = true;
+      const s3 = makeS3Adapter(options);
+      spyOn(s3._s3Client, 'upload').and.callThrough();
+      // Save file
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      // Validate
+      const calls = s3._s3Client.upload.calls.all();
+      expect(calls.length).toBe(1);
+      calls.forEach((call) => {
+        expect(call.args[0].ACL).toBe('public-read');
+      });
+    });
+
+    it('should save a file with proper ACL without direct access', async () => {
+      // Create adapter
+      const s3 = makeS3Adapter(options);
+      spyOn(s3._s3Client, 'upload').and.callThrough();
+      // Save file
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      // Validate
+      const calls = s3._s3Client.upload.calls.all();
+      expect(calls.length).toBe(1);
+      calls.forEach((call) => {
+        expect(call.args[0].ACL).toBeUndefined();
+      });
+    });
+
+    it('should save a file and override ACL with direct access', async () => {
+      // Create adapter
+      options.directAccess = true;
+      options.fileAcl = 'private';
+      const s3 = makeS3Adapter(options);
+      spyOn(s3._s3Client, 'upload').and.callThrough();
+      // Save file
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      // Validate
+      const calls = s3._s3Client.upload.calls.all();
+      expect(calls.length).toBe(1);
+      calls.forEach((call) => {
+        expect(call.args[0].ACL).toBe('private');
+      });
+    });
+
+    it('should save a file and remove ACL with direct access', async () => {
+      // Create adapter
+      options.directAccess = true;
+      options.fileAcl = 'none';
+      const s3 = makeS3Adapter(options);
+      spyOn(s3._s3Client, 'upload').and.callThrough();
+      // Save file
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      // Validate
+      const calls = s3._s3Client.upload.calls.all();
+      expect(calls.length).toBe(1);
+      calls.forEach((call) => {
+        expect(call.args[0].ACL).toBeUndefined();
+      });
     });
   });
 
