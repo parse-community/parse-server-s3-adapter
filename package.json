@@ -29,7 +29,7 @@
     "parse": "2.13.0"
   },
   "devDependencies": {
-    "codecov": "3.6.5",
+    "codecov": "3.7.1",
     "config": "3.2.4",
     "eslint": "6.7.2",
     "eslint-config-airbnb-base": "14.0.0",
