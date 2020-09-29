@@ -1,7 +1,12 @@
 # Change Log
 
+## 1.5.0
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.5.0...master)
+- NEW: Add file ACL override parameter [#90](https://github.com/parse-community/parse-server/pull/90). Thanks to [Manuel](https://github.com/mtrezza)
+- NEW: Added support for metadata and tagging files [#83](https://github.com/parse-community/parse-server/pull/83). Thanks to [stevestencil](https://github.com/stevestencil)
+
 ## 1.4.0
-[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.4.0...master)
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.4.0...1.5.0)
 - NEW: Support endpoint in S3Overrides [#79](https://github.com/parse-community/parse-server/pull/79). Thanks to [Kyle Barron](https://github.com/kylebarron)
 - NEW: Support filename validation and AWS directories [#76](https://github.com/parse-community/parse-server/pull/76). Thanks to [Mike Patnode](https://github.com/mpatnode)
 
