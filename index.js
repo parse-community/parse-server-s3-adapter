@@ -161,7 +161,7 @@ class S3Adapter {
 
     if (this._directAccess) {
       if(this._baseUrl){
-        if (this._baseUrl === 'function') {
+        if (typeof this._baseUrl === 'function') {
           if (this._baseUrlDirect) {
             return `${this._baseUrl(config,filename)}/${fileName}`;
           }
