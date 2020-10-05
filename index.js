@@ -158,11 +158,22 @@ class S3Adapter {
   // otherwise we serve the file through parse-server
   getFileLocation(config, filename) {
     const fileName = filename.split('/').map(encodeURIComponent).join('/');
+
     if (this._directAccess) {
-      if (this._baseUrl && this._baseUrlDirect) {
-        return `${this._baseUrl}/${fileName}`;
-      } if (this._baseUrl) {
-        return `${this._baseUrl}/${this._bucketPrefix + fileName}`;
+      if(this._baseUrl){
+        if (this._baseUrl instanceof Function) {
+          if (this._baseUrlDirect) {
+            return `${this._baseUrl(filename)}/${fileName}`;
+          }
+          return `${this._baseUrl(filename)}/${this._bucketPrefix + fileName}`;
+        }
+        else{
+          if (this._baseUrlDirect) {
+            return `${this._baseUrl}/${fileName}`;
+          }
+          return `${this._baseUrl}/${this._bucketPrefix + fileName}`;
+        }
+        
       }
       return `https://${this._bucket}.s3.amazonaws.com/${this._bucketPrefix + fileName}`;
     }
