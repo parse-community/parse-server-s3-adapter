@@ -365,8 +365,8 @@ describe('S3Adapter tests', () => {
       options = {
         directAccess: true,
         bucketPrefix: 'foo/bar/',
-        baseUrl: (config, filename) => {
-          if(filename.length > 12) {
+        baseUrl: (fileonfig, filename) => {
+          if (filename.length > 12) {
             return 'http://example.com/files';
           }
           return 'http://example.com/files';
