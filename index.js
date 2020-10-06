@@ -162,11 +162,10 @@ class S3Adapter {
       if (this._baseUrl) {
         if (typeof this._baseUrl === 'function') {
           if (this._baseUrlDirect) {
-            return `${this._baseUrl(config , filename)}/${fileName}`;
+            return `${this._baseUrl(config, filename)}/${fileName}`;
           }
-          return `${this._baseUrl(config,filename)}/${this._bucketPrefix + fileName}`;
-        }
-        else {
+          return `${this._baseUrl(config, filename)}/${this._bucketPrefix + fileName}`;
+        } else {
           if (this._baseUrlDirect) {
             return `${this._baseUrl}/${fileName}`;
           }
