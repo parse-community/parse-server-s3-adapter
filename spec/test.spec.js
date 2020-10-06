@@ -366,7 +366,10 @@ describe('S3Adapter tests', () => {
         directAccess: true,
         bucketPrefix: 'foo/bar/',
         baseUrl: (config, filename) => {
-            return 'http://example.com/files'; // unique prefix for every filename
+          if(filename.length > 12) {
+            return 'http://example.com/files';
+          }
+          return 'http://example.com/files';
         },
       };
     });
@@ -393,7 +396,7 @@ describe('S3Adapter tests', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://myBucket.s3.amazonaws.com/foo/bar/test.png');
     });
-  });  
+  });
 
   describe('validateFilename', () => {
     let options;
