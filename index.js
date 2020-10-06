@@ -165,7 +165,7 @@ class S3Adapter {
             return `${this._baseUrl(config, filename)}/${fileName}`;
           }
           return `${this._baseUrl(config, filename)}/${this._bucketPrefix + fileName}`;
-        } 
+        }
         if (this._baseUrlDirect) {
           return `${this._baseUrl}/${fileName}`;
         }
