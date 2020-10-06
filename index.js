@@ -165,12 +165,11 @@ class S3Adapter {
             return `${this._baseUrl(config, filename)}/${fileName}`;
           }
           return `${this._baseUrl(config, filename)}/${this._bucketPrefix + fileName}`;
-        } else {
-          if (this._baseUrlDirect) {
-            return `${this._baseUrl}/${fileName}`;
-          }
-          return `${this._baseUrl}/${this._bucketPrefix + fileName}`;
+        } 
+        if (this._baseUrlDirect) {
+          return `${this._baseUrl}/${fileName}`;
         }
+        return `${this._baseUrl}/${this._bucketPrefix + fileName}`;
       }
       return `https://${this._bucket}.s3.amazonaws.com/${this._bucketPrefix + fileName}`;
     }
