@@ -353,7 +353,6 @@ describe('S3Adapter tests', () => {
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://myBucket.s3.amazonaws.com/foo/bar/test.png');
     });
   });
-  
   describe('getFileLocation', () => {
     const testConfig = {
       mount: 'http://my.server.com/parse',
