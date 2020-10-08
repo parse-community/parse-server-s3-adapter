@@ -1,6 +1,6 @@
 # parse-server-s3-adapter
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/parse-community/parse-server-s3-adapter.svg)](https://greenkeeper.io/)
+[![Known Vulnerabilities](https://snyk.io/test/github/parse-community/parse-server-s3-adapter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/parse-community/parse-server-s3-adapter?targetFile=package.json)
 [![codecov.io](https://codecov.io/github/parse-community/parse-server-s3-adapter/coverage.svg?branch=master)](https://codecov.io/github/parse-community/parse-server-s3-adapter?branch=master)
 [![Build Status](https://travis-ci.org/parse-community/parse-server-s3-adapter.svg?branch=master)](https://travis-ci.org/parse-community/parse-server-s3-adapter)
 
