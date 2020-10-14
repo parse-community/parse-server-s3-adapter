@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.6.0
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.5.0...1.6.0)
+- NEW: Support passing baseUrl param as a function [#106](https://github.com/parse-community/parse-server/pull/106). Thanks to [uzaysan](https://github.com/uzaysan)
+
 ## 1.5.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.4.0...1.5.0)
 - NEW: Add file ACL override parameter [#90](https://github.com/parse-community/parse-server/pull/90). Thanks to [Manuel](https://github.com/mtrezza)
