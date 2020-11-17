@@ -36,6 +36,8 @@ class S3Adapter {
     this._baseUrlDirect = options.baseUrlDirect;
     this._signatureVersion = options.signatureVersion;
     this._globalCacheControl = options.globalCacheControl;
+    this._presignedUrl = options.presignedUrl;
+    this._presignedUrlExpires = parseInt(options.presignedUrlExpires, 10);
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
     // Optional FilesAdaptor method
@@ -159,6 +161,10 @@ class S3Adapter {
   getFileLocation(config, filename) {
     const fileName = filename.split('/').map(encodeURIComponent).join('/');
     if (this._directAccess) {
+      if (this._presignedUrl) {
+        const params = { Bucket: this._bucket, Key: fileName, Expires: this._presignedUrlExpires };
+        return this._s3Client.getSignedUrl('getObject', params);
+      }
       if (this._baseUrl) {
         if (typeof this._baseUrl === 'function') {
           if (this._baseUrlDirect) {
