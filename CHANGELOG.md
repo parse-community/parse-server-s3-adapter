@@ -2,23 +2,23 @@
 
 ## 1.6.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.5.0...1.6.0)
-- NEW: Support passing baseUrl param as a function [#106](https://github.com/parse-community/parse-server/pull/106). Thanks to [uzaysan](https://github.com/uzaysan)
+- NEW: Support passing baseUrl param as a function [#106](https://github.com/parse-community/parse-server-s3-adapter/pull/106). Thanks to [uzaysan](https://github.com/uzaysan)
 
 ## 1.5.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.4.0...1.5.0)
-- NEW: Add file ACL override parameter [#90](https://github.com/parse-community/parse-server/pull/90). Thanks to [Manuel](https://github.com/mtrezza)
-- NEW: Added support for metadata and tagging files [#83](https://github.com/parse-community/parse-server/pull/83). Thanks to [stevestencil](https://github.com/stevestencil)
+- NEW: Add file ACL override parameter [#90](https://github.com/parse-community/parse-server-s3-adapter/pull/90). Thanks to [Manuel](https://github.com/mtrezza)
+- NEW: Added support for metadata and tagging files [#83](https://github.com/parse-community/parse-server-s3-adapter/pull/83). Thanks to [stevestencil](https://github.com/stevestencil)
 
 ## 1.4.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.3.0...1.4.0)
-- NEW: Support endpoint in S3Overrides [#79](https://github.com/parse-community/parse-server/pull/79). Thanks to [Kyle Barron](https://github.com/kylebarron)
-- NEW: Support filename validation and AWS directories [#76](https://github.com/parse-community/parse-server/pull/76). Thanks to [Mike Patnode](https://github.com/mpatnode)
+- NEW: Support endpoint in S3Overrides [#79](https://github.com/parse-community/parse-server-s3-adapter/pull/79). Thanks to [Kyle Barron](https://github.com/kylebarron)
+- NEW: Support filename validation and AWS directories [#76](https://github.com/parse-community/parse-server-s3-adapter/pull/76). Thanks to [Mike Patnode](https://github.com/mpatnode)
 
 ## 1.3.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.2.3...1.3.0)
-- CHANGE: Conform to FilesAdapter Interface [#73](https://github.com/parse-community/parse-server/pull/73). Thanks to [Diamond Lewis](https://github.com/dplewis)
-- CHANGE: Add airbnb style guide to linter [#72](https://github.com/parse-community/parse-server/pull/72). Thanks to [Diamond Lewis](https://github.com/dplewis)
-- NEW: Support byte range requests [#71](https://github.com/parse-community/parse-server/pull/71). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- CHANGE: Conform to FilesAdapter Interface [#73](https://github.com/parse-community/parse-server-s3-adapter/pull/73). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- CHANGE: Add airbnb style guide to linter [#72](https://github.com/parse-community/parse-server-s3-adapter/pull/72). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- NEW: Support byte range requests [#71](https://github.com/parse-community/parse-server-s3-adapter/pull/71). Thanks to [Diamond Lewis](https://github.com/dplewis)
 
 ## 1.2.3
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.2.2...1.2.3)
