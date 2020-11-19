@@ -116,7 +116,6 @@ describe('S3Adapter tests', () => {
       });
     });
 
-
     describe('should not throw when initialized properly', () => {
       it('should accept a string bucket', () => {
         expect(() => {
