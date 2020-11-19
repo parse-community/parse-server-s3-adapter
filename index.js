@@ -161,28 +161,24 @@ class S3Adapter {
   getFileLocation(config, filename) {
     const fileName = filename.split('/').map(encodeURIComponent).join('/');
     if (this._directAccess) {
+      const fileKey = `${this._bucketPrefix}${fileName}`;
+
       let presignedUrl = '';
       if (this._presignedUrl) {
-        const params = {
-          Bucket: this._bucket,
-          Key: this._bucketPrefix + fileName,
-          Expires: this._presignedUrlExpires,
-        };
+        const params = { Bucket: this._bucket, Key: fileKey, Expires: this._presignedUrlExpires };
         presignedUrl = this._s3Client.getSignedUrl('getObject', params);
       }
       if (this._baseUrl) {
-        let directAccessUrl;
+        let directAccessFileKey = fileKey;
+        if (this._baseUrlDirect) {
+          directAccessFileKey = fileName;
+        }
 
+        let directAccessUrl;
         if (typeof this._baseUrl === 'function') {
-          if (this._baseUrlDirect) {
-            directAccessUrl = `${this._baseUrl(config, filename)}/${fileName}`;
-          } else {
-            directAccessUrl = `${this._baseUrl(config, filename)}/${this._bucketPrefix + fileName}`;
-          }
-        } else if (this._baseUrlDirect) {
-          directAccessUrl = `${this._baseUrl}/${fileName}`;
+          directAccessUrl = `${this._baseUrl(config, filename)}/${directAccessFileKey}`;
         } else {
-          directAccessUrl = `${this._baseUrl}/${this._bucketPrefix + fileName}`;
+          directAccessUrl = `${this._baseUrl}/${directAccessFileKey}`;
         }
 
         if (this._presignedUrl) {
@@ -193,7 +189,7 @@ class S3Adapter {
       if (this._presignedUrl) {
         return presignedUrl;
       }
-      return `https://${this._bucket}.s3.amazonaws.com/${this._bucketPrefix + fileName}`;
+      return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
     }
     return `${config.mount}/files/${config.applicationId}/${fileName}`;
   }
