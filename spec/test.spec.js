@@ -316,84 +316,43 @@ describe('S3Adapter tests', () => {
   });
 
   describe('getFileLocation', () => {
-    const testConfig = {
-      mount: 'http://my.server.com/parse',
-      applicationId: 'xxxx',
-    };
-    let options;
-
-    beforeEach(() => {
-      options = {
-        directAccess: true,
-        bucketPrefix: 'foo/bar/',
-        baseUrl: 'http://example.com/files',
+    ['http://example.com/files', () => 'http://example.com/files'].forEach((baseUrl) => {
+      const testConfig = {
+        mount: 'http://my.server.com/parse',
+        applicationId: 'xxxx',
       };
-    });
+      let options;
 
-    it('should get using the baseUrl', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
-    });
+      beforeEach(() => {
+        options = {
+          directAccess: true,
+          bucketPrefix: 'foo/bar/',
+          baseUrl,
+        };
+      });
 
-    it('should get direct to baseUrl', () => {
-      options.baseUrlDirect = true;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
-    });
+      it('should get using the baseUrl', () => {
+        const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+        expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
+      });
 
-    it('should get without directAccess', () => {
-      options.directAccess = false;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
-    });
+      it('should get direct to baseUrl', () => {
+        options.baseUrlDirect = true;
+        const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+        expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
+      });
 
-    it('should go directly to amazon', () => {
-      delete options.baseUrl;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
-    });
-  });
-  describe('getFileLocation', () => {
-    const testConfig = {
-      mount: 'http://my.server.com/parse',
-      applicationId: 'xxxx',
-    };
-    let options;
+      it('should get without directAccess', () => {
+        options.directAccess = false;
+        const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+        expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
+      });
 
-    beforeEach(() => {
-      options = {
-        directAccess: true,
-        bucketPrefix: 'foo/bar/',
-        baseUrl: (fileconfig, filename) => {
-          if (filename.length > 12) {
-            return 'http://example.com/files';
-          }
-          return 'http://example.com/files';
-        },
-      };
-    });
-
-    it('should get using the baseUrl', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
-    });
-
-    it('should get direct to baseUrl', () => {
-      options.baseUrlDirect = true;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
-    });
-
-    it('should get without directAccess', () => {
-      options.directAccess = false;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
-    });
-
-    it('should go directly to amazon', () => {
-      delete options.baseUrl;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
+      it('should go directly to amazon', () => {
+        delete options.baseUrl;
+        const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+        expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
+      });
     });
   });
 
