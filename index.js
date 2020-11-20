@@ -21,6 +21,21 @@ const serialize = (obj) => {
   return str.join('&');
 };
 
+function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, filename) {
+  let directAccessUrl;
+  if (typeof baseUrl === 'function') {
+    directAccessUrl = `${baseUrl(config, filename)}/${baseUrlFileKey}`;
+  } else {
+    directAccessUrl = `${baseUrl}/${baseUrlFileKey}`;
+  }
+
+  if (presignedUrl) {
+    directAccessUrl += presignedUrl.substring(presignedUrl.indexOf('?'));
+  }
+
+  return directAccessUrl;
+}
+
 class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
@@ -160,38 +175,27 @@ class S3Adapter {
   // otherwise we serve the file through parse-server
   getFileLocation(config, filename) {
     const fileName = filename.split('/').map(encodeURIComponent).join('/');
-    if (this._directAccess) {
-      const fileKey = `${this._bucketPrefix}${fileName}`;
+    if (!this._directAccess) {
+      return `${config.mount}/files/${config.applicationId}/${fileName}`;
+    }
 
-      let presignedUrl = '';
-      if (this._presignedUrl) {
-        const params = { Bucket: this._bucket, Key: fileKey, Expires: this._presignedUrlExpires };
-        presignedUrl = this._s3Client.getSignedUrl('getObject', params);
-      }
-      if (this._baseUrl) {
-        let directAccessFileKey = fileKey;
-        if (this._baseUrlDirect) {
-          directAccessFileKey = fileName;
-        }
+    const fileKey = `${this._bucketPrefix}${fileName}`;
 
-        let directAccessUrl;
-        if (typeof this._baseUrl === 'function') {
-          directAccessUrl = `${this._baseUrl(config, filename)}/${directAccessFileKey}`;
-        } else {
-          directAccessUrl = `${this._baseUrl}/${directAccessFileKey}`;
-        }
-
-        if (this._presignedUrl) {
-          directAccessUrl += presignedUrl.substring(presignedUrl.indexOf('?'));
-        }
-        return directAccessUrl;
-      }
-      if (this._presignedUrl) {
+    let presignedUrl = '';
+    if (this._presignedUrl) {
+      const params = { Bucket: this._bucket, Key: fileKey, Expires: this._presignedUrlExpires };
+      presignedUrl = this._s3Client.getSignedUrl('getObject', params);
+      if (!this._baseUrl) {
         return presignedUrl;
       }
+    }
+
+    if (!this._baseUrl) {
       return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
     }
-    return `${config.mount}/files/${config.applicationId}/${fileName}`;
+
+    const baseUrlFileKey = this._baseUrlDirect ? fileName : fileKey;
+    return buildDirectAccessUrl(this._baseUrl, baseUrlFileKey, presignedUrl, config, filename);
   }
 
   handleFileStream(filename, req, res) {
