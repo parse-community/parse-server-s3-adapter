@@ -75,8 +75,8 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
-      "presignedUrl": false, // default value
-      "presignedUrlExpires": 300, // default value (300 seconds or 5 minutes)
+      "presignedUrl": false, // Optional. Set to true if yo want a AWS S3 presigned URL. Default is false.
+      "presignedUrlExpires": 300, // Optional. Configure the time that the AWS S3 presigned URL should expire, in seconds. Default is 300 seconds.
       "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
       "validateFilename": null, // Default to parse-server FilesAdapter::validateFilename.
       "generateKey": null // Will default to Parse.FilesController.preserveFileName
