@@ -337,6 +337,22 @@ describe('S3Adapter tests', () => {
         expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
       });
 
+      it('when use presigned URL should use S3 \'getObject\' operation', () => {
+        options.presignedUrl = true;
+        const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+        const originalS3Client = s3._s3Client;
+        let getSignedUrlOperation = '';
+        s3._s3Client = {
+          getSignedUrl: (operation, params, callback) => {
+            getSignedUrlOperation = operation;
+            return originalS3Client.getSignedUrl(operation, params, callback);
+          },
+        };
+
+        s3.getFileLocation(testConfig, 'test.png');
+        expect(getSignedUrlOperation).toBe('getObject');
+      });
+
       it('should get using the baseUrl and amazon using presigned URL', () => {
         options.presignedUrl = true;
         const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
