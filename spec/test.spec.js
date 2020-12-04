@@ -343,11 +343,11 @@ describe('S3Adapter tests', () => {
 
         const fileLocation = s3.getFileLocation(testConfig, 'test.png');
         expect(fileLocation).toMatch(/^http:\/\/example.com\/files\/foo\/bar\/test.png\?/);
-        expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2Fus-east-1%2Fs3%2Faws4_request/);
+        expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2F\w{2}-\w{1,9}-\d%2Fs3%2Faws4_request/);
         expect(fileLocation).toMatch(/X-Amz-Date=\d{8}T\d{6}Z/);
         expect(fileLocation).toMatch(/X-Amz-Signature=.{64}/);
+        expect(fileLocation).toMatch(/X-Amz-Expires=\d{1,6}/);
         expect(fileLocation).toContain('X-Amz-Algorithm=AWS4-HMAC-SHA256');
-        expect(fileLocation).toContain('X-Amz-Expires=900');
         expect(fileLocation).toContain('X-Amz-SignedHeaders=host');
       });
 
@@ -379,8 +379,8 @@ describe('S3Adapter tests', () => {
         expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2Fus-east-1%2Fs3%2Faws4_request/);
         expect(fileLocation).toMatch(/X-Amz-Date=\d{8}T\d{6}Z/);
         expect(fileLocation).toMatch(/X-Amz-Signature=.{64}/);
+        expect(fileLocation).toMatch(/X-Amz-Expires=\d{1,6}/);
         expect(fileLocation).toContain('X-Amz-Algorithm=AWS4-HMAC-SHA256');
-        expect(fileLocation).toContain('X-Amz-Expires=900');
         expect(fileLocation).toContain('X-Amz-SignedHeaders=host');
       });
     });
