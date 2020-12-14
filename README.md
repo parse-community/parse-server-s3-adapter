@@ -1,8 +1,10 @@
 # parse-server-s3-adapter
-
+<a href="https://www.npmjs.com/package/@parse/s3-files-adapter"><img alt="npm version" src="https://img.shields.io/npm/v/@parse/s3-files-adapter.svg?style=flat"></a>
 [![Known Vulnerabilities](https://snyk.io/test/github/parse-community/parse-server-s3-adapter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/parse-community/parse-server-s3-adapter?targetFile=package.json)
 [![codecov.io](https://codecov.io/github/parse-community/parse-server-s3-adapter/coverage.svg?branch=master)](https://codecov.io/github/parse-community/parse-server-s3-adapter?branch=master)
-[![Build Status](https://travis-ci.org/parse-community/parse-server-s3-adapter.svg?branch=master)](https://travis-ci.org/parse-community/parse-server-s3-adapter)
+<a href="https://github.com/parse-community/parse-server-s3-adapter/actions?query=workflow%3Aci+branch%3Amaster">
+  <img alt="Build status" src="https://github.com/parse-community/parse-server-s3-adapter/workflows/ci/badge.svg?branch=master">
+</a>
 
 parse-server adapter for AWS S3
 
