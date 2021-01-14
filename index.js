@@ -107,7 +107,7 @@ class S3Adapter {
     if (options.metadata && typeof options.metadata === 'object') {
       params.Metadata = options.metadata;
     }
-    if (options.tags && typeof options.tags === 'object') {
+    if (options.tags && typeof options.tags === 'object' && Object.keys(options.tags).length > 0) {
       const serializedTags = serialize(options.tags);
       params.Tagging = serializedTags;
     }
