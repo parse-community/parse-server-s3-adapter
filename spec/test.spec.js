@@ -521,6 +521,21 @@ describe('S3Adapter tests', () => {
       await s3.createFile(fileName, 'hello world', 'text/utf8', { tags });
     });
 
+    it('should not send tags to s3 upload function, where tags object is empty', async () => {
+      const s3 = makeS3Adapter(options);
+      s3._s3Client.upload = (params, callback) => {
+        const { Tagging } = params;
+        expect(Tagging).toBeUndefined();
+        const data = {
+          Body: Buffer.from('hello world', 'utf8'),
+        };
+        callback(null, data);
+      };
+      const fileName = 'randomFileName.txt';
+      const tags = { };
+      await s3.createFile(fileName, 'hello world', 'text/utf8', { tags });
+    });
+
     it('should save a file with proper ACL with direct access', async () => {
       // Create adapter
       options.directAccess = true;
