@@ -38,6 +38,7 @@ class S3Adapter {
     this._globalCacheControl = options.globalCacheControl;
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
+    this._isTagging = options.isTagging;
     // Optional FilesAdaptor method
     this.validateFilename = options.validateFilename;
 
@@ -107,7 +108,7 @@ class S3Adapter {
     if (options.metadata && typeof options.metadata === 'object') {
       params.Metadata = options.metadata;
     }
-    if (options.tags && typeof options.tags === 'object') {
+    if (this._isTagging && options.tags && typeof options.tags === 'object') {
       const serializedTags = serialize(options.tags);
       params.Tagging = serializedTags;
     }
