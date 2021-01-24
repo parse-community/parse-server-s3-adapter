@@ -507,10 +507,27 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with tags added', async () => {
+      options.isTagging = true;
       const s3 = makeS3Adapter(options);
       s3._s3Client.upload = (params, callback) => {
         const { Tagging } = params;
         expect(Tagging).toEqual('foo=bar&baz=bin');
+        const data = {
+          Body: Buffer.from('hello world', 'utf8'),
+        };
+        callback(null, data);
+      };
+      const fileName = 'randomFileName.txt';
+      const tags = { foo: 'bar', baz: 'bin' };
+      await s3.createFile(fileName, 'hello world', 'text/utf8', { tags });
+    });
+
+    it('should save a file with disable tags', async () => {
+      options.isTagging = false;
+      const s3 = makeS3Adapter(options);
+      s3._s3Client.upload = (params, callback) => {
+        const { Tagging } = params;
+        expect(Tagging).toEqual(undefined);
         const data = {
           Body: Buffer.from('hello world', 'utf8'),
         };
