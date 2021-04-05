@@ -1,7 +1,17 @@
 # Change Log
 
 ## Unreleased (Master Branch)
-[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.0...master)
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.1...master)
+### Breaking Changes
+none
+### Notable Changes
+none
+### Other Changes
+none
+___
+
+## 1.6.1
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.0...1.6.1)
 ### Breaking Changes
 none
 ### Notable Changes
