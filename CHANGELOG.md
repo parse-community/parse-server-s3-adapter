@@ -1,13 +1,23 @@
 # Change Log
 
 ## Unreleased (Master Branch)
-[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.1...master)
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.2...master)
 ### Breaking Changes
 none
 ### Notable Changes
 none
 ### Other Changes
 none
+___
+
+## 1.6.2
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.1...1.6.2)
+### Breaking Changes
+none
+### Notable Changes
+none
+### Other Changes
+- Upgrade to AWS SDK 2.905.0 (Antonio Davi Macedo Coelho de Castro) [#163](https://github.com/parse-community/parse-server-s3-adapter/pull/163)
 ___
 
 ## 1.6.1
