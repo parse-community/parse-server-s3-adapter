@@ -9,15 +9,18 @@ on:
 jobs:
   test:
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node: [ '12', '14', '15' ]
     timeout-minutes: 30
     env:
       COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: '10.14'
+          node-version: ${{ matrix.node }}
       - name: Cache Node.js modules
         uses: actions/cache@v2
         with:
