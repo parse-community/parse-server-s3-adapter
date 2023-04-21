@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/parse-community/parse-server-s3-adapter/compare/2.0.0...2.0.1) (2023-04-21)
+
+
+### Bug Fixes
+
+* Security upgrade xml2js and aws-sdk ([#181](https://github.com/parse-community/parse-server-s3-adapter/issues/181)) ([66fad32](https://github.com/parse-community/parse-server-s3-adapter/commit/66fad32dd94b5280f29a12fbdf24d9427eb8c2eb))
+
 # [2.0.0](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.3...2.0.0) (2023-04-21)
 
 
