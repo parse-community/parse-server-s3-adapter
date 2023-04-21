@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.2...1.6.3) (2023-04-21)
+
+
+### Bug Fixes
+
+* upgrade aws-sdk from 2.906.0 to 2.907.0 ([#166](https://github.com/parse-community/parse-server-s3-adapter/issues/166)) ([e224f0a](https://github.com/parse-community/parse-server-s3-adapter/commit/e224f0aa3388b03307e06700aa0dbe9251fae1a9))
+
 # Change Log
 
 ## Unreleased (Master Branch)
