@@ -1,24 +1,75 @@
-# Change Log
+## [2.0.2](https://github.com/parse-community/parse-server-s3-adapter/compare/2.0.1...2.0.2) (2023-04-21)
 
+
+### Bug Fixes
+
+* Remove development dependencies from production ([#190](https://github.com/parse-community/parse-server-s3-adapter/issues/190)) ([73b17e4](https://github.com/parse-community/parse-server-s3-adapter/commit/73b17e40f124212020cf72e700976f8d3cbb22d5))
+
+## [2.0.1](https://github.com/parse-community/parse-server-s3-adapter/compare/2.0.0...2.0.1) (2023-04-21)
+
+
+### Bug Fixes
+
+* Security upgrade xml2js and aws-sdk ([#181](https://github.com/parse-community/parse-server-s3-adapter/issues/181)) ([66fad32](https://github.com/parse-community/parse-server-s3-adapter/commit/66fad32dd94b5280f29a12fbdf24d9427eb8c2eb))
+
+# [2.0.0](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.3...2.0.0) (2023-04-21)
+
+
+### Features
+
+* Add support for Node 16, 18, remove support for Node 12, 15 ([#189](https://github.com/parse-community/parse-server-s3-adapter/issues/189)) ([993534c](https://github.com/parse-community/parse-server-s3-adapter/commit/993534c57cc7009363a740bbbb04a0e4e56c7f0c))
+
+
+### BREAKING CHANGES
+
+* Removes support for Node 12 and 15 which have reached their End-of-Life date and are not officially maintained anymore. ([993534c](993534c))
+
+## [1.6.3](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.2...1.6.3) (2023-04-21)
+
+
+### Bug Fixes
+
+* upgrade aws-sdk from 2.906.0 to 2.907.0 ([#166](https://github.com/parse-community/parse-server-s3-adapter/issues/166)) ([e224f0a](https://github.com/parse-community/parse-server-s3-adapter/commit/e224f0aa3388b03307e06700aa0dbe9251fae1a9))
+
+## 1.6.2
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.1...1.6.2)
+
+### Breaking Changes
+none
+### Notable Changes
+none
+### Other Changes
+- Upgrade to AWS SDK 2.905.0 (Antonio Davi Macedo Coelho de Castro) [#163](https://github.com/parse-community/parse-server-s3-adapter/pull/163)
+___
+
+## 1.6.1
+[Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.6.0...1.6.1)
+### Breaking Changes
+none
+### Notable Changes
+none
+### Other Changes
+- Upgraded to AWS SDK 2.879.0 (Manuel Trezza) [#132](https://github.com/parse-community/parse-server-s3-adapter/pull/132)
+___
 ## 1.6.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.5.0...1.6.0)
-- NEW: Support passing baseUrl param as a function [#106](https://github.com/parse-community/parse-server/pull/106). Thanks to [uzaysan](https://github.com/uzaysan)
+- NEW: Support passing baseUrl param as a function [#106](https://github.com/parse-community/parse-server-s3-adapter/pull/106). Thanks to [uzaysan](https://github.com/uzaysan)
 
 ## 1.5.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.4.0...1.5.0)
-- NEW: Add file ACL override parameter [#90](https://github.com/parse-community/parse-server/pull/90). Thanks to [Manuel](https://github.com/mtrezza)
-- NEW: Added support for metadata and tagging files [#83](https://github.com/parse-community/parse-server/pull/83). Thanks to [stevestencil](https://github.com/stevestencil)
+- NEW: Add file ACL override parameter [#90](https://github.com/parse-community/parse-server-s3-adapter/pull/90). Thanks to [Manuel](https://github.com/mtrezza)
+- NEW: Added support for metadata and tagging files [#83](https://github.com/parse-community/parse-server-s3-adapter/pull/83). Thanks to [stevestencil](https://github.com/stevestencil)
 
 ## 1.4.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.3.0...1.4.0)
-- NEW: Support endpoint in S3Overrides [#79](https://github.com/parse-community/parse-server/pull/79). Thanks to [Kyle Barron](https://github.com/kylebarron)
-- NEW: Support filename validation and AWS directories [#76](https://github.com/parse-community/parse-server/pull/76). Thanks to [Mike Patnode](https://github.com/mpatnode)
+- NEW: Support endpoint in S3Overrides [#79](https://github.com/parse-community/parse-server-s3-adapter/pull/79). Thanks to [Kyle Barron](https://github.com/kylebarron)
+- NEW: Support filename validation and AWS directories [#76](https://github.com/parse-community/parse-server-s3-adapter/pull/76). Thanks to [Mike Patnode](https://github.com/mpatnode)
 
 ## 1.3.0
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.2.3...1.3.0)
-- CHANGE: Conform to FilesAdapter Interface [#73](https://github.com/parse-community/parse-server/pull/73). Thanks to [Diamond Lewis](https://github.com/dplewis)
-- CHANGE: Add airbnb style guide to linter [#72](https://github.com/parse-community/parse-server/pull/72). Thanks to [Diamond Lewis](https://github.com/dplewis)
-- NEW: Support byte range requests [#71](https://github.com/parse-community/parse-server/pull/71). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- CHANGE: Conform to FilesAdapter Interface [#73](https://github.com/parse-community/parse-server-s3-adapter/pull/73). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- CHANGE: Add airbnb style guide to linter [#72](https://github.com/parse-community/parse-server-s3-adapter/pull/72). Thanks to [Diamond Lewis](https://github.com/dplewis)
+- NEW: Support byte range requests [#71](https://github.com/parse-community/parse-server-s3-adapter/pull/71). Thanks to [Diamond Lewis](https://github.com/dplewis)
 
 ## 1.2.3
 [Full Changelog](https://github.com/parse-community/parse-server-s3-adapter/compare/1.2.2...1.2.3)
