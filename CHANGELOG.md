@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/parse-community/parse-server-s3-adapter/compare/2.0.1...2.0.2) (2023-04-21)
+
+
+### Bug Fixes
+
+* Remove development dependencies from production ([#190](https://github.com/parse-community/parse-server-s3-adapter/issues/190)) ([73b17e4](https://github.com/parse-community/parse-server-s3-adapter/commit/73b17e40f124212020cf72e700976f8d3cbb22d5))
+
 ## [2.0.1](https://github.com/parse-community/parse-server-s3-adapter/compare/2.0.0...2.0.1) (2023-04-21)
 
 
