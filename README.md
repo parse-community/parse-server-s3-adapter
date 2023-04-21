@@ -1,21 +1,36 @@
-# parse-server-s3-adapter
-<a href="https://www.npmjs.com/package/@parse/s3-files-adapter"><img alt="npm version" src="https://img.shields.io/npm/v/@parse/s3-files-adapter.svg?style=flat"></a>
-[![Known Vulnerabilities](https://snyk.io/test/github/parse-community/parse-server-s3-adapter/badge.svg?targetFile=package.json)](https://snyk.io/test/github/parse-community/parse-server-s3-adapter?targetFile=package.json)
-[![codecov.io](https://codecov.io/github/parse-community/parse-server-s3-adapter/coverage.svg?branch=master)](https://codecov.io/github/parse-community/parse-server-s3-adapter?branch=master)
-<a href="https://github.com/parse-community/parse-server-s3-adapter/actions?query=workflow%3Aci+branch%3Amaster">
-  <img alt="Build status" src="https://github.com/parse-community/parse-server-s3-adapter/workflows/ci/badge.svg?branch=master">
-</a>
+# Parse Server S3 File Adapter <!-- omit in toc -->
 
-parse-server adapter for AWS S3
+[![Build Status](https://github.com/parse-community/parse-server-s3-adapter/workflows/ci/badge.svg?branch=master)](https://github.com/parse-community/parse-server-s3-adapter/actions?query=workflow%3Aci+branch%3Amaster)
+[![Snyk Badge](https://snyk.io/test/github/parse-community/parse-server-s3-adapter/badge.svg)](https://snyk.io/test/github/parse-community/parse-server-s3-adapter)
+[![Coverage](https://img.shields.io/codecov/c/github/parse-community/parse-server-s3-adapter/master.svg)](https://codecov.io/github/parse-community/parse-server-s3-adapter?branch=master)
+[![auto-release](https://img.shields.io/badge/%F0%9F%9A%80-auto--release-9e34eb.svg)](https://github.com/parse-community/parse-server-s3-adapter/releases)
 
-# installation
+[![npm latest version](https://img.shields.io/npm/v/@parse/s3-files-adapter.svg)](https://www.npmjs.com/package/@parse/s3-files-adapter)
+
+---
+
+The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 File Adapter Configuration](https://docs.parseplatform.org/parse-server/guide/#configuring-s3adapter) for more details. 
+
+---
+
+- [Installation](#installation)
+- [AWS Credentials](#aws-credentials)
+- [Deprecated Configuration](#deprecated-configuration)
+- [Usage with Parse Server](#usage-with-parse-server)
+    - [Parameters](#parameters)
+    - [Using a config file](#using-a-config-file)
+    - [using environment variables](#using-environment-variables)
+    - [passing as an instance](#passing-as-an-instance)
+    - [Usage with Digital Ocean Spaces](#usage-with-digital-ocean-spaces)
+    - [Adding Metadata and Tags](#adding-metadata-and-tags)
+
+# Installation
 
 `npm install --save @parse/s3-files-adapter`
 
 # AWS Credentials
 
-## Deprecation Notice -- AWS Credentials
- *the ability to explicitly pass credentials to this adapter is deprecated and will be removed in a future release.*
+⚠️ The ability to explicitly pass credentials to this adapter is deprecated and will be removed in a future release.
 
 You may already be compatible with this change.  If you have not explicitly set an `accessKey` and `secretKey` and you have configured the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, then you're all set and this will continue to work as is.
 
@@ -41,6 +56,7 @@ For an AWS host:
 If for some reason you really need to be able to set the key and secret explicitly, you can still do it using `s3overrides` as described below and setting `accessKeyId` and `secretAccessKey` in the `s3Overrides` object.
 
 # Deprecated Configuration
+
 Although it is not recommended, AWS credentials can be explicitly configured through an options
 object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
 This option is provided for backward compatibility and will be removed in the forthcoming version 2.0 of this adapter.
