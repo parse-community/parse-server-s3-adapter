@@ -2,7 +2,9 @@
 //
 // Stores Parse files in AWS S3.
 
-const AWS = require('aws-sdk');
+const {
+  S3
+} = require("@aws-sdk/client-s3");
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
@@ -56,7 +58,7 @@ class S3Adapter {
 
     Object.assign(s3Options, options.s3overrides);
 
-    this._s3Client = new AWS.S3(s3Options);
+    this._s3Client = new S3(s3Options);
     this._hasBucket = false;
   }
 
