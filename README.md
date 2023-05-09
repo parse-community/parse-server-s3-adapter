@@ -73,7 +73,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
 |-----------|----------|---------------|----------------------|-------------|
 | `fileAcl` | yes | `undefined` | S3_FILE_ACL | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `'none'` causes any ACL parameter to be removed that would otherwise be set. |
 | `presignedUrl` | yes | `false` | S3_PRESIGNED_URL | If `true` a [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`. |
-| `presignedUrlExpires` | yes | `undefined` | S3_PRESIGNED_URL_EXPIRES | Sets the duration in seconds after which the [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) of the file expires. If no value is set, the AWS S3 SDK default Expires value applies. This parameter requires `presignedUrl` to be `true`. |
+| `presignedUrlExpires` | yes | `undefined` | S3_PRESIGNED_URL_EXPIRES | Sets the duration in seconds after which the [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) of the file expires. If no value is set, the AWS S3 SDK default [Expires](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property) value applies. This parameter requires `presignedUrl` to be `true`. |
 
 ### Using a config file
 
@@ -96,7 +96,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
       "presignedUrl": false, // Optional. If true a presigned URL is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`. Default is false.
-      "presignedUrlExpires": 900, // Optional. Sets the duration in seconds after which the presigned URL of the file expires. Default is 900 seconds.
+      "presignedUrlExpires": null, // Optional. Sets the duration in seconds after which the presigned URL of the file expires. Defaults to the AWS S3 SDK default Expires value.
       "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
       "validateFilename": null, // Default to parse-server FilesAdapter::validateFilename.
       "generateKey": null // Will default to Parse.FilesController.preserveFileName
