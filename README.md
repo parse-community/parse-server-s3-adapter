@@ -72,6 +72,8 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
 | Parameter | Optional | Default value | Environment variable | Description |
 |-----------|----------|---------------|----------------------|-------------|
 | `fileAcl` | yes | `undefined` | S3_FILE_ACL | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `'none'` causes any ACL parameter to be removed that would otherwise be set. |
+| `presignedUrl` | yes | `false` | S3_PRESIGNED_URL | If `true` a [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`. |
+| `presignedUrlExpires` | yes | `undefined` | S3_PRESIGNED_URL_EXPIRES | Sets the duration in seconds after which the [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) of the file expires. If no value is set, the AWS S3 SDK default [Expires](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property) value applies. This parameter requires `presignedUrl` to be `true`. |
 
 ### Using a config file
 
@@ -93,6 +95,8 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+      "presignedUrl": false, // Optional. If true a presigned URL is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`. Default is false.
+      "presignedUrlExpires": null, // Optional. Sets the duration in seconds after which the presigned URL of the file expires. Defaults to the AWS S3 SDK default Expires value.
       "ServerSideEncryption": 'AES256|aws:kms', //AES256 or aws:kms, or if you do not pass this, encryption won't be done
       "validateFilename": null, // Default to parse-server FilesAdapter::validateFilename.
       "generateKey": null // Will default to Parse.FilesController.preserveFileName
@@ -132,29 +136,35 @@ And update your config / options
 ```
 var S3Adapter = require('@parse/s3-files-adapter');
 
-var s3Adapter = new S3Adapter('accessKey',
-                  'secretKey', bucket, {
-                    region: 'us-east-1'
-                    bucketPrefix: '',
-                    directAccess: false,
-                    baseUrl: 'http://images.example.com',
-                    signatureVersion: 'v4',
-                    globalCacheControl: 'public, max-age=86400',  // 24 hrs Cache-Control.
-                    validateFilename: (filename) => {
-                      if (filename.length > 1024) {
-                         return 'Filename too long.';
-                       }
-                       return null; // Return null on success
-                    },
-                    generateKey: (filename) => {
-                        return `${Date.now()}_${filename}`; // unique prefix for every filename
-                    }
-                  });
+var s3Adapter = new S3Adapter(
+  'accessKey',
+  'secretKey',
+  'bucket',
+  {
+    region: 'us-east-1'
+    bucketPrefix: '',
+    directAccess: false,
+    baseUrl: 'http://images.example.com',
+    signatureVersion: 'v4',
+    globalCacheControl: 'public, max-age=86400',  // 24 hrs Cache-Control.
+    presignedUrl: false,
+    presignedUrlExpires: 900,
+    validateFilename: (filename) => {
+      if (filename.length > 1024) {
+          return 'Filename too long.';
+        }
+        return null; // Return null on success
+    },
+    generateKey: (filename) => {
+      return `${Date.now()}_${filename}`; // unique prefix for every filename
+    }
+  }
+);
 
 var api = new ParseServer({
-	appId: 'my_app',
-	masterKey: 'master_key',
-	filesAdapter: s3adapter
+  appId: 'my_app',
+  masterKey: 'master_key',
+  filesAdapter: s3adapter
 })
 ```
 **Note:** there are a few ways you can pass arguments:
@@ -185,6 +195,8 @@ var s3Options = {
   "baseUrl": null // default value
   "signatureVersion": 'v4', // default value
   "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
+  "presignedUrl": false, // default value
+  "presignedUrlExpires": 900, // default value (900 seconds)
   "validateFilename": () => null, // Anything goes!
   "generateKey": (filename) => filename,  // Ensure Parse.FilesController.preserveFileName is true!
 }
@@ -211,6 +223,8 @@ var s3Options = {
   region: process.env.SPACES_REGION,
   directAccess: true,
   globalCacheControl: "public, max-age=31536000",
+  presignedUrl: false,
+  presignedUrlExpires: 900,
   bucketPrefix: process.env.SPACES_BUCKET_PREFIX,
   s3overrides: {
     accessKeyId: process.env.SPACES_ACCESS_KEY,

@@ -116,6 +116,7 @@ describe('S3Adapter tests', () => {
       });
     });
 
+
     describe('should not throw when initialized properly', () => {
       it('should accept a string bucket', () => {
         expect(() => {
@@ -234,7 +235,7 @@ describe('S3Adapter tests', () => {
 
   describe('getFileStream', () => {
     it('should handle range bytes', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket');
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
       s3._s3Client = {
         createBucket: (callback) => callback(),
         getObject: (params, callback) => {
@@ -265,7 +266,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should handle range bytes error', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket');
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
       s3._s3Client = {
         createBucket: (callback) => callback(),
         getObject: (params, callback) => {
@@ -289,7 +290,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should handle range bytes no data', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket');
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
       const data = { Error: 'NoBody' };
       s3._s3Client = {
         createBucket: (callback) => callback(),
@@ -330,26 +331,26 @@ describe('S3Adapter tests', () => {
     });
 
     it('should get using the baseUrl', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
     });
 
     it('should get direct to baseUrl', () => {
       options.baseUrlDirect = true;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
     });
 
     it('should get without directAccess', () => {
       options.directAccess = false;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
     });
 
     it('should go directly to amazon', () => {
       delete options.baseUrl;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://myBucket.s3.amazonaws.com/foo/bar/test.png');
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
     });
   });
   describe('getFileLocation', () => {
@@ -373,26 +374,110 @@ describe('S3Adapter tests', () => {
     });
 
     it('should get using the baseUrl', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
     });
 
     it('should get direct to baseUrl', () => {
       options.baseUrlDirect = true;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
     });
 
     it('should get without directAccess', () => {
       options.directAccess = false;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
     });
 
     it('should go directly to amazon', () => {
       delete options.baseUrl;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
-      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://myBucket.s3.amazonaws.com/foo/bar/test.png');
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
+    });
+  });
+  describe('getFileLocation', () => {
+    const testConfig = {
+      mount: 'http://my.server.com/parse',
+      applicationId: 'xxxx',
+    };
+    let options;
+
+    beforeEach(() => {
+      options = {
+        presignedUrl: false,
+        directAccess: true,
+        bucketPrefix: 'foo/bar/',
+        baseUrl: 'http://example.com/files',
+      };
+    });
+
+    it('should get using the baseUrl', () => {
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
+    });
+
+    it('when use presigned URL should use S3 \'getObject\' operation', () => {
+      options.presignedUrl = true;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      const originalS3Client = s3._s3Client;
+      let getSignedUrlOperation = '';
+      s3._s3Client = {
+        getSignedUrl: (operation, params, callback) => {
+          getSignedUrlOperation = operation;
+          return originalS3Client.getSignedUrl(operation, params, callback);
+        },
+      };
+
+      s3.getFileLocation(testConfig, 'test.png');
+      expect(getSignedUrlOperation).toBe('getObject');
+    });
+
+    it('should get using the baseUrl and amazon using presigned URL', () => {
+      options.presignedUrl = true;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+
+      const fileLocation = s3.getFileLocation(testConfig, 'test.png');
+      expect(fileLocation).toMatch(/^http:\/\/example.com\/files\/foo\/bar\/test.png\?/);
+      expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2F\w{2}-\w{1,9}-\d%2Fs3%2Faws4_request/);
+      expect(fileLocation).toMatch(/X-Amz-Date=\d{8}T\d{6}Z/);
+      expect(fileLocation).toMatch(/X-Amz-Signature=.{64}/);
+      expect(fileLocation).toMatch(/X-Amz-Expires=\d{1,6}/);
+      expect(fileLocation).toContain('X-Amz-Algorithm=AWS4-HMAC-SHA256');
+      expect(fileLocation).toContain('X-Amz-SignedHeaders=host');
+    });
+
+    it('should get direct to baseUrl', () => {
+      options.baseUrlDirect = true;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
+    });
+
+    it('should get without directAccess', () => {
+      options.directAccess = false;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
+    });
+
+    it('should go directly to amazon', () => {
+      delete options.baseUrl;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      expect(s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
+    });
+
+    it('should go directly to amazon using presigned URL', () => {
+      delete options.baseUrl;
+      options.presignedUrl = true;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+
+      const fileLocation = s3.getFileLocation(testConfig, 'test.png');
+      expect(fileLocation).toMatch(/^https:\/\/my-bucket.s3.amazonaws.com\/foo\/bar\/test.png\?/);
+      expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2Fus-east-1%2Fs3%2Faws4_request/);
+      expect(fileLocation).toMatch(/X-Amz-Date=\d{8}T\d{6}Z/);
+      expect(fileLocation).toMatch(/X-Amz-Signature=.{64}/);
+      expect(fileLocation).toMatch(/X-Amz-Expires=\d{1,6}/);
+      expect(fileLocation).toContain('X-Amz-Algorithm=AWS4-HMAC-SHA256');
+      expect(fileLocation).toContain('X-Amz-SignedHeaders=host');
     });
   });
 
@@ -406,7 +491,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should be null by default', () => {
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.validateFilename === null).toBe(true);
     });
 
@@ -420,7 +505,7 @@ describe('S3Adapter tests', () => {
         }
         return null;
       };
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'myBucket', options);
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       expect(s3.validateFilename('foo/bar') instanceof Parse.Error).toBe(true);
     });
   });

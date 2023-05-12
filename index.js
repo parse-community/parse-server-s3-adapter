@@ -21,6 +21,21 @@ const serialize = (obj) => {
   return str.join('&');
 };
 
+function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, filename) {
+  let directAccessUrl;
+  if (typeof baseUrl === 'function') {
+    directAccessUrl = `${baseUrl(config, filename)}/${baseUrlFileKey}`;
+  } else {
+    directAccessUrl = `${baseUrl}/${baseUrlFileKey}`;
+  }
+
+  if (presignedUrl) {
+    directAccessUrl += presignedUrl.substring(presignedUrl.indexOf('?'));
+  }
+
+  return directAccessUrl;
+}
+
 class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
@@ -36,6 +51,8 @@ class S3Adapter {
     this._baseUrlDirect = options.baseUrlDirect;
     this._signatureVersion = options.signatureVersion;
     this._globalCacheControl = options.globalCacheControl;
+    this._presignedUrl = options.presignedUrl;
+    this._presignedUrlExpires = parseInt(options.presignedUrlExpires, 10);
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
     // Optional FilesAdaptor method
@@ -158,22 +175,32 @@ class S3Adapter {
   // otherwise we serve the file through parse-server
   getFileLocation(config, filename) {
     const fileName = filename.split('/').map(encodeURIComponent).join('/');
-    if (this._directAccess) {
-      if (this._baseUrl) {
-        if (typeof this._baseUrl === 'function') {
-          if (this._baseUrlDirect) {
-            return `${this._baseUrl(config, filename)}/${fileName}`;
-          }
-          return `${this._baseUrl(config, filename)}/${this._bucketPrefix + fileName}`;
-        }
-        if (this._baseUrlDirect) {
-          return `${this._baseUrl}/${fileName}`;
-        }
-        return `${this._baseUrl}/${this._bucketPrefix + fileName}`;
-      }
-      return `https://${this._bucket}.s3.amazonaws.com/${this._bucketPrefix + fileName}`;
+    if (!this._directAccess) {
+      return `${config.mount}/files/${config.applicationId}/${fileName}`;
     }
-    return (`${config.mount}/files/${config.applicationId}/${fileName}`);
+
+    const fileKey = `${this._bucketPrefix}${fileName}`;
+
+    let presignedUrl = '';
+    if (this._presignedUrl) {
+      const params = { Bucket: this._bucket, Key: fileKey };
+      if (this._presignedUrlExpires) {
+        params.Expires = this._presignedUrlExpires;
+      }
+      // Always use the "getObject" operation, and we recommend that you protect the URL
+      // appropriately: https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html
+      presignedUrl = this._s3Client.getSignedUrl('getObject', params);
+      if (!this._baseUrl) {
+        return presignedUrl;
+      }
+    }
+
+    if (!this._baseUrl) {
+      return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
+    }
+
+    const baseUrlFileKey = this._baseUrlDirect ? fileName : fileKey;
+    return buildDirectAccessUrl(this._baseUrl, baseUrlFileKey, presignedUrl, config, filename);
   }
 
   handleFileStream(filename, req, res) {
