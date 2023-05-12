@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/parse-community/parse-server-s3-adapter/compare/2.0.2...2.1.0) (2023-05-12)
+
+
+### Features
+
+* Add option to generate pre-signed URL with expiration time ([#180](https://github.com/parse-community/parse-server-s3-adapter/issues/180)) ([d92363d](https://github.com/parse-community/parse-server-s3-adapter/commit/d92363d68a609b1db089bf83028b4f6780c9491c))
+
 ## [2.0.2](https://github.com/parse-community/parse-server-s3-adapter/compare/2.0.1...2.0.2) (2023-04-21)
 
 
