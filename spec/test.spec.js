@@ -1,4 +1,4 @@
-const AWS = require('aws-sdk');
+const S3Client = require('@aws-sdk/client-s3');
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
 const Parse = require('parse').Parse;
@@ -190,7 +190,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should accept endpoint as an override option in args', () => {
-      const otherEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+      const otherEndpoint = new S3Client.Endpoint('nyc3.digitaloceanspaces.com');
       const confObj = {
         bucketPrefix: 'test/',
         bucket: 'bucket-1',

@@ -2,7 +2,7 @@
 //
 // Stores Parse files in AWS S3.
 
-const AWS = require('aws-sdk');
+const S3Client = require('@aws-sdk/client-s3').S3;
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
@@ -73,7 +73,7 @@ class S3Adapter {
 
     Object.assign(s3Options, options.s3overrides);
 
-    this._s3Client = new AWS.S3(s3Options);
+    this._s3Client = new S3Client(s3Options);
     this._hasBucket = false;
   }
 
@@ -82,8 +82,11 @@ class S3Adapter {
     if (this._hasBucket) {
       promise = Promise.resolve();
     } else {
+      const params = {
+        Bucket: this._bucket
+      };
       promise = new Promise((resolve) => {
-        this._s3Client.createBucket(() => {
+        this._s3Client.createBucket(params, () => {
           this._hasBucket = true;
           resolve();
         });
@@ -96,6 +99,7 @@ class S3Adapter {
   // Returns a promise containing the S3 object creation response
   createFile(filename, data, contentType, options = {}) {
     const params = {
+      Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Body: data,
     };
@@ -129,7 +133,7 @@ class S3Adapter {
       params.Tagging = serializedTags;
     }
     return this.createBucket().then(() => new Promise((resolve, reject) => {
-      this._s3Client.upload(params, (err, response) => {
+      this._s3Client.putObject(params, (err, response) => {
         if (err !== null) {
           return reject(err);
         }
@@ -141,6 +145,7 @@ class S3Adapter {
   deleteFile(filename) {
     return this.createBucket().then(() => new Promise((resolve, reject) => {
       const params = {
+        Bucket: this._bucket,
         Key: this._bucketPrefix + filename,
       };
       this._s3Client.deleteObject(params, (err, data) => {
@@ -155,7 +160,10 @@ class S3Adapter {
   // Search for and return a file if found by filename
   // Returns a promise that succeeds with the buffer result from S3
   getFileData(filename) {
-    const params = { Key: this._bucketPrefix + filename };
+    const params = {
+      Bucket: this._bucket,
+      Key: this._bucketPrefix + filename
+    };
     return this.createBucket().then(() => new Promise((resolve, reject) => {
       this._s3Client.getObject(params, (err, data) => {
         if (err !== null) {
@@ -205,6 +213,7 @@ class S3Adapter {
 
   handleFileStream(filename, req, res) {
     const params = {
+      Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Range: req.get('Range'),
     };
