@@ -3,6 +3,7 @@
 // Stores Parse files in AWS S3.
 
 const S3Client = require('@aws-sdk/client-s3').S3;
+// const getSignedUrl = require('@aws-sdk/s3-request-presigner').getSignedUrl;
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
@@ -137,9 +138,13 @@ class S3Adapter {
         if (err !== null) {
           return reject(err);
         }
+        // NOTE: populate Location manually since it is not part of putObject call
+        // NOTE: https://github.com/aws/aws-sdk-js-v3/issues/3875
+        response.Location = `https://${params.Bucket}.s3.${this._region}.amazonaws.com/${params.Key}`
         return resolve(response);
       });
     }));
+
   }
 
   deleteFile(filename) {
@@ -173,7 +178,7 @@ class S3Adapter {
         if (data && !data.Body) {
           return reject(data);
         }
-        return resolve(data.Body);
+        return resolve(data.Body.transformToString());
       });
     }));
   }
@@ -189,19 +194,19 @@ class S3Adapter {
 
     const fileKey = `${this._bucketPrefix}${fileName}`;
 
-    let presignedUrl = '';
-    if (this._presignedUrl) {
-      const params = { Bucket: this._bucket, Key: fileKey };
-      if (this._presignedUrlExpires) {
-        params.Expires = this._presignedUrlExpires;
-      }
-      // Always use the "getObject" operation, and we recommend that you protect the URL
-      // appropriately: https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html
-      presignedUrl = this._s3Client.getSignedUrl('getObject', params);
-      if (!this._baseUrl) {
-        return presignedUrl;
-      }
-    }
+    const presignedUrl = '';
+    // if (this._presignedUrl) {
+    //   const params = { Bucket: this._bucket, Key: fileKey };
+    //   if (this._presignedUrlExpires) {
+    //     params.Expires = this._presignedUrlExpires;
+    //   }
+    //   // Always use the "getObject" operation, and we recommend that you protect the URL
+    //   // appropriately: https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html
+    //   presignedUrl = getSignedUrl(this._s3Client, 'getObject', params).then(result => );
+    //   if (!this._baseUrl) {
+    //     return presignedUrl;
+    //   }
+    // }
 
     if (!this._baseUrl) {
       return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
