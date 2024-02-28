@@ -2,7 +2,8 @@
 //
 // Stores Parse files in AWS S3.
 
-const AWS = require('aws-sdk');
+const S3Client = require('@aws-sdk/client-s3').S3;
+// const getSignedUrl = require('@aws-sdk/s3-request-presigner').getSignedUrl;
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
@@ -73,7 +74,7 @@ class S3Adapter {
 
     Object.assign(s3Options, options.s3overrides);
 
-    this._s3Client = new AWS.S3(s3Options);
+    this._s3Client = new S3Client(s3Options);
     this._hasBucket = false;
   }
 
@@ -82,8 +83,11 @@ class S3Adapter {
     if (this._hasBucket) {
       promise = Promise.resolve();
     } else {
+      const params = {
+        Bucket: this._bucket
+      };
       promise = new Promise((resolve) => {
-        this._s3Client.createBucket(() => {
+        this._s3Client.createBucket(params, () => {
           this._hasBucket = true;
           resolve();
         });
@@ -96,6 +100,7 @@ class S3Adapter {
   // Returns a promise containing the S3 object creation response
   createFile(filename, data, contentType, options = {}) {
     const params = {
+      Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Body: data,
     };
@@ -129,18 +134,23 @@ class S3Adapter {
       params.Tagging = serializedTags;
     }
     return this.createBucket().then(() => new Promise((resolve, reject) => {
-      this._s3Client.upload(params, (err, response) => {
+      this._s3Client.putObject(params, (err, response) => {
         if (err !== null) {
           return reject(err);
         }
+        // NOTE: populate Location manually since it is not part of putObject call
+        // NOTE: https://github.com/aws/aws-sdk-js-v3/issues/3875
+        response.Location = `https://${params.Bucket}.s3.${this._region}.amazonaws.com/${params.Key}`
         return resolve(response);
       });
     }));
+
   }
 
   deleteFile(filename) {
     return this.createBucket().then(() => new Promise((resolve, reject) => {
       const params = {
+        Bucket: this._bucket,
         Key: this._bucketPrefix + filename,
       };
       this._s3Client.deleteObject(params, (err, data) => {
@@ -155,7 +165,10 @@ class S3Adapter {
   // Search for and return a file if found by filename
   // Returns a promise that succeeds with the buffer result from S3
   getFileData(filename) {
-    const params = { Key: this._bucketPrefix + filename };
+    const params = {
+      Bucket: this._bucket,
+      Key: this._bucketPrefix + filename
+    };
     return this.createBucket().then(() => new Promise((resolve, reject) => {
       this._s3Client.getObject(params, (err, data) => {
         if (err !== null) {
@@ -165,7 +178,7 @@ class S3Adapter {
         if (data && !data.Body) {
           return reject(data);
         }
-        return resolve(data.Body);
+        return resolve(data.Body.transformToString());
       });
     }));
   }
@@ -181,19 +194,19 @@ class S3Adapter {
 
     const fileKey = `${this._bucketPrefix}${fileName}`;
 
-    let presignedUrl = '';
-    if (this._presignedUrl) {
-      const params = { Bucket: this._bucket, Key: fileKey };
-      if (this._presignedUrlExpires) {
-        params.Expires = this._presignedUrlExpires;
-      }
-      // Always use the "getObject" operation, and we recommend that you protect the URL
-      // appropriately: https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html
-      presignedUrl = this._s3Client.getSignedUrl('getObject', params);
-      if (!this._baseUrl) {
-        return presignedUrl;
-      }
-    }
+    const presignedUrl = '';
+    // if (this._presignedUrl) {
+    //   const params = { Bucket: this._bucket, Key: fileKey };
+    //   if (this._presignedUrlExpires) {
+    //     params.Expires = this._presignedUrlExpires;
+    //   }
+    //   // Always use the "getObject" operation, and we recommend that you protect the URL
+    //   // appropriately: https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html
+    //   presignedUrl = getSignedUrl(this._s3Client, 'getObject', params).then(result => );
+    //   if (!this._baseUrl) {
+    //     return presignedUrl;
+    //   }
+    // }
 
     if (!this._baseUrl) {
       return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
@@ -205,6 +218,7 @@ class S3Adapter {
 
   handleFileStream(filename, req, res) {
     const params = {
+      Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Range: req.get('Range'),
     };
