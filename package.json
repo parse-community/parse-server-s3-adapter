@@ -1,6 +1,6 @@
 {
   "name": "@parse/s3-files-adapter",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "AWS S3 adapter for parse-server",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/parse-community/parse-server-s3-adapter#readme",
   "dependencies": {
-    "aws-sdk": "2.1399.0"
+    "@aws-sdk/client-s3": "^3.623.0",
+    "@aws-sdk/s3-request-presigner": "^3.623.0"
   },
   "devDependencies": {
     "@semantic-release/changelog": "5.0.1",
@@ -36,12 +37,13 @@
     "@semantic-release/release-notes-generator": "9.0.3",
     "codecov": "3.8.3",
     "config": "3.3.2",
+    "dotenv": "^16.4.5",
     "eslint": "7.13.0",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-plugin-import": "2.22.1",
     "istanbul": "0.4.5",
     "jasmine": "3.5.0",
-    "parse": "3.3.1",
+    "parse": "5.3.0",
     "parse-server-conformance-tests": "1.0.0",
     "semantic-release": "17.4.6"
   }
