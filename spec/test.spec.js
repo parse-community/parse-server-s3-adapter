@@ -1,4 +1,5 @@
-const AWS = require('aws-sdk');
+require('dotenv').config();
+
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
 const Parse = require('parse').Parse;
@@ -189,8 +190,8 @@ describe('S3Adapter tests', () => {
       expect(s3._bucketPrefix).toEqual('test/');
     });
 
-    it('should accept endpoint as an override option in args', () => {
-      const otherEndpoint = new AWS.Endpoint('nyc3.digitaloceanspaces.com');
+    it('should accept endpoint as an override option in args', async () => {
+      const otherEndpoint = 'https://test.com:8080/path?foo=bar';
       const confObj = {
         bucketPrefix: 'test/',
         bucket: 'bucket-1',
@@ -199,13 +200,12 @@ describe('S3Adapter tests', () => {
         s3overrides: { endpoint: otherEndpoint },
       };
       const s3 = new S3Adapter(confObj);
-      expect(s3._s3Client.endpoint.protocol).toEqual(otherEndpoint.protocol);
-      expect(s3._s3Client.endpoint.host).toEqual(otherEndpoint.host);
-      expect(s3._s3Client.endpoint.port).toEqual(otherEndpoint.port);
-      expect(s3._s3Client.endpoint.hostname).toEqual(otherEndpoint.hostname);
-      expect(s3._s3Client.endpoint.pathname).toEqual(otherEndpoint.pathname);
-      expect(s3._s3Client.endpoint.path).toEqual(otherEndpoint.path);
-      expect(s3._s3Client.endpoint.href).toEqual(otherEndpoint.href);
+      const endpointFromConfig = await s3._s3Client.config.endpoint();
+      expect(endpointFromConfig.protocol).toEqual("https:");
+      expect(endpointFromConfig.path).toEqual('/path');
+      expect(endpointFromConfig.port).toEqual(8080);
+      expect(endpointFromConfig.hostname).toEqual('test.com');
+      expect(endpointFromConfig.query.foo).toEqual('bar');
     });
 
     it('should accept options and overrides as args', () => {
@@ -524,7 +524,7 @@ describe('S3Adapter tests', () => {
           if (lastSlash > 0) {
             // put the prefix before the last component of the filename
             key += filename.substring(0, lastSlash + 1) + prefix
-                + filename.substring(lastSlash + 1);
+              + filename.substring(lastSlash + 1);
           } else {
             key += prefix + filename;
           }
