@@ -2,7 +2,7 @@
 //
 // Stores Parse files in AWS S3.
 
-const AWS = require('aws-sdk');
+const { S3Client, CreateBucketCommand } = require('@aws-sdk/client-s3');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
@@ -65,6 +65,21 @@ class S3Adapter {
       globalCacheControl: this._globalCacheControl,
     };
 
+    // const s3Options = {
+    //   region: this._region,
+    //   // Add other configuration options if needed
+    // };
+
+    if (options.accessKey && options.secretKey) {
+      awsCredentialsDeprecationNotice();
+      s3Options.credentials = {
+        accessKeyId: options.accessKey,
+        secretAccessKey: options.secretKey,
+      };
+    } else if (options.credentials)
+      s3Options.credentials = options.credentials;
+
+
     if (options.accessKey && options.secretKey) {
       awsCredentialsDeprecationNotice();
       s3Options.accessKeyId = options.accessKey;
@@ -73,23 +88,21 @@ class S3Adapter {
 
     Object.assign(s3Options, options.s3overrides);
 
-    this._s3Client = new AWS.S3(s3Options);
+    this._s3Client = new S3Client(s3Options);
     this._hasBucket = false;
   }
 
-  createBucket() {
-    let promise;
-    if (this._hasBucket) {
-      promise = Promise.resolve();
-    } else {
-      promise = new Promise((resolve) => {
-        this._s3Client.createBucket(() => {
-          this._hasBucket = true;
-          resolve();
-        });
-      });
+  async createBucket() {
+    if (this._hasBucket) return;
+
+    try {
+      await this._s3Client.send(new CreateBucketCommand({ Bucket: this._bucket }));
+      this._hasBucket = true;
+    } catch (error) {
+      if (error.name === "BucketAlreadyOwnedByYou")
+        this._hasBucket = true;
+      else throw error;
     }
-    return promise;
   }
 
   // For a given config object, filename, and data, store a file in S3
