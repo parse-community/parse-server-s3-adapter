@@ -1,5 +1,3 @@
-require('dotenv').config();
-
 const config = require('config');
 const { Readable } = require('stream');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
