@@ -76,11 +76,6 @@ class S3Adapter {
       globalCacheControl: this._globalCacheControl,
     };
 
-    // const s3Options = {
-    //   region: this._region,
-    //   // Add other configuration options if needed
-    // };
-
     if (options.accessKey && options.secretKey) {
       awsCredentialsDeprecationNotice();
       s3Options.credentials = {
