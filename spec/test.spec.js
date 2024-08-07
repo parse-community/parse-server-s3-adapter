@@ -1,11 +1,12 @@
 require('dotenv').config();
 
 const config = require('config');
+const { Readable } = require('stream');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
 const Parse = require('parse').Parse;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
-const { GetObjectCommand, PutObjectCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
+const { GetObjectCommand, PutObjectCommand, CreateBucketCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 describe('S3Adapter tests', () => {
   function makeS3Adapter(options) {
@@ -30,34 +31,44 @@ describe('S3Adapter tests', () => {
       const objects = {};
 
       s3._s3Client = {
-        createBucket: (callback) => setTimeout(callback, 100),
-        upload: (params, callback) => setTimeout(() => {
-          const { Key, Body } = params;
+        send: (command) => {
+          if (command instanceof PutObjectCommand) {
+            const { Key, Body } = command.input;
 
-          objects[Key] = Body;
+            objects[Key] = Body;
 
-          callback(null, {
-            Location: `https://${bucket}.s3.amazonaws.com/${Key}`,
-          });
-        }, 100),
-        deleteObject: (params, callback) => setTimeout(() => {
-          const { Key } = params;
-
-          delete objects[Key];
-
-          callback(null, {});
-        }, 100),
-        getObject: (params, callback) => setTimeout(() => {
-          const { Key } = params;
-
-          if (objects[Key]) {
-            callback(null, {
-              Body: Buffer.from(objects[Key], 'utf8'),
+            return Promise.resolve({
+              Location: `https://${bucket}.s3.amazonaws.com/${Key}`,
             });
-          } else {
-            callback(new Error('Not found'));
           }
-        }, 100),
+          if (command instanceof DeleteObjectCommand) {
+            const { Key } = command.input;
+
+            delete objects[Key];
+
+            return Promise.resolve({});
+          }
+          if (command instanceof GetObjectCommand) {
+            const { Key } = command.input;
+
+            if (objects[Key]) {
+              const stream = new Readable();
+              stream.push('hello world');
+              stream.push(null); // End of stream
+
+              return {
+                Body: stream,
+                AcceptRanges: 'bytes',
+                ContentLength: 36,
+                ContentRange: 'bytes 0-35/36',
+                ContentType: 'text/plain',
+              };
+            } else {
+              return Promise.reject(new Error('Not found'));
+            }
+          }
+          return Promise.resolve();
+        }
       };
     }
     return s3;
@@ -415,11 +426,9 @@ describe('S3Adapter tests', () => {
       options.presignedUrl = true;
       const s3 = makeS3Adapter(options);
 
-      const originalSignedUrlFunction = s3.getSignedUrlSync;
       let getSignedUrlCommand = '';
-      s3.getSignedUrlSync = (client, command, options) => {
+      s3.getSignedUrlSync = (_, command) => {
         getSignedUrlCommand = command;
-        return originalSignedUrlFunction(client, command, options);
       }
 
       s3.getFileLocation(testConfig, 'test.png');
@@ -650,7 +659,7 @@ describe('S3Adapter tests', () => {
 
     beforeAll(async () => {
       s3 = makeS3Adapter({ bucketPrefix: 'test-prefix/' });
-      const testFileContent = 'This is a test file for S3 streaming.';
+      const testFileContent = 'hello world! This is a test file for S3 streaming.';
       await s3.createFile(filename, testFileContent, 'text/plain', {});
     })
 
@@ -661,7 +670,7 @@ describe('S3Adapter tests', () => {
     it('should get stream bytes correctly', async () => {
       const req = {
         get: jasmine.createSpy('get').and.callFake((header) => {
-          if (header === 'Range') return 'bytes=0-4';
+          if (header === 'Range') return 'bytes=0-10';
           return null;
         })
       };
@@ -672,7 +681,7 @@ describe('S3Adapter tests', () => {
       };
       const data = await s3.handleFileStream(filename, req, res);
 
-      expect(data.toString('utf8')).toBe('This ')
+      expect(data.toString('utf8')).toBe('hello world')
       expect(res.writeHead).toHaveBeenCalled();
       expect(res.write).toHaveBeenCalled();
       expect(res.end).toHaveBeenCalled();
