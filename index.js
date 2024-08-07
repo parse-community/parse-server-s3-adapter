@@ -39,33 +39,6 @@ function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, fil
   return directAccessUrl;
 }
 
-function getSignedUrlSync(client, command, options) {
-  let isDone = false;
-  let signedUrl = '';
-  let error = null;
-
-  getSignedUrl(client, command, options)
-    .then((url) => {
-      signedUrl = url;
-      isDone = true;
-    })
-    .catch((err) => {
-      error = err;
-      isDone = true;
-    });
-
-  // Block the event loop until the promise resolves
-  while (!isDone) {
-    deasync.sleep(100); // Sleep for 100 milliseconds
-  }
-
-  if (error) {
-    throw error;
-  }
-
-  return signedUrl;
-}
-
 class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
@@ -203,6 +176,34 @@ class S3Adapter {
     return response.Body;
   }
 
+  // Exposed only for testing purposes
+  getSignedUrlSync(client, command, options) {
+    let isDone = false;
+    let signedUrl = '';
+    let error = null;
+
+    getSignedUrl(client, command, options)
+      .then((url) => {
+        signedUrl = url;
+        isDone = true;
+      })
+      .catch((err) => {
+        error = err;
+        isDone = true;
+      });
+
+    // Block the event loop until the promise resolves
+    while (!isDone) {
+      deasync.sleep(100); // Sleep for 100 milliseconds
+    }
+
+    if (error) {
+      throw error;
+    }
+
+    return signedUrl;
+  }
+
   // Generates and returns the location of a file stored in S3 for the given request and filename
   // The location is the direct S3 link if the option is set,
   // otherwise we serve the file through parse-server
@@ -220,7 +221,7 @@ class S3Adapter {
       const options = this._presignedUrlExpires ? { expiresIn: this._presignedUrlExpires } : {};
 
       const command = new GetObjectCommand(params);
-      presignedUrl = getSignedUrlSync(this._s3Client, command, options);
+      presignedUrl = this.getSignedUrlSync(this._s3Client, command, options);
 
       if (!this._baseUrl) {
         return presignedUrl;

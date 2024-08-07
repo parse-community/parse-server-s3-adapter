@@ -5,6 +5,7 @@ const filesAdapterTests = require('parse-server-conformance-tests').files;
 const Parse = require('parse').Parse;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
 
 describe('S3Adapter tests', () => {
   function makeS3Adapter(options) {
@@ -419,18 +420,17 @@ describe('S3Adapter tests', () => {
 
     it('when use presigned URL should use S3 \'getObject\' operation', () => {
       options.presignedUrl = true;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      const originalS3Client = s3._s3Client;
-      let getSignedUrlOperation = '';
-      s3._s3Client = {
-        getSignedUrl: (operation, params, callback) => {
-          getSignedUrlOperation = operation;
-          return originalS3Client.getSignedUrl(operation, params, callback);
-        },
-      };
+      const s3 = makeS3Adapter(options);
+
+      const originalSignedUrlFunction = s3.getSignedUrlSync;
+      let getSignedUrlCommand = '';
+      s3.getSignedUrlSync = (client, command, options) => {
+        getSignedUrlCommand = command;
+        return originalSignedUrlFunction(client, command, options);
+      }
 
       s3.getFileLocation(testConfig, 'test.png');
-      expect(getSignedUrlOperation).toBe('getObject');
+      expect(getSignedUrlCommand).toBeInstanceOf(GetObjectCommand);
     });
 
     it('should get using the baseUrl and amazon using presigned URL', () => {
@@ -471,7 +471,7 @@ describe('S3Adapter tests', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
 
       const fileLocation = s3.getFileLocation(testConfig, 'test.png');
-      expect(fileLocation).toMatch(/^https:\/\/my-bucket.s3.amazonaws.com\/foo\/bar\/test.png\?/);
+      expect(fileLocation).toMatch(/^https:\/\/my-bucket.s3.us-east-1.amazonaws.com\/foo\/bar\/test.png\?/);
       expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2Fus-east-1%2Fs3%2Faws4_request/);
       expect(fileLocation).toMatch(/X-Amz-Date=\d{8}T\d{6}Z/);
       expect(fileLocation).toMatch(/X-Amz-Signature=.{64}/);
