@@ -20,6 +20,7 @@ describe('S3Adapter tests', () => {
         accessKey: process.env.TEST_S3_ACCESS_KEY,
         secretKey: process.env.TEST_S3_SECRET_KEY,
         bucket: process.env.TEST_S3_BUCKET,
+        region: process.env.TEST_S3_REGION
       }, options));
     } else {
       const bucket = 'FAKE_BUCKET';
@@ -643,35 +644,40 @@ describe('S3Adapter tests', () => {
     });
   });
 
-  it("should properly create, read, delete files remove later", (done) => {
-    const adapter = makeS3Adapter({});
-    var filename = 'file.txt';
-    adapter.createFile(filename, "hello world", 'text/utf8').then((result) => {
-      return adapter.getFileData(filename);
-    }, (err) => {
-      fail("The adapter should create the file");
-      done();
-    }).then((result) => {
-      expect(result instanceof Buffer).toBe(true);
-      expect(result.toString('utf-8')).toEqual("hello world");
-      return adapter.deleteFile(filename);
-    }, (err) => {
-      fail("The adapter should get the file");
-      done();
-    }).then((result) => {
+  describe('handleFileStream', () => {
+    const filename = 'file.txt';
+    let s3;
 
-      adapter.getFileData(filename).then((res) => {
-        fail("the file should be deleted");
-        done();
-      }, (err) => {
-        done();
-      });
+    beforeAll(async () => {
+      s3 = makeS3Adapter({ bucketPrefix: 'test-prefix/' });
+      const testFileContent = 'This is a test file for S3 streaming.';
+      await s3.createFile(filename, testFileContent, 'text/plain', {});
+    })
 
-    }, (err) => {
-      fail("The adapter should delete the file");
-      done();
-    });
-  }, 5000);
+    afterAll(async () => {
+      await s3.deleteFile(filename);
+    })
+
+    it('should get stream bytes correctly', async () => {
+      const req = {
+        get: jasmine.createSpy('get').and.callFake((header) => {
+          if (header === 'Range') return 'bytes=0-4';
+          return null;
+        })
+      };
+      const res = {
+        writeHead: jasmine.createSpy('writeHead'),
+        write: jasmine.createSpy('write'),
+        end: jasmine.createSpy('end')
+      };
+      const data = await s3.handleFileStream(filename, req, res);
+
+      expect(data.toString('utf8')).toBe('This ')
+      expect(res.writeHead).toHaveBeenCalled();
+      expect(res.write).toHaveBeenCalled();
+      expect(res.end).toHaveBeenCalled();
+    })
+  })
 
   filesAdapterTests.testAdapter('S3Adapter', makeS3Adapter({}));
 });
