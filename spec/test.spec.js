@@ -5,7 +5,7 @@ const filesAdapterTests = require('parse-server-conformance-tests').files;
 const Parse = require('parse').Parse;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
-const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { GetObjectCommand, PutObjectCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
 
 describe('S3Adapter tests', () => {
   function makeS3Adapter(options) {
@@ -237,19 +237,13 @@ describe('S3Adapter tests', () => {
   describe('getFileStream', () => {
     it('should handle range bytes', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
-      s3._s3Client = {
-        createBucket: (callback) => callback(),
-        getObject: (params, callback) => {
-          const { Range } = params;
+      const s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
+      const returnedData = {
+        Body: { transformToWebStream: () => Buffer.from('hello world', 'utf8') }
+      }
+      s3ClientMock.send.and.returnValue(Promise.resolve(returnedData));
+      s3._s3Client = s3ClientMock;
 
-          expect(Range).toBe('bytes=0-1');
-
-          const data = {
-            Body: Buffer.from('hello world', 'utf8'),
-          };
-          callback(null, data);
-        },
-      };
       const req = {
         get: () => 'bytes=0-1',
       };
@@ -263,17 +257,17 @@ describe('S3Adapter tests', () => {
         expect(resp.writeHead).toHaveBeenCalled();
         expect(resp.write).toHaveBeenCalled();
         expect(resp.end).toHaveBeenCalled();
+        const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+        expect(commandArg.input.Range).toBe('bytes=0-1');
       });
     });
 
     it('should handle range bytes error', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
-      s3._s3Client = {
-        createBucket: (callback) => callback(),
-        getObject: (params, callback) => {
-          callback('FileNotFound', null);
-        },
-      };
+      const s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
+      s3ClientMock.send.and.returnValue(Promise.reject('FileNotFound'));
+      s3._s3Client = s3ClientMock;
+
       const req = {
         get: () => 'bytes=0-1',
       };
@@ -292,13 +286,11 @@ describe('S3Adapter tests', () => {
 
     it('should handle range bytes no data', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
+      const s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
+      s3ClientMock.send.and.returnValue(Promise.resolve());
+      s3._s3Client = s3ClientMock;
+
       const data = { Error: 'NoBody' };
-      s3._s3Client = {
-        createBucket: (callback) => callback(),
-        getObject: (params, callback) => {
-          callback(null, data);
-        },
-      };
       const req = {
         get: () => 'bytes=0-1',
       };
@@ -569,86 +561,73 @@ describe('S3Adapter tests', () => {
   });
 
   describe('createFile', () => {
-    let options;
+    let options, s3ClientMock;
     beforeEach(() => {
       options = {
         bucketPrefix: 'test/',
       };
+      s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
+      s3ClientMock.send.and.returnValue(Promise.resolve());
+    });
+
+    it('should save a file with right command', async () => {
+      const s3 = makeS3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      expect(s3ClientMock.send.calls.all().length).toBe(2);
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(CreateBucketCommand));
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
     });
 
     it('should save a file with metadata added', async () => {
       const s3 = makeS3Adapter(options);
-      s3._s3Client.upload = (params, callback) => {
-        const { Metadata } = params;
-        expect(Metadata).toEqual({ foo: 'bar' });
-        const data = {
-          Body: Buffer.from('hello world', 'utf8'),
-        };
-        callback(null, data);
-      };
-      const fileName = 'randomFileName.txt';
+      s3._s3Client = s3ClientMock;
       const metadata = { foo: 'bar' };
-      await s3.createFile(fileName, 'hello world', 'text/utf8', { metadata });
+
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', { metadata });
+      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      expect(commandArg.input.Metadata).toEqual({ foo: 'bar' });
     });
 
     it('should save a file with tags added', async () => {
       const s3 = makeS3Adapter(options);
-      s3._s3Client.upload = (params, callback) => {
-        const { Tagging } = params;
-        expect(Tagging).toEqual('foo=bar&baz=bin');
-        const data = {
-          Body: Buffer.from('hello world', 'utf8'),
-        };
-        callback(null, data);
-      };
-      const fileName = 'randomFileName.txt';
+      s3._s3Client = s3ClientMock;
       const tags = { foo: 'bar', baz: 'bin' };
-      await s3.createFile(fileName, 'hello world', 'text/utf8', { tags });
+
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', { tags });
+      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      expect(commandArg.input.Tagging).toBe('foo=bar&baz=bin');
     });
 
     it('should save a file with proper ACL with direct access', async () => {
-      // Create adapter
       options.directAccess = true;
       const s3 = makeS3Adapter(options);
-      spyOn(s3._s3Client, 'upload').and.callThrough();
-      // Save file
+      s3._s3Client = s3ClientMock;
+
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      // Validate
-      const calls = s3._s3Client.upload.calls.all();
-      expect(calls.length).toBe(1);
-      calls.forEach((call) => {
-        expect(call.args[0].ACL).toBe('public-read');
-      });
+      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      expect(commandArg.input.ACL).toBe('public-read');
     });
 
     it('should save a file with proper ACL without direct access', async () => {
-      // Create adapter
       const s3 = makeS3Adapter(options);
-      spyOn(s3._s3Client, 'upload').and.callThrough();
-      // Save file
+      s3._s3Client = s3ClientMock;
+
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      // Validate
-      const calls = s3._s3Client.upload.calls.all();
-      expect(calls.length).toBe(1);
-      calls.forEach((call) => {
-        expect(call.args[0].ACL).toBeUndefined();
-      });
+      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      expect(commandArg.input.ACL).toBeUndefined();
     });
 
     it('should save a file and override ACL with direct access', async () => {
-      // Create adapter
       options.directAccess = true;
       options.fileAcl = 'private';
       const s3 = makeS3Adapter(options);
-      spyOn(s3._s3Client, 'upload').and.callThrough();
-      // Save file
+      s3._s3Client = s3ClientMock;
+
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      // Validate
-      const calls = s3._s3Client.upload.calls.all();
-      expect(calls.length).toBe(1);
-      calls.forEach((call) => {
-        expect(call.args[0].ACL).toBe('private');
-      });
+      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      expect(commandArg.input.ACL).toBe('private');
     });
 
     it('should save a file and remove ACL with direct access', async () => {
@@ -656,15 +635,11 @@ describe('S3Adapter tests', () => {
       options.directAccess = true;
       options.fileAcl = 'none';
       const s3 = makeS3Adapter(options);
-      spyOn(s3._s3Client, 'upload').and.callThrough();
-      // Save file
+      s3._s3Client = s3ClientMock;
+
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      // Validate
-      const calls = s3._s3Client.upload.calls.all();
-      expect(calls.length).toBe(1);
-      calls.forEach((call) => {
-        expect(call.args[0].ACL).toBeUndefined();
-      });
+      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      expect(commandArg.input.ACL).toBeUndefined();
     });
   });
 
