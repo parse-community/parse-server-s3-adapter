@@ -204,7 +204,7 @@ class S3Adapter {
 
     // Block the event loop until the promise resolves
     while (!isDone) {
-      deasync.sleep(100); // Sleep for 100 milliseconds
+      deasync.sleep(10); // Sleep for 100 milliseconds
     }
 
     if (error) {
