@@ -39,6 +39,15 @@ function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, fil
   return directAccessUrl;
 }
 
+function responseToBuffer(response) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    response.Body.on('data', (chunk) => chunks.push(chunk));
+    response.Body.on('end', () => resolve(Buffer.concat(chunks)));
+    response.Body.on('error', reject);
+  });
+}
+
 class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
@@ -171,9 +180,11 @@ class S3Adapter {
     };
     await this.createBucket()
     const command = new GetObjectCommand(params);
-    const response = this._s3Client.send(command);
+    const response = await this._s3Client.send(command);
     if (response && !response.Body) throw new Error(response);
-    return response.Body;
+
+    const buffer = await responseToBuffer(response);
+    return buffer;
   }
 
   // Exposed only for testing purposes
