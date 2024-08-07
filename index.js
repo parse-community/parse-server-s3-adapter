@@ -265,10 +265,13 @@ class S3Adapter {
       'Content-Range': data.ContentRange,
       'Content-Type': data.ContentType,
     });
-    res.write(data.Body);
-    res.end();
-    return data.Body.transformToWebStream();
-
+    data.Body.on('data', (chunk) => res.write(chunk));
+    data.Body.on('end', () => res.end());
+    data.Body.on('error', (e) => {
+      res.status(404);
+      res.send(e.message);
+    });
+    return responseToBuffer(data);
   }
 }
 
