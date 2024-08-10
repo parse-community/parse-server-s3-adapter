@@ -251,7 +251,7 @@ class S3Adapter {
     await this.createBucket();
     const command = new GetObjectCommand(params);
     const data = await this._s3Client.send(command);
-    if (data && !data.Body) throw new Error(data);
+    if (data && !data.Body) throw new Error("S3 object body is missing.");
 
     res.writeHead(206, {
       'Accept-Ranges': data.AcceptRanges,
