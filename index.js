@@ -4,7 +4,6 @@
 
 const { S3Client, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const deasync = require('deasync');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
@@ -151,7 +150,9 @@ class S3Adapter {
     await this.createBucket();
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
-    return response;
+    const location = `https://${this._bucket}.s3.${this._region}.amazonaws.com/${params.Key}`;
+
+    return Object.assign(response || {}, { Location: location });
   }
 
   async deleteFile(filename) {
@@ -182,37 +183,14 @@ class S3Adapter {
   }
 
   // Exposed only for testing purposes
-  getSignedUrlSync(client, command, options) {
-    let isDone = false;
-    let signedUrl = '';
-    let error = null;
-
-    getSignedUrl(client, command, options)
-      .then((url) => {
-        signedUrl = url;
-        isDone = true;
-      })
-      .catch((err) => {
-        error = err;
-        isDone = true;
-      });
-
-    // Block the event loop until the promise resolves
-    while (!isDone) {
-      deasync.sleep(10); // Sleep for 100 milliseconds
-    }
-
-    if (error) {
-      throw error;
-    }
-
-    return signedUrl;
+  getFileSignedUrl(client, command, options) {
+    return getSignedUrl(client, command, options);
   }
 
   // Generates and returns the location of a file stored in S3 for the given request and filename
   // The location is the direct S3 link if the option is set,
   // otherwise we serve the file through parse-server
-  getFileLocation(config, filename) {
+  async getFileLocation(config, filename) {
     const fileName = filename.split('/').map(encodeURIComponent).join('/');
     if (!this._directAccess) {
       return `${config.mount}/files/${config.applicationId}/${fileName}`;
@@ -226,7 +204,7 @@ class S3Adapter {
       const options = this._presignedUrlExpires ? { expiresIn: this._presignedUrlExpires } : {};
 
       const command = new GetObjectCommand(params);
-      presignedUrl = this.getSignedUrlSync(this._s3Client, command, options);
+      presignedUrl = await this.getFileSignedUrl(this._s3Client, command, options);
 
       if (!this._baseUrl) {
         return presignedUrl;
