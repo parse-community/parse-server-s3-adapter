@@ -248,10 +248,10 @@ describe('S3Adapter tests', () => {
     it('should handle range bytes', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
       const s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
-      const returnedData = {
-        Body: { transformToWebStream: () => Buffer.from('hello world', 'utf8') }
-      }
-      s3ClientMock.send.and.returnValue(Promise.resolve(returnedData));
+      const stream = new Readable();
+      stream.push('hello world');
+      stream.push(null);
+      s3ClientMock.send.and.returnValue(Promise.resolve({ Body: stream }));
       s3._s3Client = s3ClientMock;
 
       const req = {
@@ -297,10 +297,9 @@ describe('S3Adapter tests', () => {
     it('should handle range bytes no data', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
       const s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
-      s3ClientMock.send.and.returnValue(Promise.resolve());
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
       s3._s3Client = s3ClientMock;
 
-      const data = { Error: 'NoBody' };
       const req = {
         get: () => 'bytes=0-1',
       };
@@ -310,7 +309,7 @@ describe('S3Adapter tests', () => {
         end: jasmine.createSpy('end'),
       };
       s3.handleFileStream('test.mov', req, resp).catch((error) => {
-        expect(error).toBe(data);
+        expect(error.message).toBe('S3 object body is missing.');
         expect(resp.writeHead).not.toHaveBeenCalled();
         expect(resp.write).not.toHaveBeenCalled();
         expect(resp.end).not.toHaveBeenCalled();
