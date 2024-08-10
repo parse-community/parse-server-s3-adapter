@@ -151,7 +151,9 @@ class S3Adapter {
     await this.createBucket();
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
-    return response;
+    const location = `https://${this._bucket}.s3.${this._region}.amazonaws.com/${params.Key}`;
+
+    return Object.assign(response || {}, { Location: location });
   }
 
   async deleteFile(filename) {
