@@ -93,7 +93,7 @@ class S3Adapter {
     return promise;
   }
 
-  / // For a given config object, filename, and data, store a file in S3
+  // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   createFile(filename, data, contentType, options = {}) {
     const params = {
