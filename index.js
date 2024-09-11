@@ -4,6 +4,7 @@
 
 const AWS = require('aws-sdk');
 const optionsFromArguments = require('./lib/optionsFromArguments');
+const stream = require('stream');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
   // eslint-disable-next-line no-console
@@ -92,12 +93,11 @@ class S3Adapter {
     return promise;
   }
 
-  // For a given config object, filename, and data, store a file in S3
+  / // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   createFile(filename, data, contentType, options = {}) {
     const params = {
       Key: this._bucketPrefix + filename,
-      Body: data,
     };
 
     if (this._generateKey instanceof Function) {
@@ -128,14 +128,105 @@ class S3Adapter {
       const serializedTags = serialize(options.tags);
       params.Tagging = serializedTags;
     }
-    return this.createBucket().then(() => new Promise((resolve, reject) => {
-      this._s3Client.upload(params, (err, response) => {
-        if (err !== null) {
-          return reject(err);
-        }
-        return resolve(response);
-      });
-    }));
+
+    // if we are dealing with a blob, we need to handle it differently
+    // it could be over the V8 memory limit
+    if (
+      typeof Blob !== 'undefined' &&
+      data instanceof Blob
+    ) {
+      return this.createBucket().then(() => new Promise((resolve, reject) => {
+        const passThrough = new stream.PassThrough(); // Create a PassThrough stream
+        
+        // 100MB part size 
+        const partSize =  1024 * 1024 * 100;
+        let buffer = Buffer.alloc(0);
+        let partNumber = 1;
+        const uploadPromises = [];
+  
+        // Initiate multipart upload
+        this._s3Client.createMultipartUpload(params, (err, multipart) => {
+          if (err) return reject(err);
+  
+          // Handle data chunking
+          passThrough.on('data', chunk => {
+            buffer = Buffer.concat([buffer, chunk]);
+  
+            // When buffer exceeds partSize, upload that part
+            while (buffer.length >= partSize) {
+              const partParams = {
+                Body: buffer.subarray(0, partSize),
+                Bucket: multipart.Bucket,
+                Key: multipart.Key,
+                PartNumber: partNumber,
+                UploadId: multipart.UploadId,
+              };
+  
+              uploadPromises.push(
+                this._s3Client.uploadPart(partParams).promise()
+              );
+  
+              buffer = buffer.subarray(partSize); // Remove the uploaded part from buffer
+              partNumber++;
+            }
+          });
+  
+          passThrough.on('end', () => {
+            // Upload the remaining buffer as the last part
+            if (buffer.length > 0) {
+              const partParams = {
+                Body: buffer,
+                Bucket: multipart.Bucket,
+                Key: multipart.Key,
+                PartNumber: partNumber,
+                UploadId: multipart.UploadId,
+              };
+              uploadPromises.push(
+                this._s3Client.uploadPart(partParams).promise()
+              );
+            }
+  
+            // Complete multipart upload
+            Promise.all(uploadPromises)
+              .then(parts => {
+                const completeParams = {
+                  Bucket: multipart.Bucket,
+                  Key: multipart.Key,
+                  MultipartUpload: {
+                    Parts: parts.map((part, index) => ({
+                      ETag: part.ETag,
+                      PartNumber: index + 1,
+                    })),
+                  },
+                  UploadId: multipart.UploadId,
+                };
+                return this._s3Client.completeMultipartUpload(completeParams).promise();
+              })
+              .then(resolve)
+              .catch(err => {
+                this._s3Client.abortMultipartUpload({ Bucket: multipart.Bucket, Key: multipart.Key, UploadId: multipart.UploadId });
+                reject(err);
+              });
+          });
+  
+          passThrough.on('error', err => {
+            this._s3Client.abortMultipartUpload({ Bucket: multipart.Bucket, Key: multipart.Key, UploadId: multipart.UploadId });
+            reject(err);
+          });
+
+          // make the data a stream
+          let readableStream = data.stream();
+                    
+          // may come in as a web stream, so we need to convert it to a node stream
+          if (readableStream instanceof ReadableStream) {
+            readableStream = stream.Readable.fromWeb(readableStream);
+          }
+          
+          // Pipe the data to the PassThrough stream
+          readableStream.pipe(passThrough);
+        });
+      }));
+    }
   }
 
   deleteFile(filename) {
