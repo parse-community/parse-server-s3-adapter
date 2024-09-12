@@ -37,39 +37,6 @@ function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, fil
   return directAccessUrl;
 }
 
-class Chunker extends stream.Transform {
-  constructor(chunkSize) {
-    super();
-    this.chunkSize = chunkSize;
-    this.currentSize = 0; // Track current chunk size
-    this.chunks = []; // Store chunks
-  }
-
-  _transform(chunk, encoding, callback) {
-    this.currentSize += chunk.length;
-    this.chunks.push(chunk);
-
-    // If accumulated chunks reach the chunkSize, flush them
-    if (this.currentSize >= this.chunkSize) {
-      const fullChunk = Buffer.concat(this.chunks, this.currentSize);
-      this.push(fullChunk); // Push the full chunk
-      this.chunks = []; // Reset chunk storage
-      this.currentSize = 0;
-    }
-
-    callback();
-  }
-
-  _flush(callback) {
-    // Handle any remaining data that's smaller than chunkSize
-    if (this.currentSize > 0) {
-      const remainingChunk = Buffer.concat(this.chunks, this.currentSize);
-      this.push(remainingChunk);
-    }
-    callback();
-  }
-}
-
 class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
@@ -126,80 +93,6 @@ class S3Adapter {
     return promise;
   }
 
-
-  _handleCreateLargeBlob(params, data) {
-    return this.createBucket().then(() => new Promise((resolve, reject) => {
-      // Initiate multipart upload
-      this._s3Client.createMultipartUpload(params, (err, multipart) => {
-        if (err) return reject(err);
-
-        const ONE_HUNDRED_MB = 1024 * 1024 * 100;
-        const chunker = new Chunker(ONE_HUNDRED_MB);
-        let partNumber = 1;
-        const uploadPromises = [];
-
-
-        // Handle data chunking
-        chunker.on('data', chunk => {
-          // When buffer exceeds partSize, upload that part
-          const partParams = {
-            Body:  chunk,
-            Bucket: multipart.Bucket,
-            Key: multipart.Key,
-            PartNumber: partNumber,
-            UploadId: multipart.UploadId,
-          };
-
-          uploadPromises.push(
-            this._s3Client.uploadPart(partParams).promise()
-          );
-
-          partNumber++;
-
-        });
-
-        chunker.on('error', err => {
-          this._s3Client.abortMultipartUpload({ Bucket: multipart.Bucket, Key: multipart.Key, UploadId: multipart.UploadId });
-          reject(err);
-        });
-
-
-        // Complete multipart upload
-        Promise.all(uploadPromises)
-          .then(parts => {
-            const completeParams = {
-              Bucket: multipart.Bucket,
-              Key: multipart.Key,
-              MultipartUpload: {
-                Parts: parts.map((part, index) => ({
-                  ETag: part.ETag,
-                  PartNumber: index + 1,
-                })),
-              },
-              UploadId: multipart.UploadId,
-            };
-            return this._s3Client.completeMultipartUpload(completeParams).promise();
-          })
-          .then(resolve)
-          .catch(err => {
-            this._s3Client.abortMultipartUpload({ Bucket: multipart.Bucket, Key: multipart.Key, UploadId: multipart.UploadId });
-            reject(err);
-          });
-
-        // make the data a stream
-        let readableStream = data.stream();
-
-        // may come in as a web stream, so we need to convert it to a node stream
-        if (readableStream instanceof ReadableStream) {
-          readableStream = stream.Readable.fromWeb(readableStream);
-        }
-
-        // Pipe the data to the PassThrough stream
-        readableStream.pipe(chunker);
-      });
-    }));
-  }
-
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   createFile(filename, data, contentType, options = {}) {
@@ -235,16 +128,41 @@ class S3Adapter {
       const serializedTags = serialize(options.tags);
       params.Tagging = serializedTags;
     }
+    return this.createBucket()
+      .then(() => new Promise((resolve, reject) => {
+        // if we are dealing with a blob, we need to handle it differently
+        // it could be over the V8 memory limit
+        if (
+          typeof Blob !== 'undefined' &&
+          data instanceof Blob
+        ) {
+          const passStream = new stream.PassThrough();
 
-    // if we are dealing with a blob, we need to handle it differently
-    // it could be over the V8 memory limit
-    if (
-      typeof Blob !== 'undefined' &&
-      data instanceof Blob
-    ) {
+          // make the data a stream
+          let readableStream = data.stream();
 
-      return this._handleCreateLargeBlob(params, data);
-    }
+          // may come in as a web stream, so we need to convert it to a node stream
+          if (readableStream instanceof ReadableStream) {
+            readableStream = stream.Readable.fromWeb(readableStream);
+          }
+
+          // Pipe the data to the PassThrough stream
+          readableStream.pipe(passStream).on('error', reject)
+
+          params.Body = passStream;
+
+          console.log(`Uploading stream to S3 for ${filename} of type ${contentType} and size ${data.size}`);
+        } else {
+          params.Body = data;
+        }
+
+        this._s3Client.upload(params, (err, response) => {
+          if (err !== null) {
+            return reject(err);
+          }
+          return resolve(response);
+        });
+      }));
   }
 
   deleteFile(filename) {
