@@ -151,7 +151,6 @@ class S3Adapter {
 
           params.Body = passStream;
 
-          console.log(`Uploading stream to S3 for ${filename} of type ${contentType} and size ${data.size}`);
         } else {
           params.Body = data;
         }
