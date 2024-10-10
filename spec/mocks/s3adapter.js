@@ -74,4 +74,4 @@ function makeS3Adapter(options) {
   return s3;
 }
 
-module.exports = {makeS3Adapter}
+module.exports = { makeS3Adapter };
