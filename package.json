@@ -11,7 +11,7 @@
     "mongo:stop": "mongodb-runner stop --all",
     "coverage": "nyc jasmine",
     "lint:fix": "eslint --fix --cache ./",
-    "ci": "npm run mongo:run && npm run coverage && npm run mongo:stop"
+    "test:integration": "npm run mongo:run && npm run coverage && npm run mongo:stop"
   },
   "repository": {
     "type": "git",
