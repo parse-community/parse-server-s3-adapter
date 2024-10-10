@@ -2,19 +2,27 @@
 //
 // Stores Parse files in AWS S3.
 
-const { S3Client, CreateBucketCommand, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const {
+  S3Client,
+  CreateBucketCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+} = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
   // eslint-disable-next-line no-console
-  console.warn('Passing AWS credentials to this adapter is now DEPRECATED and will be removed in a future version',
-    'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details');
+  console.warn(
+    'Passing AWS credentials to this adapter is now DEPRECATED and will be removed in a future version',
+    'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details'
+  );
 };
 
-const serialize = (obj) => {
+const serialize = obj => {
   const str = [];
-  Object.keys(obj).forEach((key) => {
+  Object.keys(obj).forEach(key => {
     if (obj[key]) {
       str.push(`${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`);
     }
@@ -40,7 +48,7 @@ function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, fil
 function responseToBuffer(response) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    response.Body.on('data', (chunk) => chunks.push(chunk));
+    response.Body.on('data', chunk => chunks.push(chunk));
     response.Body.on('end', () => resolve(Buffer.concat(chunks)));
     response.Body.on('error', reject);
   });
@@ -81,9 +89,7 @@ class S3Adapter {
         accessKeyId: options.accessKey,
         secretAccessKey: options.secretKey,
       };
-    } else if (options.credentials)
-      s3Options.credentials = options.credentials;
-
+    } else if (options.credentials) s3Options.credentials = options.credentials;
 
     if (options.accessKey && options.secretKey) {
       awsCredentialsDeprecationNotice();
@@ -104,8 +110,7 @@ class S3Adapter {
       await this._s3Client.send(new CreateBucketCommand({ Bucket: this._bucket }));
       this._hasBucket = true;
     } catch (error) {
-      if (error.name === 'BucketAlreadyOwnedByYou')
-        this._hasBucket = true;
+      if (error.name === 'BucketAlreadyOwnedByYou') this._hasBucket = true;
       else throw error;
     }
   }
@@ -160,9 +165,9 @@ class S3Adapter {
       Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
     };
-    await this.createBucket()
+    await this.createBucket();
     const command = new DeleteObjectCommand(params);
-    const response = await this._s3Client.send(command)
+    const response = await this._s3Client.send(command);
     return response;
   }
 
@@ -173,7 +178,7 @@ class S3Adapter {
       Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
     };
-    await this.createBucket()
+    await this.createBucket();
     const command = new GetObjectCommand(params);
     const response = await this._s3Client.send(command);
     if (response && !response.Body) throw new Error(response);
@@ -229,7 +234,7 @@ class S3Adapter {
     await this.createBucket();
     const command = new GetObjectCommand(params);
     const data = await this._s3Client.send(command);
-    if (data && !data.Body) throw new Error("S3 object body is missing.");
+    if (data && !data.Body) throw new Error('S3 object body is missing.');
 
     res.writeHead(206, {
       'Accept-Ranges': data.AcceptRanges,
@@ -237,9 +242,9 @@ class S3Adapter {
       'Content-Range': data.ContentRange,
       'Content-Type': data.ContentType,
     });
-    data.Body.on('data', (chunk) => res.write(chunk));
+    data.Body.on('data', chunk => res.write(chunk));
     data.Body.on('end', () => res.end());
-    data.Body.on('error', (e) => {
+    data.Body.on('error', e => {
       res.status(404);
       res.send(e.message);
     });
