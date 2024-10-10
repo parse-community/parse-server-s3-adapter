@@ -1,78 +1,14 @@
-const config = require('config');
 const { Readable } = require('stream');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
 const Parse = require('parse').Parse;
-const S3Adapter = require('../index.js');
+const S3Adapter = require('../index');
 const optionsFromArguments = require('../lib/optionsFromArguments');
-const { GetObjectCommand, PutObjectCommand, CreateBucketCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { GetObjectCommand, PutObjectCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
+const { makeS3Adapter } = require('./mocks/s3adapter');
+
+const config = require('./config/test');
 
 describe('S3Adapter tests', () => {
-  function makeS3Adapter(options) {
-    let s3;
-
-    if (
-      process.env.TEST_S3_ACCESS_KEY
-      && process.env.TEST_S3_SECRET_KEY
-      && process.env.TEST_S3_BUCKET) {
-      // Should be initialized from the env
-      s3 = new S3Adapter(Object.assign({
-        accessKey: process.env.TEST_S3_ACCESS_KEY,
-        secretKey: process.env.TEST_S3_SECRET_KEY,
-        bucket: process.env.TEST_S3_BUCKET,
-        region: process.env.TEST_S3_REGION
-      }, options));
-    } else {
-      const bucket = 'FAKE_BUCKET';
-      const region = 'us-east-1';
-
-      s3 = new S3Adapter('FAKE_ACCESS_KEY', 'FAKE_SECRET_KEY', bucket, options);
-
-      const objects = {};
-
-      s3._s3Client = {
-        send: (command) => {
-          if (command instanceof PutObjectCommand) {
-            const { Key, Body } = command.input;
-
-            objects[Key] = Body;
-
-            return Promise.resolve({
-              Location: `https://${bucket}.s3.${region}.amazonaws.com/${Key}`,
-            });
-          }
-          if (command instanceof DeleteObjectCommand) {
-            const { Key } = command.input;
-
-            delete objects[Key];
-
-            return Promise.resolve({});
-          }
-          if (command instanceof GetObjectCommand) {
-            const { Key } = command.input;
-
-            if (objects[Key]) {
-              const stream = new Readable();
-              stream.push('hello world');
-              stream.push(null); // End of stream
-
-              return {
-                Body: stream,
-                AcceptRanges: 'bytes',
-                ContentLength: 36,
-                ContentRange: 'bytes 0-35/36',
-                ContentType: 'text/plain',
-              };
-            } else {
-              return Promise.reject(new Error('Not found'));
-            }
-          }
-          return Promise.resolve();
-        }
-      };
-    }
-    return s3;
-  }
-
   beforeEach(() => {
     delete process.env.S3_BUCKET;
     delete process.env.S3_REGION;
@@ -86,7 +22,7 @@ describe('S3Adapter tests', () => {
 
     expect(() => {
       new S3Adapter('accessKey', 'secretKey', {});
-    }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
+    }).toThrow(new Error("Failed to configure S3Adapter. Arguments don't make sense"));
 
     expect(() => {
       new S3Adapter({ accessKey: 'accessKey', secretKey: 'secretKey' });
@@ -118,41 +54,40 @@ describe('S3Adapter tests', () => {
     describe('not initialized properly', () => {
       it('should fail with two string arguments', () => {
         expect(() => {
-          new S3Adapter(config.get('accessKey'), config.get('secretKey'), {});
-        }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
+          new S3Adapter(config.accessKey, config.secretKey, {});
+        }).toThrow(new Error("Failed to configure S3Adapter. Arguments don't make sense"));
       });
 
       it('should fail when passed an object without a bucket', () => {
         expect(() => {
-          new S3Adapter(config.get('insufficientOptions'));
+          new S3Adapter(config.insufficientOptions);
         }).toThrow(new Error("S3Adapter requires option 'bucket' or env. variable S3_BUCKET"));
       });
     });
 
-
     describe('should not throw when initialized properly', () => {
       it('should accept a string bucket', () => {
         expect(() => {
-          new S3Adapter(config.get('bucket'));
+          new S3Adapter(config.bucket);
         }).not.toThrow();
       });
 
       it('should accept an object with a bucket', () => {
         expect(() => {
-          new S3Adapter(config.get('objectWithBucket'));
+          new S3Adapter(config.objectWithBucket);
         }).not.toThrow();
       });
 
       it('should accept a second argument of object with a params object with a bucket', () => {
         expect(() => {
-          new S3Adapter(config.get('emptyObject'), config.get('paramsObjectWBucket'));
+          new S3Adapter(config.emptyObject, config.paramsObjectWBucket);
         }).not.toThrow();
       });
 
       it('should accept environment over default', () => {
         const TEST_REGION = 'test';
         process.env.S3_REGION = TEST_REGION;
-        const s3 = new S3Adapter(config.get('bucket'));
+        const s3 = new S3Adapter(config.bucket);
         expect(s3._region).toBe(TEST_REGION);
       });
     });
@@ -193,7 +128,15 @@ describe('S3Adapter tests', () => {
 
     it('should accept options and overrides as an option in args', () => {
       const confObj = {
-        bucketPrefix: 'test/', bucket: 'bucket-1', secretKey: 'secret-1', accessKey: 'key-1', s3overrides: { secretAccessKey: 'secret-2', accessKeyId: 'key-2', params: { Bucket: 'bucket-2' } },
+        bucketPrefix: 'test/',
+        bucket: 'bucket-1',
+        secretKey: 'secret-1',
+        accessKey: 'key-1',
+        s3overrides: {
+          secretAccessKey: 'secret-2',
+          accessKeyId: 'key-2',
+          params: { Bucket: 'bucket-2' },
+        },
       };
       const s3 = new S3Adapter(confObj);
       expect(s3._s3Client.config.accessKeyId).toEqual('key-2');
@@ -213,7 +156,7 @@ describe('S3Adapter tests', () => {
       };
       const s3 = new S3Adapter(confObj);
       const endpointFromConfig = await s3._s3Client.config.endpoint();
-      expect(endpointFromConfig.protocol).toEqual("https:");
+      expect(endpointFromConfig.protocol).toEqual('https:');
       expect(endpointFromConfig.path).toEqual('/path');
       expect(endpointFromConfig.port).toEqual(8080);
       expect(endpointFromConfig.hostname).toEqual('test.com');
@@ -222,9 +165,16 @@ describe('S3Adapter tests', () => {
 
     it('should accept options and overrides as args', () => {
       const confObj = {
-        bucketPrefix: 'test/', bucket: 'bucket-1', secretKey: 'secret-1', accessKey: 'key-1',
+        bucketPrefix: 'test/',
+        bucket: 'bucket-1',
+        secretKey: 'secret-1',
+        accessKey: 'key-1',
       };
-      const overridesObj = { secretAccessKey: 'secret-2', accessKeyId: 'key-2', params: { Bucket: 'bucket-2' } };
+      const overridesObj = {
+        secretAccessKey: 'secret-2',
+        accessKeyId: 'key-2',
+        params: { Bucket: 'bucket-2' },
+      };
       const s3 = new S3Adapter(confObj, overridesObj);
       expect(s3._s3Client.config.accessKeyId).toEqual('key-2');
       expect(s3._s3Client.config.secretAccessKey).toEqual('secret-2');
@@ -234,7 +184,10 @@ describe('S3Adapter tests', () => {
 
     it('should accept overrides without params', () => {
       const confObj = {
-        bucketPrefix: 'test/', bucket: 'bucket-1', secretKey: 'secret-1', accessKey: 'key-1',
+        bucketPrefix: 'test/',
+        bucket: 'bucket-1',
+        secretKey: 'secret-1',
+        accessKey: 'key-1',
       };
       const overridesObj = { secretAccessKey: 'secret-2' };
       const s3 = new S3Adapter(confObj, overridesObj);
@@ -263,7 +216,7 @@ describe('S3Adapter tests', () => {
         write: jasmine.createSpy('write'),
         end: jasmine.createSpy('end'),
       };
-      s3.handleFileStream('test.mov', req, resp).then((data) => {
+      s3.handleFileStream('test.mov', req, resp).then(data => {
         expect(data.toString('utf8')).toBe('hello world');
         expect(resp.writeHead).toHaveBeenCalled();
         expect(resp.write).toHaveBeenCalled();
@@ -287,7 +240,7 @@ describe('S3Adapter tests', () => {
         write: jasmine.createSpy('write'),
         end: jasmine.createSpy('end'),
       };
-      s3.handleFileStream('test.mov', req, resp).catch((error) => {
+      s3.handleFileStream('test.mov', req, resp).catch(error => {
         expect(error).toBe('FileNotFound');
         expect(resp.writeHead).not.toHaveBeenCalled();
         expect(resp.write).not.toHaveBeenCalled();
@@ -309,7 +262,7 @@ describe('S3Adapter tests', () => {
         write: jasmine.createSpy('write'),
         end: jasmine.createSpy('end'),
       };
-      s3.handleFileStream('test.mov', req, resp).catch((error) => {
+      s3.handleFileStream('test.mov', req, resp).catch(error => {
         expect(error.message).toBe('S3 object body is missing.');
         expect(resp.writeHead).not.toHaveBeenCalled();
         expect(resp.write).not.toHaveBeenCalled();
@@ -335,25 +288,33 @@ describe('S3Adapter tests', () => {
 
     it('should get using the baseUrl', async () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://example.com/files/foo/bar/test.png'
+      );
     });
 
     it('should get direct to baseUrl', async () => {
       options.baseUrlDirect = true;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://example.com/files/test.png'
+      );
     });
 
     it('should get without directAccess', async () => {
       options.directAccess = false;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://my.server.com/parse/files/xxxx/test.png'
+      );
     });
 
     it('should go directly to amazon', async () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+      );
     });
   });
   describe('getFileLocation with baseUrl', () => {
@@ -378,25 +339,33 @@ describe('S3Adapter tests', () => {
 
     it('should get using the baseUrl', async () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://example.com/files/foo/bar/test.png'
+      );
     });
 
     it('should get direct to baseUrl', async () => {
       options.baseUrlDirect = true;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://example.com/files/test.png'
+      );
     });
 
     it('should get without directAccess', async () => {
       options.directAccess = false;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://my.server.com/parse/files/xxxx/test.png'
+      );
     });
 
     it('should go directly to amazon', async () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+      );
     });
   });
   describe('getFileLocation with presignedUrl', () => {
@@ -417,17 +386,19 @@ describe('S3Adapter tests', () => {
 
     it('should get using the baseUrl', async () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/foo/bar/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://example.com/files/foo/bar/test.png'
+      );
     });
 
-    it('when use presigned URL should use S3 \'getObject\' operation', async () => {
+    it("when use presigned URL should use S3 'getObject' operation", async () => {
       options.presignedUrl = true;
       const s3 = makeS3Adapter(options);
 
       let getSignedUrlCommand = '';
       s3.getFileSignedUrl = (_, command) => {
         getSignedUrlCommand = command;
-      }
+      };
 
       await s3.getFileLocation(testConfig, 'test.png');
       expect(getSignedUrlCommand).toBeInstanceOf(GetObjectCommand);
@@ -439,7 +410,9 @@ describe('S3Adapter tests', () => {
 
       const fileLocation = await s3.getFileLocation(testConfig, 'test.png');
       expect(fileLocation).toMatch(/^http:\/\/example.com\/files\/foo\/bar\/test.png\?/);
-      expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2F\w{2}-\w{1,9}-\d%2Fs3%2Faws4_request/);
+      expect(fileLocation).toMatch(
+        /X-Amz-Credential=accessKey%2F\d{8}%2F\w{2}-\w{1,9}-\d%2Fs3%2Faws4_request/
+      );
       expect(fileLocation).toMatch(/X-Amz-Date=\d{8}T\d{6}Z/);
       expect(fileLocation).toMatch(/X-Amz-Signature=.{64}/);
       expect(fileLocation).toMatch(/X-Amz-Expires=\d{1,6}/);
@@ -450,19 +423,25 @@ describe('S3Adapter tests', () => {
     it('should get direct to baseUrl', async () => {
       options.baseUrlDirect = true;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://example.com/files/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://example.com/files/test.png'
+      );
     });
 
     it('should get without directAccess', async () => {
       options.directAccess = false;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('http://my.server.com/parse/files/xxxx/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'http://my.server.com/parse/files/xxxx/test.png'
+      );
     });
 
     it('should go directly to amazon', async () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
-      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual('https://my-bucket.s3.amazonaws.com/foo/bar/test.png');
+      expect(await s3.getFileLocation(testConfig, 'test.png')).toEqual(
+        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+      );
     });
 
     it('should go directly to amazon using presigned URL', async () => {
@@ -471,8 +450,12 @@ describe('S3Adapter tests', () => {
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
 
       const fileLocation = await s3.getFileLocation(testConfig, 'test.png');
-      expect(fileLocation).toMatch(/^https:\/\/my-bucket.s3.us-east-1.amazonaws.com\/foo\/bar\/test.png\?/);
-      expect(fileLocation).toMatch(/X-Amz-Credential=accessKey%2F\d{8}%2Fus-east-1%2Fs3%2Faws4_request/);
+      expect(fileLocation).toMatch(
+        /^https:\/\/my-bucket.s3.us-east-1.amazonaws.com\/foo\/bar\/test.png\?/
+      );
+      expect(fileLocation).toMatch(
+        /X-Amz-Credential=accessKey%2F\d{8}%2Fus-east-1%2Fs3%2Faws4_request/
+      );
       expect(fileLocation).toMatch(/X-Amz-Date=\d{8}T\d{6}Z/);
       expect(fileLocation).toMatch(/X-Amz-Signature=.{64}/);
       expect(fileLocation).toMatch(/X-Amz-Expires=\d{1,6}/);
@@ -496,11 +479,11 @@ describe('S3Adapter tests', () => {
     });
 
     it('should not allow directories when overridden', () => {
-      options.validateFilename = (filename) => {
+      options.validateFilename = filename => {
         if (filename.indexOf('/') !== -1) {
           return new Parse.Error(
             Parse.Error.INVALID_FILE_NAME,
-            'Filename contains invalid characters.',
+            'Filename contains invalid characters.'
           );
         }
         return null;
@@ -517,14 +500,14 @@ describe('S3Adapter tests', () => {
     beforeEach(() => {
       options = {
         bucketPrefix: 'test/',
-        generateKey: (filename) => {
+        generateKey: filename => {
           let key = '';
           const lastSlash = filename.lastIndexOf('/');
           const prefix = `${Date.now()}_`;
           if (lastSlash > 0) {
             // put the prefix before the last component of the filename
-            key += filename.substring(0, lastSlash + 1) + prefix
-              + filename.substring(lastSlash + 1);
+            key +=
+              filename.substring(0, lastSlash + 1) + prefix + filename.substring(lastSlash + 1);
           } else {
             key += prefix + filename;
           }
@@ -536,7 +519,7 @@ describe('S3Adapter tests', () => {
     it('should return a file with a date stamp inserted in the path', () => {
       const s3 = makeS3Adapter(options);
       const fileName = 'randomFileName.txt';
-      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
+      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
         const url = new URL(value.Location);
         expect(url.pathname.indexOf(fileName) > 13).toBe(true);
       });
@@ -547,7 +530,7 @@ describe('S3Adapter tests', () => {
       options.generateKey = null;
       const s3 = makeS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
-      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
+      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
         const url = new URL(value.Location);
         expect(url.pathname.substring(1)).toEqual(options.bucketPrefix + fileName);
       });
@@ -557,7 +540,7 @@ describe('S3Adapter tests', () => {
     it('should add unique timestamp to the file name after the last directory when there is a path', () => {
       const s3 = makeS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
-      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
+      const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
         const url = new URL(value.Location);
         expect(url.pathname.indexOf('foo/')).toEqual(6);
         expect(url.pathname.indexOf('random') > 13).toBe(true);
@@ -659,32 +642,32 @@ describe('S3Adapter tests', () => {
       s3 = makeS3Adapter({ bucketPrefix: 'test-prefix/' });
       const testFileContent = 'hello world! This is a test file for S3 streaming.';
       await s3.createFile(filename, testFileContent, 'text/plain', {});
-    })
+    });
 
     afterAll(async () => {
       await s3.deleteFile(filename);
-    })
+    });
 
     it('should get stream bytes correctly', async () => {
       const req = {
-        get: jasmine.createSpy('get').and.callFake((header) => {
+        get: jasmine.createSpy('get').and.callFake(header => {
           if (header === 'Range') return 'bytes=0-10';
           return null;
-        })
+        }),
       };
       const res = {
         writeHead: jasmine.createSpy('writeHead'),
         write: jasmine.createSpy('write'),
-        end: jasmine.createSpy('end')
+        end: jasmine.createSpy('end'),
       };
       const data = await s3.handleFileStream(filename, req, res);
 
-      expect(data.toString('utf8')).toBe('hello world')
+      expect(data.toString('utf8')).toBe('hello world');
       expect(res.writeHead).toHaveBeenCalled();
       expect(res.write).toHaveBeenCalled();
       expect(res.end).toHaveBeenCalled();
-    })
-  })
+    });
+  });
 
   filesAdapterTests.testAdapter('S3Adapter', makeS3Adapter({}));
 });
