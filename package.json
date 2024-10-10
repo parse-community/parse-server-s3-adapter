@@ -10,7 +10,8 @@
     "mongo:run": "mongodb-runner start -t replset --version 6.0 -- --port 27017",
     "mongo:stop": "mongodb-runner stop --all",
     "coverage": "nyc jasmine",
-    "lint:fix": "eslint --fix --cache ./"
+    "lint:fix": "eslint --fix --cache ./",
+    "ci": "npm run mongo:run && npm run coverage && npm run mongo:stop"
   },
   "repository": {
     "type": "git",
