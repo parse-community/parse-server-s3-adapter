@@ -7,6 +7,9 @@
     "pretest": "npm run lint",
     "test": "NODE_ENV=test NODE_CONFIG_DIR=./spec/config istanbul cover -x **/spec/** jasmine --captureExceptions",
     "lint": "eslint --cache ./",
+    "mongo:run": "mongodb-runner start -t replset --version 6.0 -- --port 27017",
+    "mongo:stop": "mongodb-runner stop --all",
+    "test:integration": "npm run mongo:run && npm run test && npm run mongo:stop",
     "lint:fix": "eslint --fix --cache ./"
   },
   "repository": {
@@ -41,8 +44,11 @@
     "eslint-plugin-import": "2.22.1",
     "istanbul": "0.4.5",
     "jasmine": "3.5.0",
-    "parse": "3.3.1",
+    "parse": "5.3.0",
+    "parse-server": "^7.3.0",
     "parse-server-conformance-tests": "1.0.0",
+    "prettier": "3.3.3",
+    "mongodb-runner": "5.6.4",
     "semantic-release": "17.4.6"
   }
 }
