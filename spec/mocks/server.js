@@ -1,5 +1,4 @@
 const { ParseServer } = require('parse-server');
-const MockEmailAdapterWithOptions = require('./MockEmailAdapterWithOptions');
 const { makeS3Adapter } = require('./s3adapter-v2');
 
 const port = 1327;
@@ -19,7 +18,6 @@ const defaultConfiguration = {
   liveQuery: {
     classNames: [],
   },
-  startLiveQueryServer: true,
   verbose: false,
   silent: true,
   fileUpload: {
@@ -27,12 +25,6 @@ const defaultConfiguration = {
     enableForAnonymousUser: true,
     enableForAuthenticatedUser: true,
   },
-  revokeSessionOnPasswordReset: false,
-  allowCustomObjectId: false,
-  allowClientClassCreation: true,
-  encodeParseObjectInCloudFunction: true,
-  masterKeyIps: ['0.0.0.0/0', '0.0.0.0', '::/0', '::'],
-  emailAdapter: MockEmailAdapterWithOptions(),
   port,
   mountPath,
   filesAdapter: S3Adapter,
