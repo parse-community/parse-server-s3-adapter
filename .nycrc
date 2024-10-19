@@ -1,5 +1,5 @@
 {
   "reportDir": "./coverage",
   "reporter": ["lcov", "text"],
-  "extension": [".js", ".ts"]
+  "include": ["spec/**/*.spec.js"]
 }
