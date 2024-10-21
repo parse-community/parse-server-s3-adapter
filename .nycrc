@@ -1,5 +1,13 @@
 {
-  "reportDir": "./coverage",
-  "reporter": ["lcov", "text"],
-  "include": ["spec/**/*.spec.js"]
+  "all": true,
+  "reporter": [
+    "lcov",
+    "text-summary"
+  ],
+  "include": [
+    "src/**/*.js"
+  ],
+  "exclude": [
+    "**/spec/**"
+  ]
 }
