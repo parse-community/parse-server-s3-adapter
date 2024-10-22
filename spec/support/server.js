@@ -34,7 +34,7 @@ async function startServer(config = {}) {
 
   // Compose server config
   const serverConfig = Object.assign({}, config, defaultConfig);
-  
+
   // Launch parse server
   const parseServer = ParseServer(serverConfig);
   await parseServer.start();
