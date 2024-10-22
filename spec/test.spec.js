@@ -4,7 +4,7 @@ const config = require('config');
 const S3Adapter = require('../index');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 const { GetObjectCommand, PutObjectCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
-const { getMockS3Adapter } = require('./mocks/s3adapter-v3');
+const { getMockS3Adapter } = require('./mocks/s3adapter');
 
 
 describe('S3Adapter tests', () => {
