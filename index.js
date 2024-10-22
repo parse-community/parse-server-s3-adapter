@@ -89,7 +89,9 @@ class S3Adapter {
         accessKeyId: options.accessKey,
         secretAccessKey: options.secretKey,
       };
-    } else if (options.credentials) s3Options.credentials = options.credentials;
+    } else if (options.credentials) {
+      s3Options.credentials = options.credentials;
+    }
 
     if (options.accessKey && options.secretKey) {
       awsCredentialsDeprecationNotice();
@@ -104,14 +106,14 @@ class S3Adapter {
   }
 
   async createBucket() {
-    if (this._hasBucket) return;
+    if (this._hasBucket) { return; }
 
     try {
       await this._s3Client.send(new CreateBucketCommand({ Bucket: this._bucket }));
       this._hasBucket = true;
     } catch (error) {
-      if (error.name === 'BucketAlreadyOwnedByYou') this._hasBucket = true;
-      else throw error;
+      if (error.name === 'BucketAlreadyOwnedByYou') { this._hasBucket = true; }
+      else { throw error; }
     }
   }
 
@@ -181,7 +183,7 @@ class S3Adapter {
     await this.createBucket();
     const command = new GetObjectCommand(params);
     const response = await this._s3Client.send(command);
-    if (response && !response.Body) throw new Error(response);
+    if (response && !response.Body) { throw new Error(response); }
 
     const buffer = await responseToBuffer(response);
     return buffer;
@@ -234,7 +236,7 @@ class S3Adapter {
     await this.createBucket();
     const command = new GetObjectCommand(params);
     const data = await this._s3Client.send(command);
-    if (data && !data.Body) throw new Error('S3 object body is missing.');
+    if (data && !data.Body) { throw new Error('S3 object body is missing.'); }
 
     res.writeHead(206, {
       'Accept-Ranges': data.AcceptRanges,
