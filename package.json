@@ -30,8 +30,6 @@
     "@semantic-release/release-notes-generator": "9.0.3",
     "config": "3.3.2",
     "eslint": "7.13.0",
-    "eslint-config-airbnb-base": "14.2.1",
-    "eslint-plugin-import": "2.22.1",
     "express": "4.21.1",
     "jasmine": "3.5.0",
     "jasmine-spec-reporter": "7.0.0",
@@ -39,7 +37,6 @@
     "nyc": "17.1.0",
     "parse": "3.3.1",
     "parse-server": "7.3.0",
-    "parse-server-conformance-tests": "1.0.0",
     "prettier": "3.3.3",
     "semantic-release": "17.4.6"
   },

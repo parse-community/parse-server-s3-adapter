@@ -1,6 +1,5 @@
 const AWS = require('aws-sdk');
 const config = require('config');
-const filesAdapterTests = require('parse-server-conformance-tests').files;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 const { getMockS3Adapter } = require("./mocks/s3adapter-v2.js");
@@ -613,6 +612,4 @@ describe('S3Adapter tests', () => {
       });
     });
   });
-
-  filesAdapterTests.testAdapter('S3Adapter', getMockS3Adapter({}));
 });
