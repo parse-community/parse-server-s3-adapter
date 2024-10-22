@@ -27,14 +27,26 @@ jobs:
         include:
           - name: Node.js 18
             NODE_VERSION: 18.20.4
+            PARSE_SERVER_VERSION: 7
           - name: Node.js 20
             NODE_VERSION: 20.15.1
+            PARSE_SERVER_VERSION: 7
           - name: Node.js 22
             NODE_VERSION: 22.4.1
+            PARSE_SERVER_VERSION: 7
+          - name: Parse Server 6
+            NODE_VERSION: 16
+            PARSE_SERVER_VERSION: 6
+          - name: Parse Server 5
+            NODE_VERSION: 14
+            PARSE_SERVER_VERSION: 5
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    env:
+      NODE_VERSION: ${{ matrix.NODE_VERSION }}
+      PARSE_SERVER_VERSION: ${{ matrix.PARSE_SERVER_VERSION }}
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.NODE_VERSION }}
@@ -42,6 +54,8 @@ jobs:
         with:
           node-version: ${{ matrix.NODE_VERSION }}
           cache: npm
+      - name: Install Parse Server ${{ matrix.PARSE_SERVER_VERSION }}
+        run: npm i -DE parse-server@${{ matrix.PARSE_SERVER_VERSION }}
       - name: Install dependencies
         run: npm ci
       - name: Run tests
