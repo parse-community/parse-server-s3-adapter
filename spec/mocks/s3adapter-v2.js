@@ -1,66 +1,56 @@
 const S3Adapter = require('../../index.js');
 
-function makeS3Adapter(options) {
-  let s3;
+function getMockS3Adapter(options) {
+  const accessKey = process.env.TEST_S3_ACCESS_KEY || 'ACCESS_KEY';
+  const secretKey = process.env.TEST_S3_SECRET_KEY || 'SECRET_KEY';
+  const bucket = process.env.TEST_S3_BUCKET || 'BUCKET';
 
-  if (
-    process.env.TEST_S3_ACCESS_KEY &&
-    process.env.TEST_S3_SECRET_KEY &&
-    process.env.TEST_S3_BUCKET
-  ) {
-    // Should be initialized from the env
-    s3 = new S3Adapter(
-      Object.assign(
-        {
-          accessKey: process.env.TEST_S3_ACCESS_KEY,
-          secretKey: process.env.TEST_S3_SECRET_KEY,
-          bucket: process.env.TEST_S3_BUCKET,
-        },
-        options
-      )
-    );
-  } else {
-    const bucket = 'FAKE_BUCKET';
+  const s3 = new S3Adapter(Object.assign({
+    accessKey,
+    secretKey,
+    bucket,
+  }, options));
 
-    s3 = new S3Adapter('FAKE_ACCESS_KEY', 'FAKE_SECRET_KEY', bucket, options);
+  const objects = {};
 
-    const objects = {};
+  s3._s3Client = {
+    createBucket: callback =>
+      // @ts-ignore
+      setTimeout(callback, 100),
 
-    s3._s3Client = {
-      createBucket: callback => setTimeout(callback, 100),
-      upload: (params, callback) =>
-        setTimeout(() => {
-          const { Key, Body } = params;
+    upload: (params, callback) =>
+      // @ts-ignore
+      setTimeout(() => {
+        const { Key, Body } = params;
+        objects[Key] = Body;
+        callback(null, { Location: `https://${bucket}.s3.amazonaws.com/${Key}` });
+      }, 100),
 
-          objects[Key] = Body;
+    deleteObject: (params, callback) =>
+      // @ts-ignore
+      setTimeout(() => {
+        const { Key } = params;
+        delete objects[Key];
+        // @ts-ignore
+        callback(null, {});
+      }, 100),
 
-          callback(null, {
-            Location: `https://${bucket}.s3.amazonaws.com/${Key}`,
-          });
-        }, 100),
-      deleteObject: (params, callback) =>
-        setTimeout(() => {
-          const { Key } = params;
+    getObject: (params, callback) =>
+      // @ts-ignore
+      setTimeout(() => {
+        const { Key } = params;
 
-          delete objects[Key];
+        if (objects[Key]) {
+          // @ts-ignore
+          callback(null, { Body: Buffer.from(objects[Key], 'utf8') });
+        } else {
+          // @ts-ignore
+          callback(new Error('Not found'));
+        }
+      }, 100),
+  };
 
-          callback(null, {});
-        }, 100),
-      getObject: (params, callback) =>
-        setTimeout(() => {
-          const { Key } = params;
-
-          if (objects[Key]) {
-            callback(null, {
-              Body: Buffer.from(objects[Key], 'utf8'),
-            });
-          } else {
-            callback(new Error('Not found'));
-          }
-        }, 100),
-    };
-  }
   return s3;
 }
 
-module.exports = { makeS3Adapter };
+module.exports = { getMockS3Adapter };

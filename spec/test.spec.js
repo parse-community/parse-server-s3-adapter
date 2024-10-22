@@ -3,7 +3,7 @@ const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
-const { makeS3Adapter } = require("./mocks/s3adapter-v2.js");
+const { getMockS3Adapter } = require("./mocks/s3adapter-v2.js");
 
 describe('S3Adapter tests', () => {
   beforeEach(() => {
@@ -480,7 +480,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should return a file with a date stamp inserted in the path', () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       const fileName = 'randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
@@ -491,7 +491,7 @@ describe('S3Adapter tests', () => {
 
     it('should do nothing when null', () => {
       options.generateKey = null;
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
@@ -501,7 +501,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should add unique timestamp to the file name after the last directory when there is a path', () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then((value) => {
         const url = new URL(value.Location);
@@ -523,7 +523,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with metadata added', async () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client.upload = (params, callback) => {
         const { Metadata } = params;
         expect(Metadata).toEqual({ foo: 'bar' });
@@ -538,7 +538,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with tags added', async () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client.upload = (params, callback) => {
         const { Tagging } = params;
         expect(Tagging).toEqual('foo=bar&baz=bin');
@@ -555,7 +555,7 @@ describe('S3Adapter tests', () => {
     it('should save a file with proper ACL with direct access', async () => {
       // Create adapter
       options.directAccess = true;
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       spyOn(s3._s3Client, 'upload').and.callThrough();
       // Save file
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -569,7 +569,7 @@ describe('S3Adapter tests', () => {
 
     it('should save a file with proper ACL without direct access', async () => {
       // Create adapter
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       spyOn(s3._s3Client, 'upload').and.callThrough();
       // Save file
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -585,7 +585,7 @@ describe('S3Adapter tests', () => {
       // Create adapter
       options.directAccess = true;
       options.fileAcl = 'private';
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       spyOn(s3._s3Client, 'upload').and.callThrough();
       // Save file
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -601,7 +601,7 @@ describe('S3Adapter tests', () => {
       // Create adapter
       options.directAccess = true;
       options.fileAcl = 'none';
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       spyOn(s3._s3Client, 'upload').and.callThrough();
       // Save file
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -614,5 +614,5 @@ describe('S3Adapter tests', () => {
     });
   });
 
-  filesAdapterTests.testAdapter('S3Adapter', makeS3Adapter({}));
+  filesAdapterTests.testAdapter('S3Adapter', getMockS3Adapter({}));
 });

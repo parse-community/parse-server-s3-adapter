@@ -1,11 +1,11 @@
 const { ParseServer } = require('parse-server');
 const express = require('express');
 const http = require('http');
-const { makeS3Adapter } = require('../mocks/s3adapter-v2');
+const { getMockS3Adapter } = require('../mocks/s3adapter-v2');
 const Config = require('../../node_modules/parse-server/lib/Config.js');
 
 const expressApp = express();
-const S3Adapter = makeS3Adapter();
+const S3Adapter = getMockS3Adapter();
 
 let serverState = {};
 
