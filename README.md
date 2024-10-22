@@ -40,9 +40,11 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
 
 ### Parse Server
 
-| Version | Latest Version | End-of-Life   | Compatible |
-|---------|----------------|---------------|------------|
-| <=7     | 7.3.0          | December 2025 | ✅ Yes      |
+| Version | End-of-Life   | Compatible |
+|---------|---------------|------------|
+| <=5     | December 2023 | ✅ Yes      |
+| 6       | December 2024 | ✅ Yes      |
+| 7       | December 2025 | ✅ Yes      |
 
 ### Node.js
 
