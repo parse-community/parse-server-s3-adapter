@@ -5,7 +5,7 @@ const satisfiesParseServerVersion = version => {
   const semverVersion = semver.coerce(envVersion);
   console.log(`satisfiesParseServerVersion: envVersion: ${version}`);
   console.log(`satisfiesParseServerVersion: version: ${envVersion}`);
-  return !envVersion || !semverVersion || semver.satisfies(semverVersion, version);
+  return !envVersion || !semverVersion || semver.satisfies(semverVersion, version);
 }
 
 global.it_only_parse_server_version = version => satisfiesParseServerVersion(version) ? it : xit;
