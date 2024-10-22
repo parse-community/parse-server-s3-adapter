@@ -2,6 +2,8 @@ const semver = require('semver');
 
 const satisfiesParseServerVersion = version => {
   const envVersion = process.env.PARSE_SERVER_VERSION;
+  console.log(`satisfiesParseServerVersion: envVersion: ${version}`);
+  console.log(`satisfiesParseServerVersion: version: ${envVersion}`);
   return !envVersion || semver.satisfies(envVersion, version);
 }
 
