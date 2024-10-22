@@ -1,9 +1,12 @@
 const { httpRequest } = require('./support/request');
 
-describe('S3Adapter integration tests', () => {
+const fileName = 'file.txt';
+const fileData = 'hello world';
+
+describe('Parse Server 7 integration test', () => {
   it('stores a file', async () => {
-    const base64 = Buffer.from('1').toString('base64');
-    const file = new Parse.File('file.txt', { base64 });
+    const base64 = Buffer.from(fileData).toString('base64');
+    const file = new Parse.File(fileName, { base64 });
     await file.save();
 
     expect(file).toBeDefined();
@@ -11,20 +14,20 @@ describe('S3Adapter integration tests', () => {
   });
 
   it('reads the contents of a file', async () => {
-    const base64 = Buffer.from('1').toString('base64');
-    const file = new Parse.File('file.txt', { base64 });
+    const base64 = Buffer.from(fileData).toString('base64');
+    const file = new Parse.File(fileName, { base64 });
     await file.save();
     const fileLink = file.url();
 
     const response = await httpRequest(fileLink);
     const text = response.toString();
 
-    expect(text).toBe('1');
+    expect(text).toBe(fileData);
   });
 
   it('deletes a file', async () => {
-    const base64 = Buffer.from('1').toString('base64');
-    const file = new Parse.File('file.txt', { base64 });
+    const base64 = Buffer.from(fileData).toString('base64');
+    const file = new Parse.File(fileName, { base64 });
     await file.save();
 
     const fileLink = file.url();
