@@ -34,9 +34,6 @@ jobs:
           - name: Parse Server 7, Node.js 22
             NODE_VERSION: 22.4.1
             PARSE_SERVER_VERSION: 7
-          - name: Parse Server 6
-            NODE_VERSION: 18
-            PARSE_SERVER_VERSION: 6
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 15

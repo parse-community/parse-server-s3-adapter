@@ -3,7 +3,7 @@ const { httpRequest } = require('./support/request');
 const fileName = 'file.txt';
 const fileData = 'hello world';
 
-describe_only_parse_server_version('<=7')('Parse Server <=7 integration test', () => {
+describe_only_parse_server_version('>=7')('Parse Server >=7 integration test', () => {
   it('stores a file', async () => {
     const base64 = Buffer.from(fileData).toString('base64');
     const file = new Parse.File(fileName, { base64 });
