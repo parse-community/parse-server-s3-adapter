@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pretest": "npm run lint",
-    "test": "NODE_ENV=test NODE_CONFIG_DIR=./spec/config istanbul cover -x **/spec/** jasmine --captureExceptions",
+    "test": "nyc jasmine",
     "lint": "eslint --cache ./",
     "mongo:run": "mongodb-runner start -t replset --version 6.0 -- --port 27017",
     "mongo:stop": "mongodb-runner stop --all",
@@ -42,7 +42,7 @@
     "eslint": "7.13.0",
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-plugin-import": "2.22.1",
-    "istanbul": "0.4.5",
+    "nyc": "17.1.0",
     "jasmine": "3.5.0",
     "parse": "3.3.1",
     "parse-server": "7.3.0",
