@@ -37,9 +37,6 @@ jobs:
           - name: Parse Server 6
             NODE_VERSION: 16
             PARSE_SERVER_VERSION: 6
-          - name: Parse Server 5
-            NODE_VERSION: 14
-            PARSE_SERVER_VERSION: 5
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 15
