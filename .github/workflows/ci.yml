@@ -25,12 +25,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Node.js 14
-            NODE_VERSION: 14
-          - name: Node.js 16
-            NODE_VERSION: 16
           - name: Node.js 18
-            NODE_VERSION: 18
+            NODE_VERSION: 18.20.4
+          - name: Node.js 20
+            NODE_VERSION: 20.15.1
+          - name: Node.js 22
+            NODE_VERSION: 22.4.1
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 15
