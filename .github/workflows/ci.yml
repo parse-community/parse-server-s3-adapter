@@ -7,27 +7,64 @@ on:
     branches:
       - '**'
 jobs:
-  test:
+  lint:
+    name: Lint
+    timeout-minutes: 15
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+  test:
     strategy:
       matrix:
-        node: [ '14', '16', '18' ]
-    timeout-minutes: 30
+        include:
+          - name: Parse Server 7, Node.js 18
+            NODE_VERSION: 18.20.4
+            PARSE_SERVER_VERSION: 7
+          - name: Parse Server 7, Node.js 20
+            NODE_VERSION: 20.15.1
+            PARSE_SERVER_VERSION: 7
+          - name: Parse Server 7, Node.js 22
+            NODE_VERSION: 22.4.1
+            PARSE_SERVER_VERSION: 7
+          - name: Parse Server 6
+            NODE_VERSION: 18
+            PARSE_SERVER_VERSION: 6
+      fail-fast: false
+    name: ${{ matrix.name }}
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
     env:
-      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      NODE_VERSION: ${{ matrix.NODE_VERSION }}
+      PARSE_SERVER_VERSION: ${{ matrix.PARSE_SERVER_VERSION }}
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.NODE_VERSION }}
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-      - name: Cache Node.js modules
-        uses: actions/cache@v2
+          node-version: ${{ matrix.NODE_VERSION }}
+          cache: npm
+      - name: Install Parse Server ${{ matrix.PARSE_SERVER_VERSION }}
+        run: npm i -DE parse-server@${{ matrix.PARSE_SERVER_VERSION }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm run test
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-              ${{ runner.os }}-node-
-      - run: npm ci
-      - run: npm run test
-      - run: ./node_modules/.bin/codecov
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true

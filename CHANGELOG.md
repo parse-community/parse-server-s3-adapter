@@ -1,3 +1,15 @@
+# [3.0.0](https://github.com/parse-community/parse-server-s3-adapter/compare/2.2.0...3.0.0) (2024-10-22)
+
+
+### Features
+
+* Add support for Node 20, 22; remove support for Node 14, 16 ([#226](https://github.com/parse-community/parse-server-s3-adapter/issues/226)) ([da5a94f](https://github.com/parse-community/parse-server-s3-adapter/commit/da5a94fa180ba57dfae33659e18db4704582e8e6))
+
+
+### BREAKING CHANGES
+
+* Removes support for Node 14, 16. ([da5a94f](da5a94f))
+
 # [2.2.0](https://github.com/parse-community/parse-server-s3-adapter/compare/2.1.0...2.2.0) (2023-05-15)
 
 

@@ -2,7 +2,6 @@
 logs
 *.log
 npm-debug.log*
-.env
 
 # Runtime data
 pids
@@ -13,8 +12,8 @@ pids
 lib-cov
 
 # Coverage directory used by tools like istanbul
-coverage
 .nyc_output
+coverage
 
 # Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
@@ -37,4 +36,8 @@ node_modules
 # Webstorm
 .idea/
 
+# Lint
 .eslintcache
+
+# Parse Server
+test_logs

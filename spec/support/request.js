@@ -23,7 +23,7 @@ function httpRequest(url) {
 
         // When the response ends, resolve or reject the promise
         response.on('end', () => {
-          if (response.statusCode >= 200 && response.statusCode < 300) {
+          if (response.statusCode && response.statusCode && response.statusCode >= 200 && response.statusCode < 300) {
             resolve(data); // Resolve with the collected data
           } else {
             reject(new Error(`Request failed with status code ${response.statusCode}`));

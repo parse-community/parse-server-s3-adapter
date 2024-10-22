@@ -2,7 +2,7 @@ const { Readable } = require('stream');
 const S3Adapter = require('../../index.js');
 const { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
-function makeS3Adapter(options) {
+function getMockS3Adapter(options) {
   let s3;
 
   if (
@@ -74,4 +74,4 @@ function makeS3Adapter(options) {
   return s3;
 }
 
-module.exports = { makeS3Adapter };
+module.exports = { getMockS3Adapter };

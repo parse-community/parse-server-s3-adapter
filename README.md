@@ -13,22 +13,50 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
 
 ---
 
-- [Installation](#installation)
-- [AWS Credentials](#aws-credentials)
-- [Deprecated Configuration](#deprecated-configuration)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Compatibility](#compatibility)
+    - [Parse Server](#parse-server)
+    - [Node.js](#nodejs)
+  - [AWS Credentials](#aws-credentials)
+  - [Deprecated Configuration](#deprecated-configuration)
 - [Usage with Parse Server](#usage-with-parse-server)
-    - [Parameters](#parameters)
-    - [Using a config file](#using-a-config-file)
-    - [using environment variables](#using-environment-variables)
-    - [passing as an instance](#passing-as-an-instance)
-    - [Usage with Digital Ocean Spaces](#usage-with-digital-ocean-spaces)
-    - [Adding Metadata and Tags](#adding-metadata-and-tags)
+  - [Parameters](#parameters)
+  - [Using a Config File](#using-a-config-file)
+  - [Using Environment Variables](#using-environment-variables)
+  - [Passing as an Instance](#passing-as-an-instance)
+  - [Adding Metadata and Tags](#adding-metadata-and-tags)
+- [Compatibility with other Storage Providers](#compatibility-with-other-storage-providers)
+  - [Digital Ocean Spaces](#digital-ocean-spaces)
 
-# Installation
+
+# Getting Started
+
+## Installation
 
 `npm install --save @parse/s3-files-adapter`
 
-# AWS Credentials
+## Compatibility
+
+### Parse Server
+
+| Version | End-of-Life   | Compatible |
+|---------|---------------|------------|
+| <=5     | December 2023 | ✅ Yes      |
+| 6       | December 2024 | ✅ Yes      |
+| 7       | December 2025 | ✅ Yes      |
+
+### Node.js
+
+This product is continuously tested with the most recent releases of Node.js to ensure compatibility. We follow the [Node.js Long Term Support plan](https://github.com/nodejs/Release) and only test against versions that are officially supported and have not reached their end-of-life date.
+
+| Version    | Latest Version | End-of-Life | Compatible |
+|------------|----------------|-------------|------------|
+| Node.js 18 | 18.20.4        | April 2025  | ✅ Yes      |
+| Node.js 20 | 20.15.1        | April 2026  | ✅ Yes      |
+| Node.js 22 | 22.4.1         | April 2027  | ✅ Yes      |
+
+## AWS Credentials
 
 ⚠️ The ability to explicitly pass credentials to this adapter is deprecated and will be removed in a future release.
 
@@ -55,7 +83,7 @@ For an AWS host:
 
 If for some reason you really need to be able to set the key and secret explicitly, you can still do it using `s3overrides` as described below and setting `accessKeyId` and `secretAccessKey` in the `s3Overrides` object.
 
-# Deprecated Configuration
+## Deprecated Configuration
 
 Although it is not recommended, AWS credentials can be explicitly configured through an options
 object, constructor string arguments or environment variables ([see below](#using-a-config-file)).
@@ -65,17 +93,17 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
 
 # Usage with Parse Server
 
-### Parameters
+## Parameters
 
 *(This list is still incomplete and in the works, in the meantime find more descriptions in the chapters below.)*
 
-| Parameter | Optional | Default value | Environment variable | Description |
-|-----------|----------|---------------|----------------------|-------------|
-| `fileAcl` | yes | `undefined` | S3_FILE_ACL | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `'none'` causes any ACL parameter to be removed that would otherwise be set. |
-| `presignedUrl` | yes | `false` | S3_PRESIGNED_URL | If `true` a [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`. |
-| `presignedUrlExpires` | yes | `undefined` | S3_PRESIGNED_URL_EXPIRES | Sets the duration in seconds after which the [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) of the file expires. If no value is set, the AWS S3 SDK default [Expires](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property) value applies. This parameter requires `presignedUrl` to be `true`. |
+| Parameter             | Optional | Default value | Environment variable     | Description                                                                                                                                                                                                                                                                                                                                                                     |
+|-----------------------|----------|---------------|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `fileAcl`             | yes      | `undefined`   | S3_FILE_ACL              | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `'none'` causes any ACL parameter to be removed that would otherwise be set.                     |
+| `presignedUrl`        | yes      | `false`       | S3_PRESIGNED_URL         | If `true` a [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`.                                                                                                                                     |
+| `presignedUrlExpires` | yes      | `undefined`   | S3_PRESIGNED_URL_EXPIRES | Sets the duration in seconds after which the [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) of the file expires. If no value is set, the AWS S3 SDK default [Expires](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property) value applies. This parameter requires `presignedUrl` to be `true`. |
 
-### Using a config file
+## Using a Config File
 
 ```
 {
@@ -106,7 +134,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
 ```
 ***Note*** By default Parse.FilesController.preserveFileName will prefix all filenames with a random hex code.   You will want to disable that if you enable it here or wish to use S3 "directories".
 
-### using environment variables
+## Using Environment Variables
 
 Set your environment variables:
 
@@ -132,7 +160,7 @@ And update your config / options
 ```
 
 
-### passing as an instance
+## Passing as an Instance
 ```
 var S3Adapter = require('@parse/s3-files-adapter');
 
@@ -209,9 +237,42 @@ var api = new ParseServer({
   filesAdapter: s3Adapter
 })
 ```
-### Usage with Digital Ocean Spaces
+
+## Adding Metadata and Tags
+
+Use the optional options argument to add [Metadata](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html) and/or [Tags](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-tags.html) to S3 objects
 
 ```
+
+
+const S3Adapter = require('@parse/s3-files-adapter');
+
+const s3Options = {}; // Add correct options
+const s3Adapter = new S3Adapter(s3Options);
+
+const filename = 'Fictional_Characters.txt';
+const data = 'That\'s All Folks!';
+const contentType = 'text/plain';
+const tags = {
+  createdBy: 'Elmer Fudd',
+  owner: 'Popeye'
+};
+const metadata = {
+  source: 'Mickey Mouse'
+};
+const options = { tags, metadata };
+s3Adapter.createFile(filename, data, contentType, options);
+
+```
+
+**Note:** This adapter will **automatically** add the "x-amz-meta-" prefix to the beginning of metadata tags as stated in [S3 Documentation](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html).
+
+
+# Compatibility with other Storage Providers
+
+## Digital Ocean Spaces
+
+```js
 var S3Adapter = require("@parse/s3-files-adapter");
 var AWS = require("aws-sdk");
 
@@ -243,36 +304,6 @@ var api = new ParseServer({
   serverURL: process.env.SERVER_URL || "http://localhost:1337/parse",
   logLevel: process.env.LOG_LEVEL || "info",
   allowClientClassCreation: false,
-  filesAdapter: s3Adapter,
-  }
+  filesAdapter: s3Adapter
 });
 ```
-
-### Adding Metadata and Tags
-
-Use the optional options argument to add [Metadata](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html) and/or [Tags](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-tags.html) to S3 objects
-
-```
-
-
-const S3Adapter = require('@parse/s3-files-adapter');
-
-const s3Options = {}; // Add correct options
-const s3Adapter = new S3Adapter(s3Options);
-
-const filename = 'Fictional_Characters.txt';
-const data = 'That\'s All Folks!';
-const contentType = 'text/plain';
-const tags = {
-  createdBy: 'Elmer Fudd',
-  owner: 'Popeye'
-};
-const metadata = {
-  source: 'Mickey Mouse'
-};
-const options = { tags, metadata };
-s3Adapter.createFile(filename, data, contentType, options);
-
-```
-
-**Note:** This adapter will **automatically** add the "x-amz-meta-" prefix to the beginning of metadata tags as stated in [S3 Documentation](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html).

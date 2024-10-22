@@ -1,4 +1,15 @@
 {
-  "reporter": ["lcov", "text-summary"],
-  "exclude": ["**/spec/**"]
+  "all": true,
+  "reporter": [
+    "lcov",
+    "text-summary"
+  ],
+  "include": [
+    "src/**/*.js",
+    "lib/**/*.js",
+    "index.js"
+  ],
+  "exclude": [
+    "**/spec/**"
+  ]
 }

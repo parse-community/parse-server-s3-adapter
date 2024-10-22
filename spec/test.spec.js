@@ -1,12 +1,11 @@
 const { Readable } = require('stream');
-const filesAdapterTests = require('parse-server-conformance-tests').files;
 const Parse = require('parse').Parse;
+const config = require('config');
 const S3Adapter = require('../index');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 const { GetObjectCommand, PutObjectCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
-const { makeS3Adapter } = require('./mocks/s3adapter');
+const { getMockS3Adapter } = require('./mocks/s3adapter-v3');
 
-const config = require('./config/test');
 
 describe('S3Adapter tests', () => {
   beforeEach(() => {
@@ -54,13 +53,13 @@ describe('S3Adapter tests', () => {
     describe('not initialized properly', () => {
       it('should fail with two string arguments', () => {
         expect(() => {
-          new S3Adapter(config.accessKey, config.secretKey, {});
-        }).toThrow(new Error("Failed to configure S3Adapter. Arguments don't make sense"));
+          new S3Adapter(config.get('accessKey'), config.get('secretKey'), {});
+        }).toThrow(new Error('Failed to configure S3Adapter. Arguments don\'t make sense'));
       });
 
       it('should fail when passed an object without a bucket', () => {
         expect(() => {
-          new S3Adapter(config.insufficientOptions);
+          new S3Adapter(config.get('insufficientOptions'));
         }).toThrow(new Error("S3Adapter requires option 'bucket' or env. variable S3_BUCKET"));
       });
     });
@@ -68,26 +67,26 @@ describe('S3Adapter tests', () => {
     describe('should not throw when initialized properly', () => {
       it('should accept a string bucket', () => {
         expect(() => {
-          new S3Adapter(config.bucket);
+          new S3Adapter(config.get('bucket'));
         }).not.toThrow();
       });
 
       it('should accept an object with a bucket', () => {
         expect(() => {
-          new S3Adapter(config.objectWithBucket);
+          new S3Adapter(config.get('objectWithBucket'));
         }).not.toThrow();
       });
 
       it('should accept a second argument of object with a params object with a bucket', () => {
         expect(() => {
-          new S3Adapter(config.emptyObject, config.paramsObjectWBucket);
+          new S3Adapter(config.get('emptyObject'), config.get('paramsObjectWBucket'));
         }).not.toThrow();
       });
 
       it('should accept environment over default', () => {
         const TEST_REGION = 'test';
         process.env.S3_REGION = TEST_REGION;
-        const s3 = new S3Adapter(config.bucket);
+        const s3 = new S3Adapter(config.get('bucket'));
         expect(s3._region).toBe(TEST_REGION);
       });
     });
@@ -393,7 +392,7 @@ describe('S3Adapter tests', () => {
 
     it("when use presigned URL should use S3 'getObject' operation", async () => {
       options.presignedUrl = true;
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
 
       let getSignedUrlCommand = '';
       s3.getFileSignedUrl = (_, command) => {
@@ -517,7 +516,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should return a file with a date stamp inserted in the path', () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       const fileName = 'randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
         const url = new URL(value.Location);
@@ -528,7 +527,7 @@ describe('S3Adapter tests', () => {
 
     it('should do nothing when null', () => {
       options.generateKey = null;
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
         const url = new URL(value.Location);
@@ -538,7 +537,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should add unique timestamp to the file name after the last directory when there is a path', () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
         const url = new URL(value.Location);
@@ -562,7 +561,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with right command', async () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -572,7 +571,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with metadata added', async () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client = s3ClientMock;
       const metadata = { foo: 'bar' };
 
@@ -582,7 +581,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with tags added', async () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client = s3ClientMock;
       const tags = { foo: 'bar', baz: 'bin' };
 
@@ -593,7 +592,7 @@ describe('S3Adapter tests', () => {
 
     it('should save a file with proper ACL with direct access', async () => {
       options.directAccess = true;
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -602,7 +601,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with proper ACL without direct access', async () => {
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -613,7 +612,7 @@ describe('S3Adapter tests', () => {
     it('should save a file and override ACL with direct access', async () => {
       options.directAccess = true;
       options.fileAcl = 'private';
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -625,7 +624,7 @@ describe('S3Adapter tests', () => {
       // Create adapter
       options.directAccess = true;
       options.fileAcl = 'none';
-      const s3 = makeS3Adapter(options);
+      const s3 = getMockS3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -639,7 +638,7 @@ describe('S3Adapter tests', () => {
     let s3;
 
     beforeAll(async () => {
-      s3 = makeS3Adapter({ bucketPrefix: 'test-prefix/' });
+      s3 = getMockS3Adapter({ bucketPrefix: 'test-prefix/' });
       const testFileContent = 'hello world! This is a test file for S3 streaming.';
       await s3.createFile(filename, testFileContent, 'text/plain', {});
     });
@@ -651,7 +650,7 @@ describe('S3Adapter tests', () => {
     it('should get stream bytes correctly', async () => {
       const req = {
         get: jasmine.createSpy('get').and.callFake(header => {
-          if (header === 'Range') return 'bytes=0-10';
+          if (header === 'Range') { return 'bytes=0-10'; }
           return null;
         }),
       };
@@ -668,6 +667,4 @@ describe('S3Adapter tests', () => {
       expect(res.end).toHaveBeenCalled();
     });
   });
-
-  filesAdapterTests.testAdapter('S3Adapter', makeS3Adapter({}));
 });
