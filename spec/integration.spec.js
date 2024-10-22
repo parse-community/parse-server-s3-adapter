@@ -1,27 +1,8 @@
-const Parse = require('parse/node');
-const { TestUtils } = require('parse-server');
-const { PARSE_APP_ID, PARSE_MASTER_KEY, reconfigureServer, serverURL } = require('./mocks/server');
 const { httpRequest } = require('./support/request');
 
 const fileData = 'hello world';
 
 describe('S3Adapter integration tests', () => {
-  beforeEach(async () => {
-    process.env.TESTING = true;
-
-    await reconfigureServer();
-
-    Parse.initialize(PARSE_APP_ID);
-    Parse.serverURL = serverURL;
-    Parse.CoreManager.set('SERVER_URL', serverURL);
-    Parse.CoreManager.set('MASTER_KEY', PARSE_MASTER_KEY);
-  }, 60 * 1000);
-
-  afterAll(async () => {
-    Parse.Storage._clear();
-    await TestUtils.destroyAllDataPermanently(true);
-  });
-
   it('should create a file in Parse Server', async () => {
     const fileName = 'test-1.txt';
 
