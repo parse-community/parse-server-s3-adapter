@@ -6,7 +6,6 @@
   ],
   "include": [
     "src/**/*.js",
-    "lib/**/*.js",
     "index.js"
   ],
   "exclude": [
