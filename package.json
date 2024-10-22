@@ -3,15 +3,6 @@
   "version": "2.2.0",
   "description": "AWS S3 adapter for parse-server",
   "main": "index.js",
-  "scripts": {
-    "pretest": "npm run lint",
-    "test": "nyc jasmine",
-    "lint": "eslint --cache ./",
-    "mongo:run": "mongodb-runner start -t replset --version 6.0 -- --port 27017",
-    "mongo:stop": "mongodb-runner stop --all",
-    "test:integration": "npm run mongo:run && npm run test && npm run mongo:stop",
-    "lint:fix": "eslint --fix --cache ./"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/parse-community/parse-server-s3-adapter.git"
@@ -50,5 +41,15 @@
     "prettier": "3.3.3",
     "mongodb-runner": "5.6.4",
     "semantic-release": "17.4.6"
+  },
+  "scripts": {
+    "lint": "eslint --cache ./",
+    "lint:fix": "eslint --fix --cache ./",
+    "pretest": "npm run test:mongodb:runnerstart",
+    "posttest": "npm run test:mongodb:runnerstop",
+    "test": "npm run test:only",
+    "test:only": "nyc jasmine",
+    "test:mongodb:runnerstart": "mongodb-runner start -t standalone -- --port 27017",
+    "test:mongodb:runnerstop": "mongodb-runner stop --all"
   }
 }
