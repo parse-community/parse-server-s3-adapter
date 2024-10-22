@@ -25,17 +25,17 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Node.js 18
+          - name: Parse Server 7, Node.js 18
             NODE_VERSION: 18.20.4
             PARSE_SERVER_VERSION: 7
-          - name: Node.js 20
+          - name: Parse Server 7, Node.js 20
             NODE_VERSION: 20.15.1
             PARSE_SERVER_VERSION: 7
-          - name: Node.js 22
+          - name: Parse Server 7, Node.js 22
             NODE_VERSION: 22.4.1
             PARSE_SERVER_VERSION: 7
           - name: Parse Server 6
-            NODE_VERSION: 16
+            NODE_VERSION: 18
             PARSE_SERVER_VERSION: 6
       fail-fast: false
     name: ${{ matrix.name }}
