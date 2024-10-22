@@ -16,6 +16,7 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
 - [Getting Started](#getting-started)
   - [Installation](#installation)
   - [Compatibility](#compatibility)
+    - [Parse Server](#parse-server)
     - [Node.js](#nodejs)
   - [AWS Credentials](#aws-credentials)
   - [Deprecated Configuration](#deprecated-configuration)
@@ -36,6 +37,14 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
 `npm install --save @parse/s3-files-adapter`
 
 ## Compatibility
+
+### Parse Server
+
+| Version | End-of-Life   | Compatible |
+|---------|---------------|------------|
+| <=5     | December 2023 | ✅ Yes      |
+| 6       | December 2024 | ✅ Yes      |
+| 7       | December 2025 | ✅ Yes      |
 
 ### Node.js
 
@@ -88,11 +97,11 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
 
 *(This list is still incomplete and in the works, in the meantime find more descriptions in the chapters below.)*
 
-| Parameter | Optional | Default value | Environment variable | Description |
-|-----------|----------|---------------|----------------------|-------------|
-| `fileAcl` | yes | `undefined` | S3_FILE_ACL | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `'none'` causes any ACL parameter to be removed that would otherwise be set. |
-| `presignedUrl` | yes | `false` | S3_PRESIGNED_URL | If `true` a [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`. |
-| `presignedUrlExpires` | yes | `undefined` | S3_PRESIGNED_URL_EXPIRES | Sets the duration in seconds after which the [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) of the file expires. If no value is set, the AWS S3 SDK default [Expires](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property) value applies. This parameter requires `presignedUrl` to be `true`. |
+| Parameter             | Optional | Default value | Environment variable     | Description                                                                                                                                                                                                                                                                                                                                                                     |
+|-----------------------|----------|---------------|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `fileAcl`             | yes      | `undefined`   | S3_FILE_ACL              | Sets the [Canned ACL](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl) of the file when storing it in the S3 bucket. Setting this parameter overrides the file ACL that would otherwise depend on the `directAccess` parameter. Setting the value `'none'` causes any ACL parameter to be removed that would otherwise be set.                     |
+| `presignedUrl`        | yes      | `false`       | S3_PRESIGNED_URL         | If `true` a [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) is returned when requesting the URL of file. The URL is only valid for a specified duration, see parameter `presignedUrlExpires`.                                                                                                                                     |
+| `presignedUrlExpires` | yes      | `undefined`   | S3_PRESIGNED_URL_EXPIRES | Sets the duration in seconds after which the [presigned URL](https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html) of the file expires. If no value is set, the AWS S3 SDK default [Expires](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property) value applies. This parameter requires `presignedUrl` to be `true`. |
 
 ## Using a Config File
 

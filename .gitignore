@@ -36,4 +36,8 @@ node_modules
 # Webstorm
 .idea/
 
+# Lint
 .eslintcache
+
+# Parse Server
+test_logs

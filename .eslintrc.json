@@ -3,11 +3,12 @@
     "extends": "eslint:recommended",
     "env": {
         "node": true,
-        "es6": true
+        "es2020": true
     },
     "parserOptions": {
-        "ecmaVersion": 8,
-        "sourceType": "module"
+        "ecmaVersion": 2020,
+        "sourceType": "module",
+        "requireConfigFile": false
     },
     "rules": {
         "indent": ["error", 2, { "SwitchCase": 1 }],
@@ -19,6 +20,12 @@
         "prefer-const": "error",
         "space-infix-ops": "error",
         "no-useless-escape": "off",
-        "require-atomic-updates": "off"
+        "require-atomic-updates": "off",
+        "object-curly-spacing": ["error", "always"],
+        "curly": ["error", "all"],
+        "block-spacing": ["error", "always"]
+    },
+    "globals": {
+        "Parse": true
     }
 }

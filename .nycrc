@@ -5,7 +5,9 @@
     "text-summary"
   ],
   "include": [
-    "src/**/*.js"
+    "src/**/*.js",
+    "lib/**/*.js",
+    "index.js"
   ],
   "exclude": [
     "**/spec/**"
