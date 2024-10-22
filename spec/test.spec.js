@@ -1,5 +1,4 @@
 const { Readable } = require('stream');
-const Parse = require('parse').Parse;
 const config = require('config');
 const S3Adapter = require('../index');
 const optionsFromArguments = require('../lib/optionsFromArguments');
