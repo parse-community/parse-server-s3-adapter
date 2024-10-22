@@ -1,7 +1,7 @@
 const { httpRequest } = require('./support/request');
 
 describe('S3Adapter integration tests', () => {
-  it('should create a file in Parse Server', async () => {
+  it('stores a file', async () => {
     const base64 = Buffer.from('1').toString('base64');
     const file = new Parse.File('file.txt', { base64 });
     await file.save();
@@ -10,7 +10,7 @@ describe('S3Adapter integration tests', () => {
     expect(file.url()).toMatch(/file.txt$/);
   });
 
-  it('should read the contents of the file', async () => {
+  it('reads the contents of a file', async () => {
     const base64 = Buffer.from('1').toString('base64');
     const file = new Parse.File('file.txt', { base64 });
     await file.save();
@@ -22,7 +22,7 @@ describe('S3Adapter integration tests', () => {
     expect(text).toBe('1');
   });
 
-  it('should delete the file', async () => {
+  it('deletes a file', async () => {
     const base64 = Buffer.from('1').toString('base64');
     const file = new Parse.File('file.txt', { base64 });
     await file.save();
