@@ -1,10 +1,9 @@
 const AWS = require('aws-sdk');
 const config = require('config');
 const filesAdapterTests = require('parse-server-conformance-tests').files;
-const Parse = require('parse').Parse;
 const S3Adapter = require('../index.js');
 const optionsFromArguments = require('../lib/optionsFromArguments');
-const {makeS3Adapter} = require("./mocks/s3adapter-v2.js");
+const { makeS3Adapter } = require("./mocks/s3adapter-v2.js");
 
 describe('S3Adapter tests', () => {
   beforeEach(() => {
