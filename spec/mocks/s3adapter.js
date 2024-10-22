@@ -6,6 +6,7 @@ function getMockS3Adapter(options) {
   const accessKey = process.env.TEST_S3_ACCESS_KEY || 'ACCESS_KEY';
   const secretKey = process.env.TEST_S3_SECRET_KEY || 'SECRET_KEY';
   const bucket = process.env.TEST_S3_BUCKET || 'BUCKET';
+  const region = process.env.TEST_S3_REGION || 'us-east-1';
 
   const s3 = new S3Adapter(Object.assign({
     accessKey,
