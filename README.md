@@ -40,15 +40,17 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
 
 ### Parse Server
 
-| Version | End-of-Life   | Compatible |
-|---------|---------------|------------|
-| <=5     | December 2023 | ✅ Yes      |
-| 6       | December 2024 | ✅ Yes      |
-| 7       | December 2025 | ✅ Yes      |
+Parse Server S3 Adapter is compatible with the following versions of Parse Server.
+
+| Version          | End-of-Life   | Compatible |
+|------------------|---------------|------------|
+| Parse Server <=5 | December 2023 | ✅ Yes      |
+| Parse Server 6   | December 2024 | ✅ Yes      |
+| Parse Server 7   | December 2025 | ✅ Yes      |
 
 ### Node.js
 
-This product is continuously tested with the most recent releases of Node.js to ensure compatibility. We follow the [Node.js Long Term Support plan](https://github.com/nodejs/Release) and only test against versions that are officially supported and have not reached their end-of-life date.
+Parse Server S3 Adapter is continuously tested with the most recent releases of Node.js to ensure compatibility. We follow the [Node.js Long Term Support plan](https://github.com/nodejs/Release) and only test against versions that are officially supported and have not reached their end-of-life date.
 
 | Version    | Latest Version | End-of-Life | Compatible |
 |------------|----------------|-------------|------------|
