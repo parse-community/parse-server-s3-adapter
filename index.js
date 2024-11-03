@@ -5,6 +5,7 @@
 const AWS = require('aws-sdk');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 const stream = require('stream');
+const {Blob} = require('node:buffer')
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
   // eslint-disable-next-line no-console
@@ -132,17 +133,14 @@ class S3Adapter {
       .then(() => new Promise((resolve, reject) => {
         // if we are dealing with a blob, we need to handle it differently
         // it could be over the V8 memory limit
-        if (
-          typeof Blob !== 'undefined' &&
-          data instanceof Blob
-        ) {
+        if (data instanceof Blob) {
           const passStream = new stream.PassThrough();
 
           // make the data a stream
           let readableStream = data.stream();
 
           // may come in as a web stream, so we need to convert it to a node stream
-          if (readableStream instanceof ReadableStream) {
+          if (readableStream instanceof stream.ReadableStream) {
             readableStream = stream.Readable.fromWeb(readableStream);
           }
 
