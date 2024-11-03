@@ -4,6 +4,8 @@
 
 const AWS = require('aws-sdk');
 const optionsFromArguments = require('./lib/optionsFromArguments');
+const stream = require('stream');
+const {Blob} = require('node:buffer')
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
   // eslint-disable-next-line no-console
@@ -97,7 +99,6 @@ class S3Adapter {
   createFile(filename, data, contentType, options = {}) {
     const params = {
       Key: this._bucketPrefix + filename,
-      Body: data,
     };
 
     if (this._generateKey instanceof Function) {
@@ -128,14 +129,37 @@ class S3Adapter {
       const serializedTags = serialize(options.tags);
       params.Tagging = serializedTags;
     }
-    return this.createBucket().then(() => new Promise((resolve, reject) => {
-      this._s3Client.upload(params, (err, response) => {
-        if (err !== null) {
-          return reject(err);
+    return this.createBucket()
+      .then(() => new Promise((resolve, reject) => {
+        // if we are dealing with a blob, we need to handle it differently
+        // it could be over the V8 memory limit
+        if (data instanceof Blob) {
+          const passStream = new stream.PassThrough();
+
+          // make the data a stream
+          let readableStream = data.stream();
+
+          // may come in as a web stream, so we need to convert it to a node stream
+          if (readableStream instanceof stream.ReadableStream) {
+            readableStream = stream.Readable.fromWeb(readableStream);
+          }
+
+          // Pipe the data to the PassThrough stream
+          readableStream.pipe(passStream).on('error', reject)
+
+          params.Body = passStream;
+
+        } else {
+          params.Body = data;
         }
-        return resolve(response);
-      });
-    }));
+
+        this._s3Client.upload(params, (err, response) => {
+          if (err !== null) {
+            return reject(err);
+          }
+          return resolve(response);
+        });
+      }));
   }
 
   deleteFile(filename) {
