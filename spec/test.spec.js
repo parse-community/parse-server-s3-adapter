@@ -153,12 +153,25 @@ describe('S3Adapter tests', () => {
         s3overrides: { endpoint: otherEndpoint },
       };
       const s3 = new S3Adapter(confObj);
+      expect(s3._endpoint).toEqual(otherEndpoint);
       const endpointFromConfig = await s3._s3Client.config.endpoint();
       expect(endpointFromConfig.protocol).toEqual('https:');
       expect(endpointFromConfig.path).toEqual('/path');
       expect(endpointFromConfig.port).toEqual(8080);
       expect(endpointFromConfig.hostname).toEqual('test.com');
       expect(endpointFromConfig.query.foo).toEqual('bar');
+    });
+
+    it("should have undefined endpoint if no custom endpoint is provided", async () => {
+      const confObj = {
+        bucketPrefix: 'test/',
+        bucket: 'bucket-1',
+        secretKey: 'secret-1',
+        accessKey: 'key-1',
+      };
+      const s3 = new S3Adapter(confObj);
+      const endpoint = await s3._s3Client.config.endpoint?.();
+      expect(endpoint).toBeUndefined();
     });
 
     it('should accept options and overrides as args', () => {

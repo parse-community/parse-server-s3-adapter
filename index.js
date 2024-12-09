@@ -73,6 +73,7 @@ class S3Adapter {
     this._presignedUrlExpires = parseInt(options.presignedUrlExpires, 10);
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
+    this._endpoint = options.s3overrides?.endpoint;
     // Optional FilesAdaptor method
     this.validateFilename = options.validateFilename;
 
@@ -157,7 +158,8 @@ class S3Adapter {
     await this.createBucket();
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
-    const location = `https://${this._bucket}.s3.${this._region}.amazonaws.com/${params.Key}`;
+    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    const location = `${endpoint}/${params.Key}`;
 
     return Object.assign(response || {}, { Location: location });
   }

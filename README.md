@@ -280,7 +280,6 @@ var S3Adapter = require("@parse/s3-files-adapter");
 var AWS = require("aws-sdk");
 
 //Configure Digital Ocean Spaces EndPoint
-const spacesEndpoint = new AWS.Endpoint(process.env.SPACES_ENDPOINT);
 var s3Options = {
   bucket: process.env.SPACES_BUCKET_NAME,
   baseUrl: process.env.SPACES_BASE_URL,
@@ -293,7 +292,7 @@ var s3Options = {
   s3overrides: {
     accessKeyId: process.env.SPACES_ACCESS_KEY,
     secretAccessKey: process.env.SPACES_SECRET_KEY,
-    endpoint: spacesEndpoint
+    endpoint: process.env.SPACES_ENDPOINT
   }
 };
 
