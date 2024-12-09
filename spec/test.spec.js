@@ -232,7 +232,11 @@ describe('S3Adapter tests', () => {
         expect(resp.writeHead).toHaveBeenCalled();
         expect(resp.write).toHaveBeenCalled();
         expect(resp.end).toHaveBeenCalled();
-        const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+        const commands = s3ClientMock.send.calls.all();
+        expect(commands.length).toBe(2);
+        expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+        const commandArg = commands[1].args[0];
+        expect(commandArg).toBeInstanceOf(GetObjectCommand);
         expect(commandArg.input.Range).toBe('bytes=0-1');
       });
     });
@@ -588,7 +592,11 @@ describe('S3Adapter tests', () => {
       const metadata = { foo: 'bar' };
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', { metadata });
-      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      const commands = s3ClientMock.send.calls.all();
+      expect(commands.length).toBe(2);
+      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.Metadata).toEqual({ foo: 'bar' });
     });
 
@@ -598,7 +606,11 @@ describe('S3Adapter tests', () => {
       const tags = { foo: 'bar', baz: 'bin' };
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', { tags });
-      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      const commands = s3ClientMock.send.calls.all();
+      expect(commands.length).toBe(2);
+      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.Tagging).toBe('foo=bar&baz=bin');
     });
 
@@ -608,7 +620,11 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      const commands = s3ClientMock.send.calls.all();
+      expect(commands.length).toBe(2);
+      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBe('public-read');
     });
 
@@ -617,7 +633,11 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      const commands = s3ClientMock.send.calls.all();
+      expect(commands.length).toBe(2);
+      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBeUndefined();
     });
 
@@ -628,7 +648,11 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      const commands = s3ClientMock.send.calls.all();
+      expect(commands.length).toBe(2);
+      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBe('private');
     });
 
@@ -640,7 +664,11 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      const commandArg = s3ClientMock.send.calls.mostRecent().args[0];
+      const commands = s3ClientMock.send.calls.all();
+      expect(commands.length).toBe(2);
+      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBeUndefined();
     });
   });
