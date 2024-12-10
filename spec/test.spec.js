@@ -124,6 +124,26 @@ describe('S3Adapter tests', () => {
       expect(options.bucketPrefix).toEqual('test/');
     });
 
+    it('should use credentials when provided', async () => {
+      const mockCredentials = {
+        accessKeyId: 'mockAccessKeyId',
+        secretAccessKey: 'mockSecretAccessKey',
+        sessionToken: 'mockSessionToken',
+      };
+
+      const options = {
+        bucket: 'bucket-1',
+        credentials: mockCredentials
+      };
+
+      const adapter = new S3Adapter(options);
+      const credentials = await adapter._s3Client.config.credentials();
+
+      expect(credentials.accessKeyId).toEqual(mockCredentials.accessKeyId);
+      expect(credentials.secretAccessKey).toEqual(mockCredentials.secretAccessKey);
+      expect(credentials.sessionToken).toEqual(mockCredentials.sessionToken);
+    });
+
     it('should accept options and overrides as an option in args', () => {
       const confObj = {
         bucketPrefix: 'test/',
