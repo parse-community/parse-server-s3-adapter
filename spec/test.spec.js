@@ -304,6 +304,44 @@ describe('S3Adapter tests', () => {
         expect(resp.end).not.toHaveBeenCalled();
       });
     });
+
+    it('should handle stream errors', async () => {
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket');
+      const s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
+
+      const mockStream = {
+        on: (event, callback) => {
+          if (event === 'error') {
+            callback(new Error('Mock S3 Body error'));
+          }
+        },
+      };
+
+      s3ClientMock.send.and.returnValue(Promise.resolve({
+        Body: mockStream,
+        AcceptRanges: 'bytes',
+        ContentLength: 1024,
+        ContentRange: 'bytes 0-1024/2048',
+        ContentType: 'application/octet-stream',
+      }));
+      s3._s3Client = s3ClientMock;
+
+      const mockReq = {
+        get: () => 'bytes=0-1024',
+      };
+      const mockRes = {
+        status: jasmine.createSpy('status'),
+        send: jasmine.createSpy('send'),
+        writeHead: jasmine.createSpy('writeHead'),
+        write: jasmine.createSpy('write'),
+        end: jasmine.createSpy('end'),
+      };
+
+      s3.handleFileStream('test.mov', mockReq, mockRes).catch(() => {
+        expect(mockRes.status).toHaveBeenCalledWith(404);
+        expect(mockRes.send).toHaveBeenCalledWith('Mock S3 Body error');
+      });
+    });
   });
 
   describe('getFileLocation with directAccess', () => {
