@@ -189,7 +189,9 @@ class S3Adapter {
     await this.createBucket();
     const command = new GetObjectCommand(params);
     const response = await this._s3Client.send(command);
-    if (response && !response.Body) { throw new Error(response); }
+    if (response && !response.Body) {
+      throw new Error(response);
+    }
 
     const buffer = await responseToBuffer(response);
     return buffer;
