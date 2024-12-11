@@ -107,7 +107,9 @@ class S3Adapter {
   }
 
   async createBucket() {
-    if (this._hasBucket) { return; }
+    if (this._hasBucket) {
+      return;
+    }
 
     try {
       await this._s3Client.send(new CreateBucketCommand({ Bucket: this._bucket }));
