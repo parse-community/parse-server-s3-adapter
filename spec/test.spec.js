@@ -464,7 +464,7 @@ describe('S3Adapter tests', () => {
       );
     });
 
-    it("when use presigned URL should use S3 'getObject' operation", async () => {
+    it('when use presigned URL should use S3 \'getObject\' operation', async () => {
       options.presignedUrl = true;
       const s3 = getMockS3Adapter(options);
 
