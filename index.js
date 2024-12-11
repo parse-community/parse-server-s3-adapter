@@ -117,6 +117,8 @@ class S3Adapter {
       else {
         throw error;
       }
+        throw error;
+      }
     }
   }
 
