@@ -20,7 +20,7 @@ describe('S3Adapter tests', () => {
 
     expect(() => {
       new S3Adapter('accessKey', 'secretKey', {});
-    }).toThrow(new Error("Failed to configure S3Adapter. Arguments don't make sense"));
+    }).toThrow(new Error('Failed to configure S3Adapter with invalid arguments.'));
 
     expect(() => {
       new S3Adapter({ accessKey: 'accessKey', secretKey: 'secretKey' });
