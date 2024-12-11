@@ -20,7 +20,7 @@ describe('S3Adapter tests', () => {
 
     expect(() => {
       new S3Adapter('accessKey', 'secretKey', {});
-    }).toThrow(new Error('Failed to configure S3Adapter with invalid arguments.'));
+    }).toThrow(new Error("Failed to configure S3Adapter. Arguments don't make sense"));
 
     expect(() => {
       new S3Adapter({ accessKey: 'accessKey', secretKey: 'secretKey' });
@@ -628,6 +628,7 @@ describe('S3Adapter tests', () => {
     let options, s3ClientMock;
     beforeEach(() => {
       options = {
+        bucket: 'bucket-1',
         bucketPrefix: 'test/',
       };
       s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
@@ -635,7 +636,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with right command', async () => {
-      const s3 = getMockS3Adapter(options);
+      const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -645,7 +646,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with metadata added', async () => {
-      const s3 = getMockS3Adapter(options);
+      const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
       const metadata = { foo: 'bar' };
 
@@ -659,7 +660,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with tags added', async () => {
-      const s3 = getMockS3Adapter(options);
+      const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
       const tags = { foo: 'bar', baz: 'bin' };
 
@@ -674,7 +675,7 @@ describe('S3Adapter tests', () => {
 
     it('should save a file with proper ACL with direct access', async () => {
       options.directAccess = true;
-      const s3 = getMockS3Adapter(options);
+      const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -687,7 +688,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should save a file with proper ACL without direct access', async () => {
-      const s3 = getMockS3Adapter(options);
+      const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -702,7 +703,7 @@ describe('S3Adapter tests', () => {
     it('should save a file and override ACL with direct access', async () => {
       options.directAccess = true;
       options.fileAcl = 'private';
-      const s3 = getMockS3Adapter(options);
+      const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
@@ -718,7 +719,7 @@ describe('S3Adapter tests', () => {
       // Create adapter
       options.directAccess = true;
       options.fileAcl = 'none';
-      const s3 = getMockS3Adapter(options);
+      const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
