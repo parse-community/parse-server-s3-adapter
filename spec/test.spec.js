@@ -164,7 +164,7 @@ describe('S3Adapter tests', () => {
     });
 
     it('should accept endpoint as an override option in args', async () => {
-      const otherEndpoint = 'https://test.com:8080/path?foo=bar';
+      const otherEndpoint = 'https://example.com:8080/path?foo=bar';
       const confObj = {
         bucketPrefix: 'test/',
         bucket: 'bucket-1',
