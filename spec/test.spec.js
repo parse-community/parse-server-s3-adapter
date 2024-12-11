@@ -178,7 +178,7 @@ describe('S3Adapter tests', () => {
       expect(endpointFromConfig.protocol).toEqual('https:');
       expect(endpointFromConfig.path).toEqual('/path');
       expect(endpointFromConfig.port).toEqual(8080);
-      expect(endpointFromConfig.hostname).toEqual('test.com');
+      expect(endpointFromConfig.hostname).toEqual('example.com');
       expect(endpointFromConfig.query.foo).toEqual('bar');
     });
 
