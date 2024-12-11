@@ -114,7 +114,9 @@ class S3Adapter {
       this._hasBucket = true;
     } catch (error) {
       if (error.name === 'BucketAlreadyOwnedByYou') { this._hasBucket = true; }
-      else { throw error; }
+      else {
+        throw error;
+      }
     }
   }
 
