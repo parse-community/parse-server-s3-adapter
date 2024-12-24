@@ -31,7 +31,7 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
   - [Adding Metadata and Tags](#adding-metadata-and-tags)
 - [Compatibility with other Storage Providers](#compatibility-with-other-storage-providers)
   - [Digital Ocean Spaces](#digital-ocean-spaces)
-- [Breaking Changes From v2 to v3](breaking-changes-from-v2-to-v3)
+- [Breaking Changes From v2 to v3](#breaking-changes-from-v2-to-v3)
   - [Best Practices](#best-practices)
   - [Why the Change](#why-the-change)
 
@@ -317,7 +317,7 @@ var api = new ParseServer({
 ```
 
 
-# Breaking Changes From v2 to v3
+# Breaking Changes from v2 to v3
 
 1. **Old Method (No Longer Supported)**:
    ```javascript
