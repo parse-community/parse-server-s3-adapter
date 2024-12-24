@@ -4,6 +4,7 @@ const S3Adapter = require('../index');
 const optionsFromArguments = require('../lib/optionsFromArguments');
 const { GetObjectCommand, PutObjectCommand, HeadBucketCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
 const { getMockS3Adapter } = require('./mocks/s3adapter');
+const rewire = require('rewire');
 
 
 describe('S3Adapter tests', () => {
@@ -867,6 +868,84 @@ describe('S3Adapter tests', () => {
       expect(res.writeHead).toHaveBeenCalled();
       expect(res.write).toHaveBeenCalled();
       expect(res.end).toHaveBeenCalled();
+    });
+  });
+
+  describe('credentials', () => {
+    let s3ClientMock, S3Adapter;
+
+    beforeEach(() => {
+      S3Adapter = rewire("../index");
+
+      s3ClientMock = jasmine.createSpy("S3Client").and.callFake(function (config) {
+        this.config = config;
+      });
+
+      S3Adapter.__set__("S3Client", s3ClientMock);
+    });
+
+    it('should use direct credentials', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        accessKey: 'access-key',
+        secretKey: 'secret-key'
+      };
+      const s3 = new S3Adapter(options);
+
+      expect(s3._s3Client.config.credentials).toEqual({
+        accessKeyId: 'access-key',
+        secretAccessKey: 'secret-key'
+      });
+    });
+
+    it('should use credentials', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        credentials: {
+          accessKeyId: 'access-key',
+          secretAccessKey: 'secret-key'
+        }
+      };
+      const s3 = new S3Adapter(options);
+
+      expect(s3._s3Client.config.credentials).toEqual({
+        accessKeyId: 'access-key',
+        secretAccessKey: 'secret-key'
+      });
+    });
+
+    it('should use s3overrides credentials', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        s3overrides: {
+          credentials: {
+            accessKeyId: 'access-key',
+            secretAccessKey: 'secret-key'
+          }
+        }
+      };
+      const s3 = new S3Adapter(options);
+
+      expect(s3._s3Client.config.credentials).toEqual({
+        accessKeyId: 'access-key',
+        secretAccessKey: 'secret-key'
+      });
+    });
+
+    it('should handle custom credential provider', async () => {
+      const customCredentials = {
+        getCredentials: () => Promise.resolve({
+          accessKeyId: 'custom-key',
+          secretAccessKey: 'custom-secret'
+        })
+      };
+      const options = {
+        bucket: 'bucket-1',
+        credentials: customCredentials
+      };
+      const s3 = new S3Adapter(options);
+
+      expect(s3._s3Client.config.credentials).toBe(customCredentials);
     });
   });
 });
