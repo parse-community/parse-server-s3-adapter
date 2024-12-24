@@ -2,7 +2,7 @@ const { Readable } = require('stream');
 const config = require('config');
 const S3Adapter = require('../index');
 const optionsFromArguments = require('../lib/optionsFromArguments');
-const { GetObjectCommand, PutObjectCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
+const { GetObjectCommand, PutObjectCommand, HeadBucketCommand, CreateBucketCommand } = require('@aws-sdk/client-s3');
 const { getMockS3Adapter } = require('./mocks/s3adapter');
 
 
@@ -47,6 +47,107 @@ describe('S3Adapter tests', () => {
     const s3 = new S3Adapter();
     expect(s3._bucket).toBe(TEST_BUCKET);
   });
+
+  describe('bucket operations', () => {
+    let s3, s3ClientMock;
+    beforeEach(() => {
+      const options = {
+        bucket: 'bucket-1',
+        bucketPrefix: 'test/',
+      };
+      s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
+      s3ClientMock.send.and.returnValue(Promise.resolve());
+
+      s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+    });
+
+    it('should return early if _hasBucket is true', async () => {
+      s3._hasBucket = true;
+
+      await s3.createBucket();
+
+      expect(s3ClientMock.send).not.toHaveBeenCalled();
+    });
+
+    it('should set _hasBucket to true if bucket exists', async () => {
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+
+      await s3.createBucket();
+
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(HeadBucketCommand));
+      expect(s3._hasBucket).toBe(true);
+    });
+
+    it('should attempt to create bucket if NotFound error occurs', async () => {
+      const notFoundError = { name: 'NotFound' };
+      s3ClientMock.send.and.returnValues(
+        Promise.reject(notFoundError),
+        Promise.resolve({})
+      );
+
+      await s3.createBucket();
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(HeadBucketCommand));
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(CreateBucketCommand));
+      expect(s3._hasBucket).toBe(true);
+    });
+
+    it('should handle BucketAlreadyExists error during creation', async () => {
+      const notFoundError = { name: 'NotFound' };
+      const bucketExistsError = { name: 'BucketAlreadyExists' };
+      s3ClientMock.send.and.returnValues(
+        Promise.reject(notFoundError),
+        Promise.reject(bucketExistsError)
+      );
+
+      await s3.createBucket();
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(HeadBucketCommand));
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(CreateBucketCommand));
+      expect(s3._hasBucket).toBe(true);
+    });
+
+    it('should handle BucketAlreadyOwnedByYou error during creation', async () => {
+      const notFoundError = { name: 'NotFound' };
+      const bucketOwnedError = { name: 'BucketAlreadyOwnedByYou' };
+      s3ClientMock.send.and.returnValues(
+        Promise.reject(notFoundError),
+        Promise.reject(bucketOwnedError)
+      );
+
+      await s3.createBucket();
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(HeadBucketCommand));
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(CreateBucketCommand));
+      expect(s3._hasBucket).toBe(true);
+    });
+
+    it('should throw non-NotFound errors during check', async () => {
+      const otherError = { name: 'SomeOtherError' };
+      s3ClientMock.send.and.returnValue(Promise.reject(otherError));
+
+      await expectAsync(s3.createBucket())
+        .toBeRejectedWith(otherError);
+      expect(s3._hasBucket).toBe(false);
+    });
+
+    it('should throw unexpected errors during creation', async () => {
+      const notFoundError = { name: 'NotFound' };
+      const creationError = { name: 'CreationError' };
+      s3ClientMock.send.and.returnValues(
+        Promise.reject(notFoundError),
+        Promise.reject(creationError)
+      );
+
+      await expectAsync(s3.createBucket())
+        .toBeRejectedWith(creationError);
+      expect(s3._hasBucket).toBe(false);
+    });
+  })
 
   describe('configured with immutable values', () => {
     describe('not initialized properly', () => {
@@ -252,9 +353,10 @@ describe('S3Adapter tests', () => {
         expect(resp.writeHead).toHaveBeenCalled();
         expect(resp.write).toHaveBeenCalled();
         expect(resp.end).toHaveBeenCalled();
+        expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+
         const commands = s3ClientMock.send.calls.all();
-        expect(commands.length).toBe(2);
-        expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+        expect(commands[0].args[0]).toBeInstanceOf(HeadBucketCommand);
         const commandArg = commands[1].args[0];
         expect(commandArg).toBeInstanceOf(GetObjectCommand);
         expect(commandArg.input.Range).toBe('bytes=0-1');
@@ -640,8 +742,9 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
-      expect(s3ClientMock.send.calls.all().length).toBe(2);
-      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(CreateBucketCommand));
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(HeadBucketCommand));
       expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
     });
 
@@ -651,9 +754,9 @@ describe('S3Adapter tests', () => {
       const metadata = { foo: 'bar' };
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', { metadata });
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
       const commands = s3ClientMock.send.calls.all();
-      expect(commands.length).toBe(2);
-      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      expect(commands[0].args[0]).toBeInstanceOf(HeadBucketCommand);
       const commandArg = commands[1].args[0];
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.Metadata).toEqual({ foo: 'bar' });
@@ -665,9 +768,9 @@ describe('S3Adapter tests', () => {
       const tags = { foo: 'bar', baz: 'bin' };
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', { tags });
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
       const commands = s3ClientMock.send.calls.all();
-      expect(commands.length).toBe(2);
-      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      expect(commands[0].args[0]).toBeInstanceOf(HeadBucketCommand);
       const commandArg = commands[1].args[0];
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.Tagging).toBe('foo=bar&baz=bin');
@@ -679,9 +782,9 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
       const commands = s3ClientMock.send.calls.all();
-      expect(commands.length).toBe(2);
-      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      expect(commands[0].args[0]).toBeInstanceOf(HeadBucketCommand);
       const commandArg = commands[1].args[0];
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBe('public-read');
@@ -692,9 +795,9 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
       const commands = s3ClientMock.send.calls.all();
-      expect(commands.length).toBe(2);
-      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      expect(commands[0].args[0]).toBeInstanceOf(HeadBucketCommand);
       const commandArg = commands[1].args[0];
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBeUndefined();
@@ -707,9 +810,9 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
       const commands = s3ClientMock.send.calls.all();
-      expect(commands.length).toBe(2);
-      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      expect(commands[0].args[0]).toBeInstanceOf(HeadBucketCommand);
       const commandArg = commands[1].args[0];
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBe('private');
@@ -723,9 +826,9 @@ describe('S3Adapter tests', () => {
       s3._s3Client = s3ClientMock;
 
       await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
       const commands = s3ClientMock.send.calls.all();
-      expect(commands.length).toBe(2);
-      expect(commands[0].args[0]).toBeInstanceOf(CreateBucketCommand);
+      expect(commands[0].args[0]).toBeInstanceOf(HeadBucketCommand);
       const commandArg = commands[1].args[0];
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBeUndefined();
