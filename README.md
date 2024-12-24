@@ -31,6 +31,9 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
   - [Adding Metadata and Tags](#adding-metadata-and-tags)
 - [Compatibility with other Storage Providers](#compatibility-with-other-storage-providers)
   - [Digital Ocean Spaces](#digital-ocean-spaces)
+- [Breaking Changes From v2 to v3](breaking-changes-from-v2-to-v3)
+  - [Best Practices](#best-practices)
+  - [Why the Change](#why-the-change)
 
 
 # Getting Started
@@ -312,3 +315,78 @@ var api = new ParseServer({
   filesAdapter: s3Adapter
 });
 ```
+
+
+# Breaking Changes From v2 to v3
+
+1. **Old Method (No Longer Supported)**:
+   ```javascript
+   const options = {
+       bucket: 'bucket-1',
+       s3overrides: {
+           accessKeyId: 'access-key',
+           secretAccessKey: 'secret-key'
+       }
+   };
+   ```
+
+2. **New Methods (Required)**:
+   Credentials must now be passed either:
+
+   - **Inside the `s3overrides.credentials` key**:
+     ```javascript
+     const options = {
+         bucket: 'bucket-1',
+         s3overrides: {
+             credentials: {
+                 accessKeyId: 'access-key',
+                 secretAccessKey: 'secret-key'
+             }
+         }
+     };
+     ```
+
+   - **Directly in the root object**:
+     ```javascript
+     const options = {
+         bucket: 'bucket-1',
+         credentials: {
+             accessKeyId: 'access-key',
+             secretAccessKey: 'secret-key'
+         }
+     };
+     ```
+
+## Best Practices
+
+1. **Use Environment Variables for Credentials**:
+   Storing credentials directly in code can be insecure. Instead, use environment variables with the AWS SDK's built-in support for credential resolution:
+   ```javascript
+   const options = {
+       bucket: 'bucket-1',
+       s3overrides: {
+           // The SDK will automatically load credentials from the environment
+       }
+   };
+   ```
+
+2. **Prefer AWS IAM Roles (for EC2, ECS, or Lambda)**:
+   If running in AWS-managed environments, use IAM roles to automatically provide temporary credentials:
+   - No need to pass `credentials` manually; the SDK resolves them automatically.
+
+3. **Use the AWS Credential Provider Chain**:
+   Leverage the SDK's support for multiple credential sources:
+   ```javascript
+   import { fromIni } from '`aws-sdk/credential-providers';
+
+   const options = {
+       bucket: 'bucket-1',
+       s3overrides: {
+           credentials: fromIni({ profile: 'your-profile-name' })
+       }
+   };
+   ```
+
+## Why the Change
+
+The updated approach adheres to AWS SDK v3's modular and secure design, improving compatibility with advanced credential management techniques and security best practices.
