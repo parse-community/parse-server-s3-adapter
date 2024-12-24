@@ -8,6 +8,7 @@ const {
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadBucketCommand,
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const optionsFromArguments = require('./lib/optionsFromArguments');
@@ -112,12 +113,26 @@ class S3Adapter {
     }
 
     try {
-      await this._s3Client.send(new CreateBucketCommand({ Bucket: this._bucket }));
+      // Check if the bucket exists
+      await this._s3Client.send(new HeadBucketCommand({ Bucket: this._bucket }));
       this._hasBucket = true;
     } catch (error) {
-      if (error.name === 'BucketAlreadyOwnedByYou') { this._hasBucket = true; }
-      else {
+      if (error.name !== 'NotFound') {
+        // If the error is something other than "NotFound", rethrow it
         throw error;
+      }
+
+      // If the bucket does not exist, attempt to create it
+      try {
+        await this._s3Client.send(new CreateBucketCommand({ Bucket: this._bucket }));
+        this._hasBucket = true;
+      } catch (creationError) {
+        // Handle specific errors during bucket creation
+        if (creationError.name === 'BucketAlreadyExists' || creationError.name === 'BucketAlreadyOwnedByYou') {
+          this._hasBucket = true;
+        } else {
+          throw creationError;
+        }
       }
     }
   }
