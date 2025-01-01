@@ -5,6 +5,9 @@
 [![Coverage](https://img.shields.io/codecov/c/github/parse-community/parse-server-s3-adapter/master.svg)](https://codecov.io/github/parse-community/parse-server-s3-adapter?branch=master)
 [![auto-release](https://img.shields.io/badge/%F0%9F%9A%80-auto--release-9e34eb.svg)](https://github.com/parse-community/parse-server-s3-adapter/releases)
 
+[![Parse Server](https://img.shields.io/badge/Parse_Server-7.0-169CEE.svg?style=flat&logo=data:image/svg%2bxml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJ1dWlkLTg2MzQ2MDY1LTNjNjQtNDBlYy1hNmQ0LWUyNzZmM2E0Y2U5MiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgMTExMy42NiAxMDk5LjQyIj48ZyBpZD0idXVpZC04MWRmNWUyZC04YWQyLTQwMmEtYTNlZS1hYjE2YTQ5NjhhNjciPjxwYXRoIGQ9Ik00ODUuMDMsNzg1LjE0Yy04MC4zMSwwLTE2MC42MS0uMDktMjQwLjkyLjA3LTE5LjY5LjA0LTM4Ljk2LDIuODUtNTYuODksMTEuODYtMzAuNjEsMTUuMzktNDYuMjQsNDAuODYtNTAuNTEsNzQuMTctMS43OCwxMy44Ny0xLjA3LDI3LjUzLDIuNCw0MS4wNyw5Ljg4LDM4LjYxLDQwLjk3LDYzLDgwLjc3LDYzLjYxLDE0LjQ4LjIyLDI4LjYtMS4xMyw0Mi4xOC02LjU3LDIyLjIxLTguODksMzcuNjgtMjQuNjksNDcuNTUtNDYuMjIsNS43LTEyLjQ0LDguNzgtMjUuNiwxMC4wMy0zOS4yMS43LTcuNjUsMS4zNC04LjM5LDkuMDctOC40LDM5LjExLS4wNiw3OC4yMi0uMDYsMTE3LjMzLDAsNy44MS4wMSw4LjcuNzcsOC4yNSw4LjYxLTEuNSwyNS45LTYuMjYsNTEuMTktMTQuOTUsNzUuNjgtOS44OSwyNy44OC0yNC41Miw1Mi45Ni00NC44OCw3NC40OS0xMi4wNiwxMi43NS0yNS44NiwyMy41LTQxLDMyLjM2LTI3LjYxLDE2LjE3LTU3LjU2LDI1LjU0LTg5LjIxLDI5LjYzLTE2LjAzLDIuMDctMzIuMTMsMy41Ni00OC4zMiwyLjk5LTUxLjA1LTEuODEtOTguMTktMTUuMzItMTM4LjkyLTQ3LjM1LTI5LjE4LTIyLjk0LTUwLjIzLTUxLjkxLTYzLjE2LTg2LjczQzQuNDksOTQwLjAzLjIsOTE0LjAyLDAsODg3LjEyYy0uMi0yNy4zOSwzLjIzLTU0LjA2LDEyLjA0LTgwLjAxLDE2LjE1LTQ3LjU1LDQ2LjA0LTg0LjIyLDg4LjM3LTExMC44NSwzMy41LTIxLjA4LDcwLjM1LTMyLjQxLDEwOS41MS0zNi43NiwxOC45My0yLjEsMzcuOTEtMi43OCw1Ni45NS0yLjc4LDE0Ni4wMS4wNiwyOTIuMDItLjE0LDQzOC4wMy4xNCw0MC43OC4wOCw3OS44OC03LjIsMTE3LjEzLTIzLjY0LDUxLjQ0LTIyLjcsOTEuNi01OC4yNSwxMTkuNzUtMTA3LjA4LDE5LjE3LTMzLjI3LDI5Ljk3LTY5LjE0LDMzLjU2LTEwNy4zNSw0LjI0LTQ1LjEyLS42My04OS4xNy0xNi44LTEzMS40Ni0yOS4xNS03Ni4xOS04My4xMS0xMjUuOTUtMTYxLjc0LTE0OC41NS0zMC42OC04LjgxLTYyLjExLTExLjExLTkzLjc0LTkuMDMtNTAuMzEsMy4zMS05Ni41MiwxOC45LTEzNy4wOCw0OS40MS0yNi45OCwyMC4zLTQ4Ljg5LDQ1LjI3LTY1LjkxLDc0LjQ3LTIzLjY0LDQwLjU2LTM2LjIsODQuNTgtNDEuMzYsMTMxLTIuMDUsMTguNDItMi45OSwzNi44NS0yLjkzLDU1LjM4LjEzLDM4LjA3LjA0LDc2LjEzLjA0LDExNC4yLDAsMi4zNS4xLDQuNy0uMDgsNy4wNC0uMzYsNC44Ny0xLjIzLDUuNjktNi4yMiw2LjA4LTEuODIuMTQtMy42NS4wNy01LjQ3LjA3LTM3LjU1LDAtNzUuMDksMC0xMTIuNjQsMC0xLjU2LDAtMy4xMy4wNS00LjY5LS4wNC01Ljk2LS4zMi02Ljc1LTEuMDgtNy4xMS02LjgyLS4wNi0xLjA0LS4wNC0yLjA5LS4wNC0zLjEzLjAyLTQ1LjYzLS44NC05MS4yOC4yOC0xMzYuODgsMS44MS03My44NSwxNi43My0xNDQuODQsNTAuNTQtMjExLjE0LDIxLjE3LTQxLjUxLDQ4LjY0LTc4LjQsODMuMi0xMDkuNzEsNDEuMzktMzcuNDksODguOTYtNjQuMjcsMTQyLjM5LTgwLjcxLDMwLjU1LTkuNCw2MS43NC0xNS4zNSw5My41My0xNy42NSw4MC4yMS01Ljc5LDE1Ny4wNSw2Ljg1LDIyOC42LDQ0Ljg3LDYzLjExLDMzLjU0LDExMi4wMSw4MS44OCwxNDYuNTUsMTQ0LjU1LDI0LjczLDQ0Ljg3LDM5LjE3LDkyLjk2LDQ1LjU3LDE0My43MSwzLjcxLDI5LjM4LDQuMjIsNTguODcsMi4yOSw4OC4yMS00LjU0LDY5LjI2LTI1LjQxLDEzMy4zOS02NC41LDE5MS4xMS0zNS41MSw1Mi40Mi04MS43Miw5Mi44OC0xMzcuNjgsMTIyLjM4LTQ1LjQ5LDIzLjk4LTkzLjg4LDM4LjY1LTE0NC43NSw0NS4zNC0xOS4zOCwyLjU1LTM4Ljg3LDMuNzQtNTguNDYsMy43LTc0LjA1LS4xNi0xNDguMS0uMDYtMjIyLjE0LS4wNloiIHN0eWxlPSJmaWxsOiNlMGUwZTA7Ii8+PC9nPjwvc3ZnPg==)](https://github.com/parse-community/parse-server/releases)
+[![Node Version](https://img.shields.io/badge/nodejs-18,_20,_22-green.svg?logo=node.js&style=flat)](https://nodejs.org)
+
 [![npm latest version](https://img.shields.io/npm/v/@parse/s3-files-adapter.svg)](https://www.npmjs.com/package/@parse/s3-files-adapter)
 
 ---
@@ -28,6 +31,7 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
   - [Adding Metadata and Tags](#adding-metadata-and-tags)
 - [Compatibility with other Storage Providers](#compatibility-with-other-storage-providers)
   - [Digital Ocean Spaces](#digital-ocean-spaces)
+- [Migration Guide from 3.x to 4.x](#migration-guide-from-3x-to-4x)
 
 
 # Getting Started
@@ -40,21 +44,24 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
 
 ### Parse Server
 
-| Version | End-of-Life   | Compatible |
-|---------|---------------|------------|
-| <=5     | December 2023 | ✅ Yes      |
-| 6       | December 2024 | ✅ Yes      |
-| 7       | December 2025 | ✅ Yes      |
+Parse Server S3 Adapter is compatible with the following versions of Parse Server.
+
+| Parse Server Version | End-of-Life   | Compatible |
+|----------------------|---------------|------------|
+| <=5                  | December 2023 | ❌ No       |
+| 6                    | December 2024 | ❌ No       |
+| <7.3.0               | December 2025 | ❌ No       |
+| >=7.3.0              | December 2025 | ✅ Yes      |
 
 ### Node.js
 
-This product is continuously tested with the most recent releases of Node.js to ensure compatibility. We follow the [Node.js Long Term Support plan](https://github.com/nodejs/Release) and only test against versions that are officially supported and have not reached their end-of-life date.
+Parse Server S3 Adapter is continuously tested with the most recent releases of Node.js to ensure compatibility. We follow the [Node.js Long Term Support plan](https://github.com/nodejs/Release) and only test against versions that are officially supported and have not reached their end-of-life date.
 
-| Version    | Latest Version | End-of-Life | Compatible |
-|------------|----------------|-------------|------------|
-| Node.js 18 | 18.20.4        | April 2025  | ✅ Yes      |
-| Node.js 20 | 20.15.1        | April 2026  | ✅ Yes      |
-| Node.js 22 | 22.4.1         | April 2027  | ✅ Yes      |
+| Node.js Version | End-of-Life | Compatible |
+|-----------------|-------------|------------|
+| 18              | April 2025  | ✅ Yes      |
+| 20              | April 2026  | ✅ Yes      |
+| 22              | April 2027  | ✅ Yes      |
 
 ## AWS Credentials
 
@@ -277,7 +284,6 @@ var S3Adapter = require("@parse/s3-files-adapter");
 var AWS = require("aws-sdk");
 
 //Configure Digital Ocean Spaces EndPoint
-const spacesEndpoint = new AWS.Endpoint(process.env.SPACES_ENDPOINT);
 var s3Options = {
   bucket: process.env.SPACES_BUCKET_NAME,
   baseUrl: process.env.SPACES_BASE_URL,
@@ -290,7 +296,7 @@ var s3Options = {
   s3overrides: {
     accessKeyId: process.env.SPACES_ACCESS_KEY,
     secretAccessKey: process.env.SPACES_SECRET_KEY,
-    endpoint: spacesEndpoint
+    endpoint: process.env.SPACES_ENDPOINT
   }
 };
 
@@ -307,3 +313,60 @@ var api = new ParseServer({
   filesAdapter: s3Adapter
 });
 ```
+
+
+# Migration Guide from 3.x to 4.x
+
+Due to the deprecation of the AWS SDK v2, Parse Server S3 Adapter 4.x adopts the AWS SDK v3. When upgrading from Parse Server S3 Adapter 3.x to 4.x, consider that S3 credentials are passed differently:
+
+*Parse Server S3 Adapter 3.x:*
+
+```js
+const options = {
+  bucket: '<AWS_S3_BUCKET>',
+  s3overrides: {
+    accessKeyId: '<AWS_ACCESS_KEY>',
+    secretAccessKey: '<AWS_SECRET_KEY>'
+  }
+};
+```
+
+*Parse Server S3 Adapter 4.x:*
+
+```js
+const options = {
+  bucket: '<AWS_S3_BUCKET>',
+  s3overrides: {
+    credentials: {
+      accessKeyId: '<AWS_ACCESS_KEY>',
+      secretAccessKey: '<AWS_SECRET_KEY>'
+    }
+  }
+};
+```
+
+Alternatively, the credentials can be set on the root object:
+
+```js
+const options = {
+  bucket: '<AWS_S3_BUCKET>',
+  credentials: {
+    accessKeyId: '<AWS_ACCESS_KEY>',
+    secretAccessKey: '<AWS_SECRET_KEY>'
+  }
+};
+```
+
+> [!NOTE]
+> It is best practice to not store credentials as environment variables, as they can be easily retrieved on a compromised machine. For Parse Server running in an AWS environment, use more secure alternatives like AWS Secrets Manager, or AWS Credential Identity Provider to access shared credentials:
+>
+> ```js
+> import { fromIni } from 'aws-sdk/credential-providers';
+>
+> const options = {
+>   bucket: '<AWS_S3_BUCKET>',
+>   s3overrides: {
+>     credentials: fromIni({ profile: '<AWS_CLIENT_PROFILE>' })
+>   }
+> };
+> ```

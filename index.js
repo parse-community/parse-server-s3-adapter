@@ -2,18 +2,28 @@
 //
 // Stores Parse files in AWS S3.
 
-const AWS = require('aws-sdk');
+const {
+  S3Client,
+  CreateBucketCommand,
+  PutObjectCommand,
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadBucketCommand,
+} = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
   // eslint-disable-next-line no-console
-  console.warn('Passing AWS credentials to this adapter is now DEPRECATED and will be removed in a future version',
-    'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details');
+  console.warn(
+    'Passing AWS credentials to this adapter is now DEPRECATED and will be removed in a future version',
+    'See: https://github.com/parse-server-modules/parse-server-s3-adapter#aws-credentials for details'
+  );
 };
 
-const serialize = (obj) => {
+const serialize = obj => {
   const str = [];
-  Object.keys(obj).forEach((key) => {
+  Object.keys(obj).forEach(key => {
     if (obj[key]) {
       str.push(`${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`);
     }
@@ -36,6 +46,15 @@ function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, fil
   return directAccessUrl;
 }
 
+function responseToBuffer(response) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    response.Body.on('data', chunk => chunks.push(chunk));
+    response.Body.on('end', () => resolve(Buffer.concat(chunks)));
+    response.Body.on('error', reject);
+  });
+}
+
 class S3Adapter {
   // Creates an S3 session.
   // Providing AWS access, secret keys and bucket are mandatory
@@ -55,6 +74,7 @@ class S3Adapter {
     this._presignedUrlExpires = parseInt(options.presignedUrlExpires, 10);
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
+    this._endpoint = options.s3overrides?.endpoint;
     // Optional FilesAdaptor method
     this.validateFilename = options.validateFilename;
 
@@ -67,35 +87,61 @@ class S3Adapter {
 
     if (options.accessKey && options.secretKey) {
       awsCredentialsDeprecationNotice();
+      s3Options.credentials = {
+        accessKeyId: options.accessKey,
+        secretAccessKey: options.secretKey,
+      };
+    } else if (options.credentials) {
+      s3Options.credentials = options.credentials;
+    }
+
+    if (options.accessKey && options.secretKey) {
+      awsCredentialsDeprecationNotice();
       s3Options.accessKeyId = options.accessKey;
       s3Options.secretAccessKey = options.secretKey;
     }
 
     Object.assign(s3Options, options.s3overrides);
 
-    this._s3Client = new AWS.S3(s3Options);
+    this._s3Client = new S3Client(s3Options);
     this._hasBucket = false;
   }
 
-  createBucket() {
-    let promise;
+  async createBucket() {
     if (this._hasBucket) {
-      promise = Promise.resolve();
-    } else {
-      promise = new Promise((resolve) => {
-        this._s3Client.createBucket(() => {
-          this._hasBucket = true;
-          resolve();
-        });
-      });
+      return;
     }
-    return promise;
+
+    try {
+      // Check if the bucket exists
+      await this._s3Client.send(new HeadBucketCommand({ Bucket: this._bucket }));
+      this._hasBucket = true;
+    } catch (error) {
+      if (error.name !== 'NotFound') {
+        // If the error is something other than "NotFound", rethrow it
+        throw error;
+      }
+
+      // If the bucket does not exist, attempt to create it
+      try {
+        await this._s3Client.send(new CreateBucketCommand({ Bucket: this._bucket }));
+        this._hasBucket = true;
+      } catch (creationError) {
+        // Handle specific errors during bucket creation
+        if (creationError.name === 'BucketAlreadyExists' || creationError.name === 'BucketAlreadyOwnedByYou') {
+          this._hasBucket = true;
+        } else {
+          throw creationError;
+        }
+      }
+    }
   }
 
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
-  createFile(filename, data, contentType, options = {}) {
+  async createFile(filename, data, contentType, options = {}) {
     const params = {
+      Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Body: data,
     };
@@ -128,52 +174,53 @@ class S3Adapter {
       const serializedTags = serialize(options.tags);
       params.Tagging = serializedTags;
     }
-    return this.createBucket().then(() => new Promise((resolve, reject) => {
-      this._s3Client.upload(params, (err, response) => {
-        if (err !== null) {
-          return reject(err);
-        }
-        return resolve(response);
-      });
-    }));
+    await this.createBucket();
+    const command = new PutObjectCommand(params);
+    const response = await this._s3Client.send(command);
+    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    const location = `${endpoint}/${params.Key}`;
+
+    return Object.assign(response || {}, { Location: location });
   }
 
-  deleteFile(filename) {
-    return this.createBucket().then(() => new Promise((resolve, reject) => {
-      const params = {
-        Key: this._bucketPrefix + filename,
-      };
-      this._s3Client.deleteObject(params, (err, data) => {
-        if (err !== null) {
-          return reject(err);
-        }
-        return resolve(data);
-      });
-    }));
+  async deleteFile(filename) {
+    const params = {
+      Bucket: this._bucket,
+      Key: this._bucketPrefix + filename,
+    };
+    await this.createBucket();
+    const command = new DeleteObjectCommand(params);
+    const response = await this._s3Client.send(command);
+    return response;
   }
 
   // Search for and return a file if found by filename
   // Returns a promise that succeeds with the buffer result from S3
-  getFileData(filename) {
-    const params = { Key: this._bucketPrefix + filename };
-    return this.createBucket().then(() => new Promise((resolve, reject) => {
-      this._s3Client.getObject(params, (err, data) => {
-        if (err !== null) {
-          return reject(err);
-        }
-        // Something happened here...
-        if (data && !data.Body) {
-          return reject(data);
-        }
-        return resolve(data.Body);
-      });
-    }));
+  async getFileData(filename) {
+    const params = {
+      Bucket: this._bucket,
+      Key: this._bucketPrefix + filename,
+    };
+    await this.createBucket();
+    const command = new GetObjectCommand(params);
+    const response = await this._s3Client.send(command);
+    if (response && !response.Body) {
+      throw new Error(response);
+    }
+
+    const buffer = await responseToBuffer(response);
+    return buffer;
+  }
+
+  // Exposed only for testing purposes
+  getFileSignedUrl(client, command, options) {
+    return getSignedUrl(client, command, options);
   }
 
   // Generates and returns the location of a file stored in S3 for the given request and filename
   // The location is the direct S3 link if the option is set,
   // otherwise we serve the file through parse-server
-  getFileLocation(config, filename) {
+  async getFileLocation(config, filename) {
     const fileName = filename.split('/').map(encodeURIComponent).join('/');
     if (!this._directAccess) {
       return `${config.mount}/files/${config.applicationId}/${fileName}`;
@@ -184,12 +231,11 @@ class S3Adapter {
     let presignedUrl = '';
     if (this._presignedUrl) {
       const params = { Bucket: this._bucket, Key: fileKey };
-      if (this._presignedUrlExpires) {
-        params.Expires = this._presignedUrlExpires;
-      }
-      // Always use the "getObject" operation, and we recommend that you protect the URL
-      // appropriately: https://docs.aws.amazon.com/AmazonS3/latest/dev/ShareObjectPreSignedURL.html
-      presignedUrl = this._s3Client.getSignedUrl('getObject', params);
+      const options = this._presignedUrlExpires ? { expiresIn: this._presignedUrlExpires } : {};
+
+      const command = new GetObjectCommand(params);
+      presignedUrl = await this.getFileSignedUrl(this._s3Client, command, options);
+
       if (!this._baseUrl) {
         return presignedUrl;
       }
@@ -203,30 +249,33 @@ class S3Adapter {
     return buildDirectAccessUrl(this._baseUrl, baseUrlFileKey, presignedUrl, config, filename);
   }
 
-  handleFileStream(filename, req, res) {
+  async handleFileStream(filename, req, res) {
     const params = {
+      Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Range: req.get('Range'),
     };
-    return this.createBucket().then(() => new Promise((resolve, reject) => {
-      this._s3Client.getObject(params, (error, data) => {
-        if (error !== null) {
-          return reject(error);
-        }
-        if (data && !data.Body) {
-          return reject(data);
-        }
-        res.writeHead(206, {
-          'Accept-Ranges': data.AcceptRanges,
-          'Content-Length': data.ContentLength,
-          'Content-Range': data.ContentRange,
-          'Content-Type': data.ContentType,
-        });
-        res.write(data.Body);
-        res.end();
-        return resolve(data.Body);
-      });
-    }));
+
+    await this.createBucket();
+    const command = new GetObjectCommand(params);
+    const data = await this._s3Client.send(command);
+    if (data && !data.Body) {
+      throw new Error('S3 object body is missing.');
+    }
+
+    res.writeHead(206, {
+      'Accept-Ranges': data.AcceptRanges,
+      'Content-Length': data.ContentLength,
+      'Content-Range': data.ContentRange,
+      'Content-Type': data.ContentType,
+    });
+    data.Body.on('data', chunk => res.write(chunk));
+    data.Body.on('end', () => res.end());
+    data.Body.on('error', e => {
+      res.status(404);
+      res.send(e.message);
+    });
+    return responseToBuffer(data);
   }
 }
 
