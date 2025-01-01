@@ -31,9 +31,7 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
   - [Adding Metadata and Tags](#adding-metadata-and-tags)
 - [Compatibility with other Storage Providers](#compatibility-with-other-storage-providers)
   - [Digital Ocean Spaces](#digital-ocean-spaces)
-- [Breaking Changes From v2 to v3](#breaking-changes-from-v2-to-v3)
-  - [Best Practices](#best-practices)
-  - [Why the Change](#why-the-change)
+- [Migration Guide from 3.x to 4.x](#migration-guide-from-3x-to-4x)
 
 
 # Getting Started
@@ -317,76 +315,58 @@ var api = new ParseServer({
 ```
 
 
-# Breaking Changes from v2 to v3
+# Migration Guide from 3.x to 4.x
 
-1. **Old Method (No Longer Supported)**:
-   ```javascript
-   const options = {
-       bucket: 'bucket-1',
-       s3overrides: {
-           accessKeyId: 'access-key',
-           secretAccessKey: 'secret-key'
-       }
-   };
-   ```
+Due to the deprecation of the AWS SDK v2, Parse Server S3 Adapter 4.x adopts the AWS SDK v3. When upgrading from Parse Server S3 Adapter 3.x to 4.x, consider that S3 credentials are passed differently:
 
-2. **New Methods (Required)**:
-   Credentials must now be passed either:
+*Parse Server S3 Adapter 3.x:*
 
-   - **Inside the `s3overrides.credentials` key**:
-     ```javascript
-     const options = {
-         bucket: 'bucket-1',
-         s3overrides: {
-             credentials: {
-                 accessKeyId: 'access-key',
-                 secretAccessKey: 'secret-key'
-             }
-         }
-     };
-     ```
+```js
+const options = {
+  bucket: '<AWS_S3_BUCKET>',
+  s3overrides: {
+    accessKeyId: '<AWS_ACCESS_KEY>',
+    secretAccessKey: '<AWS_SECRET_KEY>'
+  }
+};
+```
 
-   - **Directly in the root object**:
-     ```javascript
-     const options = {
-         bucket: 'bucket-1',
-         credentials: {
-             accessKeyId: 'access-key',
-             secretAccessKey: 'secret-key'
-         }
-     };
-     ```
+*Parse Server S3 Adapter 4.x:*
 
-## Best Practices
+```js
+const options = {
+  bucket: '<AWS_S3_BUCKET>',
+  s3overrides: {
+    credentials: {
+      accessKeyId: '<AWS_ACCESS_KEY>',
+      secretAccessKey: '<AWS_SECRET_KEY>'
+    }
+  }
+};
+```
 
-1. **Use Environment Variables for Credentials**:
-   Storing credentials directly in code can be insecure. Instead, use environment variables with the AWS SDK's built-in support for credential resolution:
-   ```javascript
-   const options = {
-       bucket: 'bucket-1',
-       s3overrides: {
-           // The SDK will automatically load credentials from the environment
-       }
-   };
-   ```
+Alternatively, the credentials can be set on the root object:
 
-2. **Prefer AWS IAM Roles (for EC2, ECS, or Lambda)**:
-   If running in AWS-managed environments, use IAM roles to automatically provide temporary credentials:
-   - No need to pass `credentials` manually; the SDK resolves them automatically.
+```js
+const options = {
+  bucket: '<AWS_S3_BUCKET>',
+  credentials: {
+    accessKeyId: '<AWS_ACCESS_KEY>',
+    secretAccessKey: '<AWS_SECRET_KEY>'
+  }
+};
+```
 
-3. **Use the AWS Credential Provider Chain**:
-   Leverage the SDK's support for multiple credential sources:
-   ```javascript
-   import { fromIni } from '`aws-sdk/credential-providers';
-
-   const options = {
-       bucket: 'bucket-1',
-       s3overrides: {
-           credentials: fromIni({ profile: 'your-profile-name' })
-       }
-   };
-   ```
-
-## Why the Change
-
-The updated approach adheres to AWS SDK v3's modular and secure design, improving compatibility with advanced credential management techniques and security best practices.
+> [!NOTE]
+> It is best practice to not store credentials as environment variables, as they can be easily retrieved on a compromised machine. For Parse Server running in an AWS environment, use more secure alternatives like AWS Secrets Manager, or AWS Credential Identity Provider to access shared credentials:
+>
+> ```js
+> import { fromIni } from 'aws-sdk/credential-providers';
+>
+> const options = {
+>   bucket: '<AWS_S3_BUCKET>',
+>   s3overrides: {
+>     credentials: fromIni({ profile: '<AWS_CLIENT_PROFILE>' })
+>   }
+> };
+> ```
