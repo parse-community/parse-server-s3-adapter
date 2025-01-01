@@ -1,6 +1,6 @@
 # Parse Server S3 File Adapter <!-- omit in toc -->
 
-[![Build Status](https://github.com/parse-community/parse-server-s3-adapter/workflows/ci/badge.svg?branch=master)](https://github.com/parse-community/parse-server-s3-adapter/actions?query=workflow%3Aci+branch%3Amaster)
+[![Build Status](https://github.com/parse-community/parse-server-s3-adapter/actions/workflows/ci.yml/badge.svg)](https://github.com/parse-community/parse-server-s3-adapter/actions/workflows/ci.yml)
 [![Snyk Badge](https://snyk.io/test/github/parse-community/parse-server-s3-adapter/badge.svg)](https://snyk.io/test/github/parse-community/parse-server-s3-adapter)
 [![Coverage](https://img.shields.io/codecov/c/github/parse-community/parse-server-s3-adapter/master.svg)](https://codecov.io/github/parse-community/parse-server-s3-adapter?branch=master)
 [![auto-release](https://img.shields.io/badge/%F0%9F%9A%80-auto--release-9e34eb.svg)](https://github.com/parse-community/parse-server-s3-adapter/releases)
