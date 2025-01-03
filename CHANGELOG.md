@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/parse-community/parse-server-s3-adapter/compare/4.0.0...4.1.0) (2025-01-03)
+
+
+### Features
+
+* Upgrade @aws-sdk/client-s3 from 3.668.0 to 3.709.0 ([#235](https://github.com/parse-community/parse-server-s3-adapter/issues/235)) ([a344626](https://github.com/parse-community/parse-server-s3-adapter/commit/a344626b37946a8bed680740a6752c5903389509))
+
 # [4.0.0](https://github.com/parse-community/parse-server-s3-adapter/compare/3.0.0...4.0.0) (2025-01-01)
 
 
