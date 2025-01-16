@@ -696,7 +696,7 @@ describe('S3Adapter tests', () => {
       const s3 = getMockS3Adapter(options);
       const fileName = 'randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
-        const url = new URL(value.Location);
+        const url = new URL(value.location);
         expect(url.pathname.indexOf(fileName) > 13).toBe(true);
       });
       promises.push(response);
@@ -707,7 +707,7 @@ describe('S3Adapter tests', () => {
       const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
-        const url = new URL(value.Location);
+        const url = new URL(value.location);
         expect(url.pathname.substring(1)).toEqual(options.bucketPrefix + fileName);
       });
       promises.push(response);
@@ -717,7 +717,7 @@ describe('S3Adapter tests', () => {
       const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
-        const url = new URL(value.Location);
+        const url = new URL(value.location);
         expect(url.pathname.indexOf('foo/')).toEqual(6);
         expect(url.pathname.indexOf('random') > 13).toBe(true);
       });
