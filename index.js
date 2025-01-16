@@ -193,7 +193,7 @@ class S3Adapter {
     return {
       location: location, // actual upload location, used for tests
       url: url, // optionally signed url (can be returned to client)
-      filename: key_without_prefix, // filename in storage
+      name: key_without_prefix, // filename in storage, consistent with other adapters
       s3_response: response // raw s3 response 
     };
   }
