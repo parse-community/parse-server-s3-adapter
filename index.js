@@ -188,13 +188,16 @@ class S3Adapter {
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
     const location = `${endpoint}/${params.Key}`;
 
-    const url = await this.getFileLocation(config, key_without_prefix);
+    let url;
+    if (Object.keys(config).length != 0) { // if config is passed, we can generate a presigned url here
+      url = await this.getFileLocation(config, key_without_prefix);
+    }
 
     return {
       location: location, // actual upload location, used for tests
-      url: url, // optionally signed url (can be returned to client)
       name: key_without_prefix, // filename in storage, consistent with other adapters
-      s3_response: response // raw s3 response 
+      s3_response: response, // raw s3 response 
+      ...url? {url: url} : {} // url (optionally presigned) or non-direct access url
     };
   }
 
