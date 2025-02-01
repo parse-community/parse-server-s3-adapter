@@ -141,7 +141,7 @@ class S3Adapter {
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}, config = {}) {
-  
+
     let key_without_prefix = filename;
     if (this._generateKey instanceof Function) {
       try {
@@ -150,13 +150,13 @@ class S3Adapter {
         throw new Error(e); // throw error if generateKey function fails
       }
     }
-  
+
     const params = {
       Bucket: this._bucket,
       Key: this._bucketPrefix + key_without_prefix,
       Body: data,
     };
-  
+    
     if (this._fileAcl) {
       if (this._fileAcl === 'none') {
         delete params.ACL;

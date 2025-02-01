@@ -875,34 +875,35 @@ describe('S3Adapter tests', () => {
       };
       const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
-      
       // Mock getFileLocation to return a presigned URL
       spyOn(s3, 'getFileLocation').and.returnValue(Promise.resolve('https://presigned-url.com/file.txt'));
-  
+
       const result = await s3.createFile(
-        'file.txt', 
-        'hello world', 
-        'text/utf8', 
+        'file.txt',
+        'hello world',
+        'text/utf8',
         {},
         { mount: 'http://example.com', applicationId: 'test123' }
       );
-  
-      expect(result.url).toBe('https://presigned-url.com/file.txt');
-      expect(result.location).toBeDefined();
-      expect(result.name).toBe('file.txt');
-      expect(result.s3_response).toBeDefined();
+
+      expect(result).toEqual({
+        location: jasmine.any(String),
+        name: 'file.txt',
+        s3_response: jasmine.any(Object),
+        url: 'https://presigned-url.com/file.txt'
+      });
     });
 
     it('should handle generateKey function errors', async () => {
       const options = {
         bucket: 'bucket-1',
         generateKey: () => {
-          throw new Error('Generate key failed');
+          throw 'Generate key failed';
         }
       };
       const s3 = new S3Adapter(options);
       s3._s3Client = s3ClientMock;
-  
+
       await expectAsync(
         s3.createFile('file.txt', 'hello world', 'text/utf8', {})
       ).toBeRejectedWithError('Generate key failed');
