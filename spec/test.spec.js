@@ -874,7 +874,15 @@ describe('S3Adapter tests', () => {
         presignedUrl: true
       };
       const s3 = new S3Adapter(options);
+
+      const mockS3Response = {
+        ETag: '"mock-etag"',
+        VersionId: 'mock-version',
+        Location: 'mock-location'
+      };
+      s3ClientMock.send.and.returnValue(Promise.resolve(mockS3Response));
       s3._s3Client = s3ClientMock;
+      
       // Mock getFileLocation to return a presigned URL
       spyOn(s3, 'getFileLocation').and.returnValue(Promise.resolve('https://presigned-url.com/file.txt'));
 
