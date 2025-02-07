@@ -882,7 +882,7 @@ describe('S3Adapter tests', () => {
       };
       s3ClientMock.send.and.returnValue(Promise.resolve(mockS3Response));
       s3._s3Client = s3ClientMock;
-      
+
       // Mock getFileLocation to return a presigned URL
       spyOn(s3, 'getFileLocation').and.returnValue(Promise.resolve('https://presigned-url.com/file.txt'));
 

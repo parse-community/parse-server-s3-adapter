@@ -156,7 +156,7 @@ class S3Adapter {
       Key: this._bucketPrefix + key_without_prefix,
       Body: data,
     };
-    
+
     if (this._fileAcl) {
       if (this._fileAcl === 'none') {
         delete params.ACL;
