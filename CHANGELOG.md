@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/parse-community/parse-server-s3-adapter/compare/4.1.1...4.2.0) (2025-06-12)
+
+
+### Features
+
+* Add support for option `baseUrl` set to async function ([#285](https://github.com/parse-community/parse-server-s3-adapter/issues/285)) ([6eae9e1](https://github.com/parse-community/parse-server-s3-adapter/commit/6eae9e1f4f4e496e4a53983464639e6d2a303f93))
+
 ## [4.1.1](https://github.com/parse-community/parse-server-s3-adapter/compare/4.1.0...4.1.1) (2025-06-04)
 
 
