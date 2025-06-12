@@ -5,6 +5,10 @@
 
 * Security upgrade cookie and parse-server ([#274](https://github.com/parse-community/parse-server-s3-adapter/issues/274)) ([4b6aadc](https://github.com/parse-community/parse-server-s3-adapter/commit/4b6aadc7244dd91d79818c7c6cf752333ee79776))
 
+### Features
+
+* Support async `baseUrl` function
+
 # [4.1.0](https://github.com/parse-community/parse-server-s3-adapter/compare/4.0.0...4.1.0) (2025-01-03)
 
 

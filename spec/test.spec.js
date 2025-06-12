@@ -640,6 +640,40 @@ describe('S3Adapter tests', () => {
     });
   });
 
+  describe('getFileLocation with async baseUrl', () => {
+    const testConfig = {
+      mount: 'http://my.server.com/parse',
+      applicationId: 'xxxx',
+    };
+    let options;
+
+    beforeEach(() => {
+      options = {
+        directAccess: true,
+        bucketPrefix: 'foo/bar/',
+        baseUrl: async () => {
+          await Promise.resolve();
+          return 'http://example.com/files';
+        },
+      };
+    });
+
+    it('should await async baseUrl', async () => {
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
+        'http://example.com/files/foo/bar/test.png'
+      );
+    });
+
+    it('should direct to async baseUrl when baseUrlDirect', async () => {
+      options.baseUrlDirect = true;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+      await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
+        'http://example.com/files/test.png'
+      );
+    });
+  });
+
   describe('validateFilename', () => {
     let options;
 
