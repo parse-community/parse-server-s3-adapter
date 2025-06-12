@@ -652,8 +652,7 @@ describe('S3Adapter tests', () => {
         directAccess: true,
         bucketPrefix: 'foo/bar/',
         baseUrl: async () => {
-          await Promise.resolve();
-          return 'http://example.com/files';
+          return await Promise.resolve('http://example.com/files');
         },
       };
     });
