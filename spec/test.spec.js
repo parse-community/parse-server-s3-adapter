@@ -642,7 +642,7 @@ describe('S3Adapter tests', () => {
 
   describe('getFileLocation with async baseUrl', () => {
     const testConfig = {
-      mount: 'http://my.server.com/parse',
+      mount: 'http://example.com/parse',
       applicationId: 'xxxx',
     };
     let options;
