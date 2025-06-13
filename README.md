@@ -126,7 +126,7 @@ The preferred method is to use the default AWS credentials pattern.  If no AWS c
       "bucketPrefix": '', // default value
       "directAccess": false, // default value
       "fileAcl": null, // default value
-      "baseUrl": null, // default value
+      "baseUrl": null, // string, function or async function
       "baseUrlDirect": false, // default value
       "signatureVersion": 'v4', // default value
       "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
@@ -227,7 +227,7 @@ var s3Options = {
   "region": 'us-east-1', // default value
   "bucketPrefix": '', // default value
   "directAccess": false, // default value
-  "baseUrl": null // default value
+  "baseUrl": null // string, function or async function
   "signatureVersion": 'v4', // default value
   "globalCacheControl": null, // default value. Or 'public, max-age=86400' for 24 hrs Cache-Control
   "presignedUrl": false, // default value

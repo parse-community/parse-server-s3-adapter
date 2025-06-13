@@ -31,13 +31,14 @@ const serialize = obj => {
   return str.join('&');
 };
 
-function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, filename) {
-  let directAccessUrl;
+async function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, config, filename) {
+  let urlBase;
   if (typeof baseUrl === 'function') {
-    directAccessUrl = `${baseUrl(config, filename)}/${baseUrlFileKey}`;
+    urlBase = await baseUrl(config, filename);
   } else {
-    directAccessUrl = `${baseUrl}/${baseUrlFileKey}`;
+    urlBase = baseUrl;
   }
+  let directAccessUrl = `${urlBase}/${baseUrlFileKey}`;
 
   if (presignedUrl) {
     directAccessUrl += presignedUrl.substring(presignedUrl.indexOf('?'));
@@ -246,7 +247,7 @@ class S3Adapter {
     }
 
     const baseUrlFileKey = this._baseUrlDirect ? fileName : fileKey;
-    return buildDirectAccessUrl(this._baseUrl, baseUrlFileKey, presignedUrl, config, filename);
+    return await buildDirectAccessUrl(this._baseUrl, baseUrlFileKey, presignedUrl, config, filename);
   }
 
   async handleFileStream(filename, req, res) {
