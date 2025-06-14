@@ -32,6 +32,8 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
 - [Compatibility with other Storage Providers](#compatibility-with-other-storage-providers)
   - [Digital Ocean Spaces](#digital-ocean-spaces)
 - [Migration Guide from 3.x to 4.x](#migration-guide-from-3x-to-4x)
+  - [AWS IAM Permissions](#aws-iam-permissions)
+  - [Passing S3 Credentials](#passing-s3-credentials)
 
 
 # Getting Started
@@ -317,7 +319,27 @@ var api = new ParseServer({
 
 # Migration Guide from 3.x to 4.x
 
-Due to the deprecation of the AWS SDK v2, Parse Server S3 Adapter 4.x adopts the AWS SDK v3. When upgrading from Parse Server S3 Adapter 3.x to 4.x, consider that S3 credentials are passed differently:
+Due to the deprecation of the AWS SDK v2, Parse Server S3 Adapter 4.x adopts the AWS SDK v3. When upgrading from Parse Server S3 Adapter 3.x to 4.x, consider the following changes:
+
+## AWS IAM Permissions
+
+In version 4.x, when uploading a file, the adapter will automatically create the specified S3 bucket, if it doesn't exist yet. To find out whether the bucket already exists, it will send a `HEAD` request to AWS S3 to list the existing bucket. This request requires the AWS IAM permission `s3:ListBucket` on the bucket resource, for example:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "s3:ListBucket"
+  ],
+  "Resource": "arn:aws:s3:::<BUCKET_NAME>"
+}
+```
+> [!NOTE]
+> The specified resource needs to be the bucket ARN itself, no `/*` at the end, because it's a bucket-level permission, not object-level.
+
+## Passing S3 Credentials
+
+In version 4.x the S3 credentials are passed differently:
 
 *Parse Server S3 Adapter 3.x:*
 
