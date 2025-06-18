@@ -35,7 +35,7 @@
     "express": "4.21.1",
     "jasmine": "3.5.0",
     "jasmine-spec-reporter": "7.0.0",
-    "mongodb-runner": "5.8.3",
+    "mongodb-runner": "5.9.0",
     "nyc": "17.1.0",
     "parse": "3.5.1",
     "parse-server": "7.5.2",
