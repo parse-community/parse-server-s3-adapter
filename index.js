@@ -140,16 +140,23 @@ class S3Adapter {
 
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
-  async createFile(filename, data, contentType, options = {}) {
+  async createFile(filename, data, contentType, options = {}, config = {}) {
+
+    let key_without_prefix = filename;
+    if (this._generateKey instanceof Function) {
+      try {
+        key_without_prefix = this._generateKey(filename, contentType, options);
+      }catch(e){
+        throw new Error(e); // throw error if generateKey function fails
+      }
+    }
+
     const params = {
       Bucket: this._bucket,
-      Key: this._bucketPrefix + filename,
+      Key: this._bucketPrefix + key_without_prefix,
       Body: data,
     };
 
-    if (this._generateKey instanceof Function) {
-      params.Key = this._bucketPrefix + this._generateKey(filename);
-    }
     if (this._fileAcl) {
       if (this._fileAcl === 'none') {
         delete params.ACL;
@@ -181,7 +188,17 @@ class S3Adapter {
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
     const location = `${endpoint}/${params.Key}`;
 
-    return Object.assign(response || {}, { Location: location });
+    let url;
+    if (Object.keys(config).length != 0) { // if config is passed, we can generate a presigned url here
+      url = await this.getFileLocation(config, key_without_prefix);
+    }
+
+    return {
+      location: location, // actual upload location, used for tests
+      name: key_without_prefix, // filename in storage, consistent with other adapters
+      s3_response: response, // raw s3 response
+      ...url ? { url: url } : {} // url (optionally presigned) or non-direct access url
+    };
   }
 
   async deleteFile(filename) {
