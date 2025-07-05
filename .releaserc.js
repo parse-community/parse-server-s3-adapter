@@ -98,7 +98,7 @@ async function config() {
 
 async function loadTemplates() {
   for (const template of Object.keys(templates)) {
-    
+
     // For ES6 modules use:
     // const fileUrl = import.meta.url;
     // const __dirname = dirname(fileURLToPath(fileUrl));
