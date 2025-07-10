@@ -38,7 +38,7 @@
     "mongodb-runner": "5.9.2",
     "nyc": "17.1.0",
     "parse": "3.5.1",
-    "parse-server": "8.2.1",
+    "parse-server": "8.2.2",
     "rewire": "7.0.0",
     "semantic-release": "24.2.6",
     "semver": "7.7.2"
