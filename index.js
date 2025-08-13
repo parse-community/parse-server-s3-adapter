@@ -144,11 +144,7 @@ class S3Adapter {
 
     let key_without_prefix = filename;
     if (this._generateKey instanceof Function) {
-      try {
-        key_without_prefix = this._generateKey(filename, contentType, options);
-      } catch {
-        throw new Error('Key generation failed');
-      }
+      key_without_prefix = this._generateKey(filename, contentType, options);
     }
 
     const params = {
