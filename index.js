@@ -141,10 +141,14 @@ class S3Adapter {
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}, config = {}) {
-
     let key_without_prefix = filename;
-    if (this._generateKey instanceof Function) {
-      key_without_prefix = this._generateKey(filename, contentType, options);
+    if (typeof this._generateKey === 'function') {
+      const candidate = this._generateKey(filename, contentType, options);
+      key_without_prefix =
+        candidate && typeof candidate.then === 'function' ? await candidate : candidate;
+      if (typeof key_without_prefix !== 'string' || key_without_prefix.length === 0) {
+        throw new Error('generateKey must return a non-empty string');
+      }
     }
 
     const params = {

@@ -905,7 +905,7 @@ describe('S3Adapter tests', () => {
       const options = {
         bucket: 'bucket-1',
         generateKey: () => {
-          throw 'Generate key failed';
+          throw new Error('Generate key failed');
         }
       };
       const s3 = new S3Adapter(options);
@@ -913,7 +913,88 @@ describe('S3Adapter tests', () => {
 
       await expectAsync(
         s3.createFile('file.txt', 'hello world', 'text/utf8', {})
-      ).toBeRejectedWith('Generate key failed');
+      ).toBeRejectedWithError('Generate key failed');
+    });
+
+    it('should handle async generateKey function', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: async (filename) => {
+          // Simulate async operation
+          await new Promise(resolve => setTimeout(resolve, 10));
+          return `async-${filename}`;
+        }
+      };
+      const s3 = new S3Adapter(options);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+      s3._s3Client = s3ClientMock;
+
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      const commands = s3ClientMock.send.calls.all();
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
+      expect(commandArg.input.Key).toBe('async-file.txt');
+    });
+
+    it('should handle generateKey that returns a Promise', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: (filename) => {
+          return Promise.resolve(`promise-${filename}`);
+        }
+      };
+      const s3 = new S3Adapter(options);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+      s3._s3Client = s3ClientMock;
+
+      await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      const commands = s3ClientMock.send.calls.all();
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
+      expect(commandArg.input.Key).toBe('promise-file.txt');
+    });
+
+    it('should validate generateKey returns a non-empty string', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: () => ''
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('generateKey must return a non-empty string');
+    });
+
+    it('should validate generateKey returns a string (not number)', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: () => 12345
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('generateKey must return a non-empty string');
+    });
+
+    it('should validate async generateKey returns a string', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: async () => null
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('generateKey must return a non-empty string');
     });
   });
 
