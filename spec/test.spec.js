@@ -897,7 +897,6 @@ describe('S3Adapter tests', () => {
       expect(result).toEqual({
         location: jasmine.any(String),
         name: 'file.txt',
-        s3_response: jasmine.any(Object),
         url: 'https://presigned-url.com/file.txt'
       });
     });
@@ -914,7 +913,7 @@ describe('S3Adapter tests', () => {
 
       await expectAsync(
         s3.createFile('file.txt', 'hello world', 'text/utf8', {})
-      ).toBeRejectedWithError('Generate key failed');
+      ).toBeRejectedWith('Generate key failed');
     });
   });
 

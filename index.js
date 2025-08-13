@@ -180,19 +180,18 @@ class S3Adapter {
     }
     await this.createBucket();
     const command = new PutObjectCommand(params);
-    const response = await this._s3Client.send(command);
+    await this._s3Client.send(command);
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
     const location = `${endpoint}/${params.Key}`;
 
     let url;
-    if (config && typeof config === 'object' && Object.keys(config).length > 0) { // if config is passed, we can generate a presigned url here
+    if (config?.mount && config?.applicationId) { // if config has required properties for getFileLocation
       url = await this.getFileLocation(config, key_without_prefix);
     }
 
     return {
       location: location, // actual upload location, used for tests
       name: key_without_prefix, // filename in storage, consistent with other adapters
-      s3_response: response, // raw s3 response
       ...url ? { url: url } : {} // url (optionally presigned) or non-direct access url
     };
   }
