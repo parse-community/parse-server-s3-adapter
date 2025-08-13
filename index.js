@@ -146,8 +146,8 @@ class S3Adapter {
     if (this._generateKey instanceof Function) {
       try {
         key_without_prefix = this._generateKey(filename, contentType, options);
-      }catch(e){
-        throw new Error(e); // throw error if generateKey function fails
+      } catch {
+        throw new Error('Key generation failed');
       }
     }
 
@@ -189,7 +189,7 @@ class S3Adapter {
     const location = `${endpoint}/${params.Key}`;
 
     let url;
-    if (Object.keys(config).length != 0) { // if config is passed, we can generate a presigned url here
+    if (config && typeof config === 'object' && Object.keys(config).length > 0) { // if config is passed, we can generate a presigned url here
       url = await this.getFileLocation(config, key_without_prefix);
     }
 
