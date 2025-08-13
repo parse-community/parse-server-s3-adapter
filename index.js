@@ -146,9 +146,10 @@ class S3Adapter {
       const candidate = this._generateKey(filename, contentType, options);
       key_without_prefix =
         candidate && typeof candidate.then === 'function' ? await candidate : candidate;
-      if (typeof key_without_prefix !== 'string' || key_without_prefix.length === 0) {
+      if (typeof key_without_prefix !== 'string' || key_without_prefix.trim().length === 0) {
         throw new Error('generateKey must return a non-empty string');
       }
+      key_without_prefix = key_without_prefix.trim();
     }
 
     const params = {
@@ -185,8 +186,27 @@ class S3Adapter {
     await this.createBucket();
     const command = new PutObjectCommand(params);
     await this._s3Client.send(command);
-    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
-    const location = `${endpoint}/${params.Key}`;
+    
+    let locationBase;
+    if (this._endpoint) {
+      try {
+        const u = new URL(this._endpoint);
+        const origin = `${u.protocol}//${u.host}`;
+        const basePath = (u.pathname || '').replace(/\/$/, '');
+        const hasBucketInHostOrPath =
+          u.hostname.startsWith(`${this._bucket}.`) ||
+          basePath.split('/').includes(this._bucket);
+        const pathWithBucket = hasBucketInHostOrPath ? basePath : `${basePath}/${this._bucket}`;
+        locationBase = `${origin}${pathWithBucket}`;
+      } catch {
+        // Fallback for non-URL endpoints (assume hostname)
+        locationBase = `https://${String(this._endpoint).replace(/\/$/, '')}/${this._bucket}`;
+      }
+    } else {
+      const regionPart = this._region ? `.s3.${this._region}` : '.s3';
+      locationBase = `https://${this._bucket}${regionPart}.amazonaws.com`;
+    }
+    const location = `${locationBase}/${params.Key}`;
 
     let url;
     if (config?.mount && config?.applicationId) { // if config has required properties for getFileLocation
