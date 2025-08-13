@@ -47,6 +47,70 @@ async function buildDirectAccessUrl(baseUrl, baseUrlFileKey, presignedUrl, confi
   return directAccessUrl;
 }
 
+function cleanS3Key(key) {
+  // Single-pass character replacement using a lookup map for better performance
+  // See: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html#object-key-guidelines
+
+  const charMap = {
+    '\\': '-',
+    '{': '-', '}': '-',
+    '^': '-', '`': '-', '[': '-', ']': '-', '"': '-', '<': '-', '>': '-',
+    '~': '-', '#': '-', '|': '-', '%': '-',
+    '&': '-and-',
+    '$': '-dollar-',
+    '@': '-at-',
+    '=': '-equals-',
+    ';': '-', ':': '-', '+': '-plus-', ',': '-', '?': '-'
+  };
+
+  let result = '';
+  let lastWasHyphen = false;
+
+  for (let i = 0; i < key.length; i++) {
+    const char = key[i];
+    const charCode = char.charCodeAt(0);
+
+    // Skip non-printable ASCII and extended ASCII
+    if ((charCode >= 0 && charCode <= 31) || charCode === 127 || charCode >= 128) {
+      continue;
+    }
+
+    // Handle whitespace - convert to single hyphen
+    if (/\s/.test(char)) {
+      if (!lastWasHyphen) {
+        result += '-';
+        lastWasHyphen = true;
+      }
+      continue;
+    }
+
+    // Replace problematic characters
+    if (charMap[char]) {
+      const replacement = charMap[char];
+      if (replacement === '-') {
+        if (!lastWasHyphen) {
+          result += '-';
+          lastWasHyphen = true;
+        }
+      } else {
+        result += replacement;
+        lastWasHyphen = false;
+      }
+      continue;
+    }
+
+    // Keep safe characters
+    result += char;
+    lastWasHyphen = false;
+  }
+
+  // Remove leading/trailing hyphens and periods
+  result = result.replace(/^[-\.]+|[-\.]+$/g, '');
+
+  // Ensure we don't end up with an empty string
+  return result || `file-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+}
+
 function responseToBuffer(response) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -75,6 +139,7 @@ class S3Adapter {
     this._presignedUrlExpires = parseInt(options.presignedUrlExpires, 10);
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
+    this._cleanKey = options.cleanKey;
     this._endpoint = options.s3overrides?.endpoint;
     // Optional FilesAdaptor method
     this.validateFilename = options.validateFilename;
@@ -141,15 +206,23 @@ class S3Adapter {
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
+    let finalKey = filename;
+
+    // Apply generateKey if provided
+    if (this._generateKey instanceof Function) {
+      finalKey = this._generateKey(filename, contentType, options);
+    }
+
+    // Apply key cleaning if enabled (after generateKey)
+    if (this._cleanKey) {
+      finalKey = cleanS3Key(finalKey);
+    }
+
     const params = {
       Bucket: this._bucket,
-      Key: this._bucketPrefix + filename,
+      Key: this._bucketPrefix + finalKey,
       Body: data,
     };
-
-    if (this._generateKey instanceof Function) {
-      params.Key = this._bucketPrefix + this._generateKey(filename);
-    }
     if (this._fileAcl) {
       if (this._fileAcl === 'none') {
         delete params.ACL;

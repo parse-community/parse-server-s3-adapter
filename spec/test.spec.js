@@ -867,6 +867,73 @@ describe('S3Adapter tests', () => {
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBeUndefined();
     });
+
+    it('should clean S3 keys when cleanKey option is enabled', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        cleanKey: true
+      };
+      const s3 = new S3Adapter(options);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+      s3._s3Client = s3ClientMock;
+
+      // Test filename with problematic characters
+      const problematicFilename = 'test file{with}[bad]chars<>&%?.txt';
+      await s3.createFile(problematicFilename, 'hello world', 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      const commands = s3ClientMock.send.calls.all();
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
+
+      // Should have cleaned the filename
+      const expectedCleanKey = 'test-file-with-chars-and-.txt';
+      expect(commandArg.input.Key).toBe(expectedCleanKey);
+    });
+
+    it('should clean generated keys when cleanKey option is enabled', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        cleanKey: true,
+        generateKey: (filename) => `generated/${filename.toUpperCase()}`
+      };
+      const s3 = new S3Adapter(options);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+      s3._s3Client = s3ClientMock;
+
+      const problematicFilename = 'test{bad}.txt';
+      await s3.createFile(problematicFilename, 'hello world', 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      const commands = s3ClientMock.send.calls.all();
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
+
+      // Should have cleaned the generated key (not the original filename)
+      const expectedCleanKey = 'generated/TEST-BAD-.TXT';
+      expect(commandArg.input.Key).toBe(expectedCleanKey);
+    });
+
+    it('should not clean keys when cleanKey option is disabled', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        cleanKey: false // explicitly disabled
+      };
+      const s3 = new S3Adapter(options);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+      s3._s3Client = s3ClientMock;
+
+      const problematicFilename = 'test file{with}[bad]chars.txt';
+      await s3.createFile(problematicFilename, 'hello world', 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      const commands = s3ClientMock.send.calls.all();
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
+
+      // Should preserve original filename
+      expect(commandArg.input.Key).toBe(problematicFilename);
+    });
   });
 
   describe('handleFileStream', () => {
