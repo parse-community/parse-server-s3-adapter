@@ -186,7 +186,7 @@ class S3Adapter {
     await this.createBucket();
     const command = new PutObjectCommand(params);
     await this._s3Client.send(command);
-    
+
     let locationBase;
     if (this._endpoint) {
       try {
