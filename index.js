@@ -141,20 +141,20 @@ class S3Adapter {
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}, config = {}) {
-    let key_without_prefix = filename;
+    let keyWithoutPrefix = filename;
     if (typeof this._generateKey === 'function') {
       const candidate = this._generateKey(filename, contentType, options);
-      key_without_prefix =
+      keyWithoutPrefix =
         candidate && typeof candidate.then === 'function' ? await candidate : candidate;
-      if (typeof key_without_prefix !== 'string' || key_without_prefix.trim().length === 0) {
+      if (typeof keyWithoutPrefix !== 'string' || keyWithoutPrefix.trim().length === 0) {
         throw new Error('generateKey must return a non-empty string');
       }
-      key_without_prefix = key_without_prefix.trim();
+      keyWithoutPrefix = keyWithoutPrefix.trim();
     }
 
     const params = {
       Bucket: this._bucket,
-      Key: this._bucketPrefix + key_without_prefix,
+      Key: this._bucketPrefix + keyWithoutPrefix,
       Body: data,
     };
 
@@ -210,12 +210,12 @@ class S3Adapter {
 
     let url;
     if (config?.mount && config?.applicationId) { // if config has required properties for getFileLocation
-      url = await this.getFileLocation(config, key_without_prefix);
+      url = await this.getFileLocation(config, keyWithoutPrefix);
     }
 
     return {
       location: location, // actual upload location, used for tests
-      name: key_without_prefix, // filename in storage, consistent with other adapters
+      name: keyWithoutPrefix, // filename in storage, consistent with other adapters
       ...url ? { url: url } : {} // url (optionally presigned) or non-direct access url
     };
   }
