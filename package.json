@@ -40,7 +40,7 @@
     "parse": "7.0.1",
     "parse-server": "8.2.5",
     "rewire": "7.0.0",
-    "semantic-release": "24.2.7",
+    "semantic-release": "25.0.1",
     "semver": "7.7.2"
   },
   "scripts": {
