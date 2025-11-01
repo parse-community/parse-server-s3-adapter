@@ -37,7 +37,7 @@
     "jasmine-spec-reporter": "7.0.0",
     "mongodb-runner": "6.0.0",
     "nyc": "17.1.0",
-    "parse": "7.0.1",
+    "parse": "7.0.2",
     "parse-server": "8.2.5",
     "rewire": "7.0.0",
     "semantic-release": "25.0.1",
