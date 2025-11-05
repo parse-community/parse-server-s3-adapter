@@ -41,7 +41,7 @@
     "parse-server": "8.3.0",
     "rewire": "7.0.0",
     "semantic-release": "25.0.1",
-    "semver": "7.7.2"
+    "semver": "7.7.3"
   },
   "scripts": {
     "lint": "eslint --cache ./",
