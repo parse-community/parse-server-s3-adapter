@@ -140,16 +140,24 @@ class S3Adapter {
 
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
-  async createFile(filename, data, contentType, options = {}) {
+  async createFile(filename, data, contentType, options = {}, config = {}) {
+    let keyWithoutPrefix = filename;
+    if (typeof this._generateKey === 'function') {
+      const candidate = this._generateKey(filename, contentType, options);
+      keyWithoutPrefix =
+        candidate && typeof candidate.then === 'function' ? await candidate : candidate;
+      if (typeof keyWithoutPrefix !== 'string' || keyWithoutPrefix.trim().length === 0) {
+        throw new Error('generateKey must return a non-empty string');
+      }
+      keyWithoutPrefix = keyWithoutPrefix.trim();
+    }
+
     const params = {
       Bucket: this._bucket,
-      Key: this._bucketPrefix + filename,
+      Key: this._bucketPrefix + keyWithoutPrefix,
       Body: data,
     };
 
-    if (this._generateKey instanceof Function) {
-      params.Key = this._bucketPrefix + this._generateKey(filename);
-    }
     if (this._fileAcl) {
       if (this._fileAcl === 'none') {
         delete params.ACL;
@@ -177,11 +185,39 @@ class S3Adapter {
     }
     await this.createBucket();
     const command = new PutObjectCommand(params);
-    const response = await this._s3Client.send(command);
-    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
-    const location = `${endpoint}/${params.Key}`;
+    await this._s3Client.send(command);
 
-    return Object.assign(response || {}, { Location: location });
+    let locationBase;
+    if (this._endpoint) {
+      try {
+        const u = new URL(this._endpoint);
+        const origin = `${u.protocol}//${u.host}`;
+        const basePath = (u.pathname || '').replace(/\/$/, '');
+        const hasBucketInHostOrPath =
+          u.hostname.startsWith(`${this._bucket}.`) ||
+          basePath.split('/').includes(this._bucket);
+        const pathWithBucket = hasBucketInHostOrPath ? basePath : `${basePath}/${this._bucket}`;
+        locationBase = `${origin}${pathWithBucket}`;
+      } catch {
+        // Fallback for non-URL endpoints (assume hostname)
+        locationBase = `https://${String(this._endpoint).replace(/\/$/, '')}/${this._bucket}`;
+      }
+    } else {
+      const regionPart = this._region ? `.s3.${this._region}` : '.s3';
+      locationBase = `https://${this._bucket}${regionPart}.amazonaws.com`;
+    }
+    const location = `${locationBase}/${params.Key}`;
+
+    let url;
+    if (config?.mount && config?.applicationId) { // if config has required properties for getFileLocation
+      url = await this.getFileLocation(config, keyWithoutPrefix);
+    }
+
+    return {
+      location: location, // actual upload location, used for tests
+      name: keyWithoutPrefix, // filename in storage, consistent with other adapters
+      ...url ? { url: url } : {} // url (optionally presigned) or non-direct access url
+    };
   }
 
   async deleteFile(filename) {
