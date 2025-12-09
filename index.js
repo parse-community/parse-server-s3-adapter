@@ -228,10 +228,12 @@ class S3Adapter {
     }
 
     const fileKey = `${this._bucketPrefix}${fileName}`;
+    // For presigned URLs, use the original unencoded filename to prevent double encoding
+    const presignedFileKey = `${this._bucketPrefix}${filename}`;
 
     let presignedUrl = '';
     if (this._presignedUrl) {
-      const params = { Bucket: this._bucket, Key: fileKey };
+      const params = { Bucket: this._bucket, Key: presignedFileKey };
       const options = this._presignedUrlExpires ? { expiresIn: this._presignedUrlExpires } : {};
 
       const command = new GetObjectCommand(params);
