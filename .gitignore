@@ -41,3 +41,6 @@ node_modules
 
 # Parse Server
 test_logs
+
+# Claude
+.claude/
