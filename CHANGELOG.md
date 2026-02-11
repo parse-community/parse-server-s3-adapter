@@ -1,3 +1,12 @@
+## [4.2.1](https://github.com/parse-community/parse-server-s3-adapter/compare/4.2.0...4.2.1) (2026-02-10)
+
+
+### Bug Fixes
+
+* Security upgrade @aws-sdk/client-s3 from 3.985.0 to 3.986.0 ([#440](https://github.com/parse-community/parse-server-s3-adapter/issues/440)) ([b165cb7](https://github.com/parse-community/parse-server-s3-adapter/commit/b165cb7f61bac5b0184d50303d97d6f6789b49ab))
+* Security upgrade jws ([#390](https://github.com/parse-community/parse-server-s3-adapter/issues/390)) ([1360f15](https://github.com/parse-community/parse-server-s3-adapter/commit/1360f154aa6186c88e8105e3bbe35ed5a3f21c6a))
+* Security upgrade qs from 6.14.0 to 6.14.1 ([#408](https://github.com/parse-community/parse-server-s3-adapter/issues/408)) ([c0b11fc](https://github.com/parse-community/parse-server-s3-adapter/commit/c0b11fc1a80d56a20a9e9480f9c1402478be6d9b))
+
 # [4.2.0](https://github.com/parse-community/parse-server-s3-adapter/compare/4.1.1...4.2.0) (2025-06-12)
 
 
