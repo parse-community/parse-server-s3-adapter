@@ -25,24 +25,24 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Parse Server 8, Node.js 18
-            NODE_VERSION: 18.20.4
-            PARSE_SERVER_VERSION: 8
           - name: Parse Server 8, Node.js 20
-            NODE_VERSION: 20.15.1
+            NODE_VERSION: 20.18.0
             PARSE_SERVER_VERSION: 8
           - name: Parse Server 8, Node.js 22
-            NODE_VERSION: 22.4.1
+            NODE_VERSION: 22.12.0
             PARSE_SERVER_VERSION: 8
-          - name: Parse Server 7, Node.js 18
-            NODE_VERSION: 18.20.4
-            PARSE_SERVER_VERSION: 7
-          - name: Parse Server 7, Node.js 20
-            NODE_VERSION: 20.15.1
-            PARSE_SERVER_VERSION: 7
-          - name: Parse Server 7, Node.js 22
-            NODE_VERSION: 22.4.1
-            PARSE_SERVER_VERSION: 7
+          - name: Parse Server 8, Node.js 24
+            NODE_VERSION: 24.11.0
+            PARSE_SERVER_VERSION: 8
+          - name: Parse Server 9, Node.js 20
+            NODE_VERSION: 20.19.0
+            PARSE_SERVER_VERSION: 9
+          - name: Parse Server 9, Node.js 22
+            NODE_VERSION: 22.12.0
+            PARSE_SERVER_VERSION: 9
+          - name: Parse Server 9, Node.js 24
+            NODE_VERSION: 24.11.0
+            PARSE_SERVER_VERSION: 9
       fail-fast: false
     name: ${{ matrix.name }}
     timeout-minutes: 15
