@@ -1,3 +1,10 @@
+# [5.1.0](https://github.com/parse-community/parse-server-s3-adapter/compare/5.0.0...5.1.0) (2026-02-20)
+
+
+### Features
+
+* Upgrade to parse 8.2.0 ([#455](https://github.com/parse-community/parse-server-s3-adapter/issues/455)) ([230c2d7](https://github.com/parse-community/parse-server-s3-adapter/commit/230c2d7689854f3effe4eea3ddcb46a1e5309285))
+
 # [5.0.0](https://github.com/parse-community/parse-server-s3-adapter/compare/4.2.1...5.0.0) (2026-02-20)
 
 
