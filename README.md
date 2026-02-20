@@ -63,7 +63,7 @@ Parse Server S3 Adapter is continuously tested with the most recent releases of 
 |-----------------|-------------|------------|
 | 20              | April 2026  | ✅ Yes      |
 | 22              | April 2027  | ✅ Yes      |
-| 24              | April 2027  | ✅ Yes      |
+| 24              | April 2028  | ✅ Yes      |
 
 ## AWS Credentials
 
