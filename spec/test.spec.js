@@ -729,7 +729,7 @@ describe('S3Adapter tests', () => {
       const s3 = getMockS3Adapter(options);
       const fileName = 'randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
-        const url = new URL(value.Location);
+        const url = new URL(value.location);
         expect(url.pathname.indexOf(fileName) > 13).toBe(true);
       });
       promises.push(response);
@@ -740,7 +740,7 @@ describe('S3Adapter tests', () => {
       const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
-        const url = new URL(value.Location);
+        const url = new URL(value.location);
         expect(url.pathname.substring(1)).toEqual(options.bucketPrefix + fileName);
       });
       promises.push(response);
@@ -750,7 +750,7 @@ describe('S3Adapter tests', () => {
       const s3 = getMockS3Adapter(options);
       const fileName = 'foo/randomFileName.txt';
       const response = s3.createFile(fileName, 'hello world', 'text/utf8').then(value => {
-        const url = new URL(value.Location);
+        const url = new URL(value.location);
         expect(url.pathname.indexOf('foo/')).toEqual(6);
         expect(url.pathname.indexOf('random') > 13).toBe(true);
       });
@@ -866,6 +866,236 @@ describe('S3Adapter tests', () => {
       const commandArg = commands[1].args[0];
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBeUndefined();
+    });
+
+    it('should return url when config is provided', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        presignedUrl: true
+      };
+      const s3 = new S3Adapter(options);
+
+      const mockS3Response = {
+        ETag: '"mock-etag"',
+        VersionId: 'mock-version',
+        Location: 'mock-location'
+      };
+      s3ClientMock.send.and.returnValue(Promise.resolve(mockS3Response));
+      s3._s3Client = s3ClientMock;
+
+      // Mock getFileLocation to return a presigned URL
+      spyOn(s3, 'getFileLocation').and.returnValue(Promise.resolve('https://presigned-url.com/file.txt'));
+
+      const result = await s3.createFile(
+        'file.txt',
+        'hello world',
+        'text/utf8',
+        {},
+        { mount: 'http://example.com', applicationId: 'test123' }
+      );
+
+      expect(s3.getFileLocation).toHaveBeenCalledWith(
+        jasmine.objectContaining({ mount: 'http://example.com', applicationId: 'test123' }),
+        'file.txt'
+      );
+      expect(result).toEqual({
+        location: jasmine.any(String),
+        name: 'file.txt',
+        url: 'https://presigned-url.com/file.txt'
+      });
+    });
+
+    it('should handle generateKey function errors', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: () => {
+          throw new Error('Generate key failed');
+        }
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('Generate key failed');
+    });
+
+    it('should handle async generateKey function', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: async (filename) => {
+          // Simulate async operation
+          await new Promise(resolve => setTimeout(resolve, 10));
+          return `async-${filename}`;
+        }
+      };
+      const s3 = new S3Adapter(options);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+      s3._s3Client = s3ClientMock;
+
+      const out = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      const commands = s3ClientMock.send.calls.all();
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
+      expect(commandArg.input.Key).toBe('async-file.txt');
+      expect(out.name).toBe('async-file.txt');
+    });
+
+    it('should handle generateKey that returns a Promise', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: (filename) => {
+          return Promise.resolve(`promise-${filename}`);
+        }
+      };
+      const s3 = new S3Adapter(options);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+      s3._s3Client = s3ClientMock;
+
+      const out = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledTimes(2);
+      const commands = s3ClientMock.send.calls.all();
+      const commandArg = commands[1].args[0];
+      expect(commandArg).toBeInstanceOf(PutObjectCommand);
+      expect(commandArg.input.Key).toBe('promise-file.txt');
+      expect(out.name).toBe('promise-file.txt');
+    });
+
+    it('should validate generateKey returns a non-empty string', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: () => ''
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('generateKey must return a non-empty string');
+    });
+
+    it('should validate generateKey returns a string (not number)', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: () => 12345
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('generateKey must return a non-empty string');
+    });
+
+    it('should reject when generateKey returns only whitespace', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: () => '   '
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('generateKey must return a non-empty string');
+    });
+
+    it('should validate async generateKey returns a string', async () => {
+      const options = {
+        bucket: 'bucket-1',
+        generateKey: async () => null
+      };
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await expectAsync(
+        s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+      ).toBeRejectedWithError('generateKey must return a non-empty string');
+    });
+  });
+
+  describe('URL construction with custom endpoints', () => {
+    let s3ClientMock;
+
+    beforeEach(() => {
+      s3ClientMock = jasmine.createSpyObj('S3Client', ['send']);
+      s3ClientMock.send.and.returnValue(Promise.resolve({}));
+    });
+
+    it('should handle endpoint with path and query correctly', async () => {
+      const s3 = new S3Adapter({
+        bucket: 'test-bucket',
+        s3overrides: {
+          endpoint: 'https://example.com:8080/path?foo=bar'
+        }
+      });
+      s3._s3Client = s3ClientMock;
+
+      const result = await s3.createFile('test.txt', 'hello world', 'text/utf8');
+
+      // Should construct proper URL without breaking query parameters
+      expect(result.location).toBe('https://example.com:8080/path/test-bucket/test.txt');
+    });
+
+    it('should handle path-style endpoint without bucket in hostname', async () => {
+      const s3 = new S3Adapter({
+        bucket: 'test-bucket',
+        s3overrides: {
+          endpoint: 'https://minio.example.com'
+        }
+      });
+      s3._s3Client = s3ClientMock;
+
+      const result = await s3.createFile('test.txt', 'hello world', 'text/utf8');
+
+      // Should add bucket to path for path-style
+      expect(result.location).toBe('https://minio.example.com/test-bucket/test.txt');
+    });
+
+    it('should handle virtual-hosted-style endpoint with bucket in hostname', async () => {
+      const s3 = new S3Adapter({
+        bucket: 'test-bucket',
+        s3overrides: {
+          endpoint: 'https://test-bucket.s3.example.com'
+        }
+      });
+      s3._s3Client = s3ClientMock;
+
+      const result = await s3.createFile('test.txt', 'hello world', 'text/utf8');
+
+      // Should not duplicate bucket when it's already in hostname
+      expect(result.location).toBe('https://test-bucket.s3.example.com/test.txt');
+    });
+
+    it('should fallback for malformed endpoint', async () => {
+      const s3 = new S3Adapter({
+        bucket: 'test-bucket',
+        s3overrides: {
+          endpoint: 'not-a-valid-url'
+        }
+      });
+      s3._s3Client = s3ClientMock;
+
+      const result = await s3.createFile('test.txt', 'hello world', 'text/utf8');
+
+      // Should fallback to safe construction
+      expect(result.location).toBe('https://not-a-valid-url/test-bucket/test.txt');
+    });
+
+    it('should use default AWS endpoint when no custom endpoint', async () => {
+      const s3 = new S3Adapter({
+        bucket: 'test-bucket',
+        region: 'us-west-2'
+      });
+      s3._s3Client = s3ClientMock;
+
+      const result = await s3.createFile('test.txt', 'hello world', 'text/utf8');
+
+      // Should use standard AWS S3 URL
+      expect(result.location).toBe('https://test-bucket.s3.us-west-2.amazonaws.com/test.txt');
     });
   });
 
