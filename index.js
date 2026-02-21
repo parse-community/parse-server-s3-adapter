@@ -183,7 +183,6 @@ class S3Adapter {
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
     const params = this._buildCreateFileParams(filename, data, contentType, options);
-    await this.createBucket();
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
 
     // Streaming upload path
@@ -194,14 +193,17 @@ class S3Adapter {
           upload.abort().catch(() => {});
           reject(err);
         });
-        upload.done().then(
-          (response) => resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` })),
-          reject
-        );
+        this.createBucket()
+          .then(() => upload.done())
+          .then(
+            (response) => resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` })),
+            reject
+          );
       });
     }
 
     // Buffer upload path
+    await this.createBucket();
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
     return Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` });
