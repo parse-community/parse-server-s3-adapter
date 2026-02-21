@@ -1044,7 +1044,7 @@ describe('S3Adapter tests', () => {
       };
       const data = await s3.handleFileStream(filename, req, res);
 
-      expect(data.toString('utf8')).toBe('hello world');
+      expect(data.toString('utf8')).toBe('hello world! This is a test file for S3 streaming.');
       expect(res.writeHead).toHaveBeenCalled();
       expect(res.write).toHaveBeenCalled();
       expect(res.end).toHaveBeenCalled();
