@@ -143,65 +143,12 @@ class S3Adapter {
     }
   }
 
-  // For a given config object, filename, and data, store a file in S3
-  // Returns a promise containing the S3 object creation response
-  async createFile(filename, data, contentType, options = {}) {
-    // Streaming upload path
-    if (typeof data?.pipe === 'function') {
-      const params = {
-        Bucket: this._bucket,
-        Key: this._bucketPrefix + filename,
-        Body: data,
-      };
-      if (this._generateKey instanceof Function) {
-        params.Key = this._bucketPrefix + this._generateKey(filename);
-      }
-      if (this._fileAcl) {
-        if (this._fileAcl === 'none') {
-          delete params.ACL;
-        } else {
-          params.ACL = this._fileAcl;
-        }
-      } else if (this._directAccess) {
-        params.ACL = 'public-read';
-      }
-      if (contentType) {
-        params.ContentType = contentType;
-      }
-      if (this._globalCacheControl) {
-        params.CacheControl = this._globalCacheControl;
-      }
-      if (this._encryption === 'AES256' || this._encryption === 'aws:kms') {
-        params.ServerSideEncryption = this._encryption;
-      }
-      if (options.metadata && typeof options.metadata === 'object') {
-        params.Metadata = options.metadata;
-      }
-      if (options.tags && typeof options.tags === 'object') {
-        const serializedTags = serialize(options.tags);
-        params.Tagging = serializedTags;
-      }
-      await this.createBucket();
-      const upload = new Upload({ client: this._s3Client, params });
-      const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
-      return new Promise((resolve, reject) => {
-        data.on('error', (err) => {
-          upload.abort().catch(() => {});
-          reject(err);
-        });
-        upload.done().then(
-          (response) => resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` })),
-          reject
-        );
-      });
-    }
-
+  _buildCreateFileParams(filename, data, contentType, options = {}) {
     const params = {
       Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Body: data,
     };
-
     if (this._generateKey instanceof Function) {
       params.Key = this._bucketPrefix + this._generateKey(filename);
     }
@@ -227,16 +174,37 @@ class S3Adapter {
       params.Metadata = options.metadata;
     }
     if (options.tags && typeof options.tags === 'object') {
-      const serializedTags = serialize(options.tags);
-      params.Tagging = serializedTags;
+      params.Tagging = serialize(options.tags);
     }
+    return params;
+  }
+
+  // For a given config object, filename, and data, store a file in S3
+  // Returns a promise containing the S3 object creation response
+  async createFile(filename, data, contentType, options = {}) {
+    const params = this._buildCreateFileParams(filename, data, contentType, options);
     await this.createBucket();
+    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+
+    // Streaming upload path
+    if (typeof data?.pipe === 'function') {
+      const upload = new Upload({ client: this._s3Client, params });
+      return new Promise((resolve, reject) => {
+        data.on('error', (err) => {
+          upload.abort().catch(() => {});
+          reject(err);
+        });
+        upload.done().then(
+          (response) => resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` })),
+          reject
+        );
+      });
+    }
+
+    // Buffer upload path
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
-    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
-    const location = `${endpoint}/${params.Key}`;
-
-    return Object.assign(response || {}, { Location: location });
+    return Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` });
   }
 
   async deleteFile(filename) {
