@@ -1,3 +1,10 @@
+# [5.2.0](https://github.com/parse-community/parse-server-s3-adapter/compare/5.1.0...5.2.0) (2026-02-21)
+
+
+### Features
+
+* Add support for file upload via `Readable` stream ([#459](https://github.com/parse-community/parse-server-s3-adapter/issues/459)) ([81b764d](https://github.com/parse-community/parse-server-s3-adapter/commit/81b764df451976aa77a22c16df6488114bf2ed41))
+
 # [5.1.0](https://github.com/parse-community/parse-server-s3-adapter/compare/5.0.0...5.1.0) (2026-02-20)
 
 
