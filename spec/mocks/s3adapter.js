@@ -34,16 +34,17 @@ function getMockS3Adapter(options) {
       if (command instanceof GetObjectCommand) {
         const { Key } = command.input;
 
-        if (objects[Key]) {
+        if (objects[Key] !== undefined) {
+          const stored = objects[Key];
+          const content = Buffer.isBuffer(stored) ? stored : Buffer.from(String(stored));
           const stream = new Readable();
-          stream.push('hello world');
-          // End of stream
+          stream.push(content);
           stream.push(null);
           return {
             Body: stream,
             AcceptRanges: 'bytes',
-            ContentLength: 36,
-            ContentRange: 'bytes 0-35/36',
+            ContentLength: content.length,
+            ContentRange: `bytes 0-${content.length - 1}/${content.length}`,
             ContentType: 'text/plain',
           };
         } else {
