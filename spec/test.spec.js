@@ -867,6 +867,153 @@ describe('S3Adapter tests', () => {
       expect(commandArg).toBeInstanceOf(PutObjectCommand);
       expect(commandArg.input.ACL).toBeUndefined();
     });
+
+    it('should save a file from a stream using Upload', async () => {
+      const rewiredModule = rewire('../index');
+      let uploadParams;
+      const mockUploadDone = jasmine.createSpy('done').and.returnValue(Promise.resolve());
+      const mockUploadAbort = jasmine.createSpy('abort').and.returnValue(Promise.resolve());
+      rewiredModule.__set__('Upload', function (config) {
+        uploadParams = config.params;
+        this.done = mockUploadDone;
+        this.abort = mockUploadAbort;
+      });
+      const RewiredS3Adapter = rewiredModule;
+      const s3 = new RewiredS3Adapter(options);
+      s3._s3Client = s3ClientMock;
+      s3._hasBucket = true;
+
+      const stream = new Readable();
+      stream.push('hello world');
+      stream.push(null);
+
+      await s3.createFile('file.txt', stream, 'text/plain', {});
+
+      expect(mockUploadDone).toHaveBeenCalledTimes(1);
+      expect(uploadParams.Bucket).toBe('bucket-1');
+      expect(uploadParams.Key).toBe('test/file.txt');
+      expect(uploadParams.Body).toBe(stream);
+      expect(uploadParams.ContentType).toBe('text/plain');
+    });
+
+    it('should not use Upload for buffer data', async () => {
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      await s3.createFile('file.txt', Buffer.from('hello world'), 'text/utf8', {});
+
+      expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
+    });
+
+    it('should save a stream with metadata added', async () => {
+      const rewiredModule = rewire('../index');
+      let uploadParams;
+      rewiredModule.__set__('Upload', function (config) {
+        uploadParams = config.params;
+        this.done = () => Promise.resolve();
+        this.abort = () => Promise.resolve();
+      });
+      const RewiredS3Adapter = rewiredModule;
+      const s3 = new RewiredS3Adapter(options);
+      s3._s3Client = s3ClientMock;
+      s3._hasBucket = true;
+
+      const stream = new Readable();
+      stream.push('data');
+      stream.push(null);
+      const metadata = { foo: 'bar' };
+
+      await s3.createFile('file.txt', stream, 'text/plain', { metadata });
+      expect(uploadParams.Metadata).toEqual({ foo: 'bar' });
+    });
+
+    it('should save a stream with tags added', async () => {
+      const rewiredModule = rewire('../index');
+      let uploadParams;
+      rewiredModule.__set__('Upload', function (config) {
+        uploadParams = config.params;
+        this.done = () => Promise.resolve();
+        this.abort = () => Promise.resolve();
+      });
+      const RewiredS3Adapter = rewiredModule;
+      const s3 = new RewiredS3Adapter(options);
+      s3._s3Client = s3ClientMock;
+      s3._hasBucket = true;
+
+      const stream = new Readable();
+      stream.push('data');
+      stream.push(null);
+      const tags = { foo: 'bar', baz: 'bin' };
+
+      await s3.createFile('file.txt', stream, 'text/plain', { tags });
+      expect(uploadParams.Tagging).toBe('foo=bar&baz=bin');
+    });
+
+    it('should save a stream with proper ACL with direct access', async () => {
+      const streamOptions = Object.assign({}, options, { directAccess: true });
+      const rewiredModule = rewire('../index');
+      let uploadParams;
+      rewiredModule.__set__('Upload', function (config) {
+        uploadParams = config.params;
+        this.done = () => Promise.resolve();
+        this.abort = () => Promise.resolve();
+      });
+      const RewiredS3Adapter = rewiredModule;
+      const s3 = new RewiredS3Adapter(streamOptions);
+      s3._s3Client = s3ClientMock;
+      s3._hasBucket = true;
+
+      const stream = new Readable();
+      stream.push('data');
+      stream.push(null);
+
+      await s3.createFile('file.txt', stream, 'text/plain', {});
+      expect(uploadParams.ACL).toBe('public-read');
+    });
+
+    it('should save a stream with encryption', async () => {
+      const encOptions = Object.assign({}, options, { ServerSideEncryption: 'AES256' });
+      const rewiredModule = rewire('../index');
+      let uploadParams;
+      rewiredModule.__set__('Upload', function (config) {
+        uploadParams = config.params;
+        this.done = () => Promise.resolve();
+        this.abort = () => Promise.resolve();
+      });
+      const RewiredS3Adapter = rewiredModule;
+      const s3 = new RewiredS3Adapter(encOptions);
+      s3._s3Client = s3ClientMock;
+      s3._hasBucket = true;
+
+      const stream = new Readable();
+      stream.push('data');
+      stream.push(null);
+
+      await s3.createFile('file.txt', stream, 'text/plain', {});
+      expect(uploadParams.ServerSideEncryption).toBe('AES256');
+    });
+
+    it('should abort upload and reject when stream emits error', async () => {
+      const rewiredModule = rewire('../index');
+      const mockUploadAbort = jasmine.createSpy('abort').and.returnValue(Promise.resolve());
+      rewiredModule.__set__('Upload', function () {
+        this.done = () => new Promise(() => {}); // never resolves
+        this.abort = mockUploadAbort;
+      });
+      const RewiredS3Adapter = rewiredModule;
+      const s3 = new RewiredS3Adapter(options);
+      s3._s3Client = s3ClientMock;
+      s3._hasBucket = true;
+
+      const stream = new Readable({ read() {} });
+
+      const promise = s3.createFile('file.txt', stream, 'text/plain', {});
+      // Emit error after createFile has attached its listener
+      process.nextTick(() => stream.destroy(new Error('File too large')));
+
+      await expectAsync(promise).toBeRejectedWithError('File too large');
+      expect(mockUploadAbort).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('handleFileStream', () => {
@@ -979,6 +1126,13 @@ describe('S3Adapter tests', () => {
       const s3 = new S3Adapter(options);
 
       expect(s3._s3Client.config.credentials).toBe(customCredentials);
+    });
+  });
+
+  describe('supportsStreaming', () => {
+    it('should return true', () => {
+      const s3 = new S3Adapter({ bucket: 'bucket-1' });
+      expect(s3.supportsStreaming).toBe(true);
     });
   });
 });
