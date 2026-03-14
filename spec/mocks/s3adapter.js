@@ -16,7 +16,12 @@ function getMockS3Adapter(options) {
 
   const objects = {};
 
+  // Preserve original client config so that @aws-sdk/lib-storage Upload
+  // can access client.config.requestHandler and other required properties.
+  const originalConfig = s3._s3Client.config;
+
   s3._s3Client = {
+    config: originalConfig,
     // @ts-ignore
     send: command => {
       if (command instanceof PutObjectCommand) {
