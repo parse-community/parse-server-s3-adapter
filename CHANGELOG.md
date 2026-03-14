@@ -1,3 +1,10 @@
+## [5.3.1](https://github.com/parse-community/parse-server-s3-adapter/compare/5.3.0...5.3.1) (2026-03-14)
+
+
+### Bug Fixes
+
+* Security upgrade undici from 6.23.0 to 6.24.0 ([#468](https://github.com/parse-community/parse-server-s3-adapter/issues/468)) ([409f3f0](https://github.com/parse-community/parse-server-s3-adapter/commit/409f3f065587bcc08f394c9e0fec36d98da637af))
+
 # [5.3.0](https://github.com/parse-community/parse-server-s3-adapter/compare/5.2.0...5.3.0) (2026-03-14)
 
 
