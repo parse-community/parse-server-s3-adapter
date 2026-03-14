@@ -1,3 +1,10 @@
+# [5.3.0](https://github.com/parse-community/parse-server-s3-adapter/compare/5.2.0...5.3.0) (2026-03-14)
+
+
+### Features
+
+* Upgrade `[@aws-sdk](https://github.com/aws-sdk)` packages ([#467](https://github.com/parse-community/parse-server-s3-adapter/issues/467)) ([fcaa565](https://github.com/parse-community/parse-server-s3-adapter/commit/fcaa56502e5f54bee441fa91c14ecbaf810a8ba0))
+
 # [5.2.0](https://github.com/parse-community/parse-server-s3-adapter/compare/5.1.0...5.2.0) (2026-02-21)
 
 
