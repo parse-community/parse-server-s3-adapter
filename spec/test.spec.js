@@ -638,6 +638,22 @@ describe('S3Adapter tests', () => {
       expect(fileLocation).toContain('X-Amz-Algorithm=AWS4-HMAC-SHA256');
       expect(fileLocation).toContain('X-Amz-SignedHeaders=host');
     });
+
+    it('should not double-encode special characters in presigned URLs', async () => {
+      delete options.baseUrl;
+      options.presignedUrl = true;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+
+      // Test filename with special characters that need URL encoding
+      const specialFilename = 'doc[123].pdf';
+      const fileLocation = await s3.getFileLocation(testConfig, specialFilename);
+
+      // Should be encoded once (not double-encoded)
+      // %5B and %5D are correct encoding for [ and ]
+      // Double encoding would be %255B and %255D
+      expect(fileLocation).toContain('doc%5B123%5D.pdf');
+      expect(fileLocation).not.toContain('doc%255B123%255D.pdf');
+    });
   });
 
   describe('getFileLocation with async baseUrl', () => {
