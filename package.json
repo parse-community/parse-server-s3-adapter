@@ -24,7 +24,7 @@
     "@aws-sdk/s3-request-presigner": "3.1009.0"
   },
   "devDependencies": {
-    "@eslint/js": "9.39.2",
+    "@eslint/js": "10.0.1",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/commit-analyzer": "13.0.1",
     "@semantic-release/git": "10.0.1",
@@ -33,7 +33,7 @@
     "@semantic-release/release-notes-generator": "14.1.0",
     "config": "4.4.1",
     "cross-env": "10.1.0",
-    "eslint": "9.39.2",
+    "eslint": "10.1.0",
     "express": "5.2.1",
     "jasmine": "6.1.0",
     "jasmine-spec-reporter": "7.0.0",
