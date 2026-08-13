@@ -204,6 +204,20 @@ var api = new ParseServer({
   filesAdapter: s3adapter
 })
 ```
+
+***Note*** `generateKey` receives `(filename, contentType, options)` and may be
+asynchronous, so a key can be derived from a lookup:
+
+```javascript
+generateKey: async (filename, contentType, options) => {
+  const folder = await folderForTenant(options.metadata.tenantId);
+  return `${folder}/${Date.now()}_${filename}`;
+}
+```
+
+It must resolve to a non-empty string, and the key including `bucketPrefix` must
+be at most 1024 bytes of UTF-8, which is the S3 limit for an object key. Anything
+else rejects the upload rather than storing the file under an unusable name.
 **Note:** there are a few ways you can pass arguments:
 
 ```

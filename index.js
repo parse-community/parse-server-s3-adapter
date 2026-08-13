@@ -14,6 +14,9 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { Upload } = require('@aws-sdk/lib-storage');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
+// https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html
+const MAX_S3_KEY_BYTES = 1024;
+
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
   // eslint-disable-next-line no-console
   console.warn(
@@ -143,14 +146,33 @@ class S3Adapter {
     }
   }
 
-  _buildCreateFileParams(filename, data, contentType, options = {}) {
+  async _buildCreateFileParams(filename, data, contentType, options = {}) {
     const params = {
       Bucket: this._bucket,
       Key: this._bucketPrefix + filename,
       Body: data,
     };
     if (this._generateKey instanceof Function) {
-      params.Key = this._bucketPrefix + this._generateKey(filename);
+      // Awaited so the generator may be asynchronous, for example when the key
+      // depends on a lookup. A synchronous generator is unaffected. The content
+      // type and options are passed as well, so a key can be derived from more
+      // than the filename.
+      const key = await this._generateKey(filename, contentType, options);
+      if (typeof key !== 'string' || key.trim().length === 0) {
+        // Without this the key silently becomes the prefix plus "undefined",
+        // and the file is stored under a name nothing can resolve.
+        throw new Error('generateKey must return a non-empty string');
+      }
+      const generatedKey = this._bucketPrefix + key;
+      // An S3 key is at most 1024 bytes of UTF-8, counting the bucket prefix.
+      // Checking here reports the offending key, rather than letting S3 reject
+      // the upload with an error that does not say which part was too long.
+      if (Buffer.byteLength(generatedKey, 'utf8') > MAX_S3_KEY_BYTES) {
+        throw new Error(
+          `generateKey must return a key of at most ${MAX_S3_KEY_BYTES} bytes including the bucket prefix`
+        );
+      }
+      params.Key = generatedKey;
     }
     if (this._fileAcl) {
       if (this._fileAcl === 'none') {
@@ -182,7 +204,7 @@ class S3Adapter {
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
-    const params = this._buildCreateFileParams(filename, data, contentType, options);
+    const params = await this._buildCreateFileParams(filename, data, contentType, options);
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
 
     // Streaming upload path

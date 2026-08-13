@@ -905,6 +905,115 @@ describe('S3Adapter tests', () => {
       expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
     });
 
+    describe('generateKey', () => {
+      const keyUsed = () => {
+        const put = s3ClientMock.send.calls
+          .all()
+          .find(({ args }) => args[0] instanceof PutObjectCommand);
+        return put.args[0].input.Key;
+      };
+
+      it('should use a key from a synchronous generator', async () => {
+        options.generateKey = filename => `sync_${filename}`;
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        expect(keyUsed()).toBe('test/sync_file.txt');
+      });
+
+      it('should use a key from an asynchronous generator', async () => {
+        options.generateKey = async filename => {
+          await Promise.resolve();
+          return `async_${filename}`;
+        };
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        expect(keyUsed()).toBe('test/async_file.txt');
+      });
+
+      it('should pass the content type and options to the generator', async () => {
+        const generateKey = jasmine.createSpy('generateKey').and.returnValue('key.txt');
+        options.generateKey = generateKey;
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+        const createOptions = { metadata: { foo: 'bar' } };
+
+        await s3.createFile('file.txt', 'hello world', 'text/utf8', createOptions);
+
+        expect(generateKey).toHaveBeenCalledWith('file.txt', 'text/utf8', createOptions);
+      });
+
+      it('should reject when the generator does not return a string', async () => {
+        options.generateKey = () => undefined;
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        // Otherwise the key silently becomes "test/undefined".
+        await expectAsync(
+          s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+        ).toBeRejectedWithError('generateKey must return a non-empty string');
+      });
+
+      it('should reject when the generator returns a blank string', async () => {
+        options.generateKey = () => '   ';
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await expectAsync(
+          s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+        ).toBeRejectedWithError('generateKey must return a non-empty string');
+      });
+
+      it('should accept a key at the S3 length limit', async () => {
+        // 1024 bytes total, including the 'test/' prefix.
+        options.generateKey = () => 'a'.repeat(1024 - 'test/'.length);
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        expect(Buffer.byteLength(keyUsed(), 'utf8')).toBe(1024);
+      });
+
+      it('should reject a key over the S3 length limit', async () => {
+        options.generateKey = () => 'a'.repeat(1024);
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await expectAsync(
+          s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+        ).toBeRejectedWithError(
+          'generateKey must return a key of at most 1024 bytes including the bucket prefix'
+        );
+      });
+
+      it('should measure the key limit in bytes rather than characters', async () => {
+        // 600 characters, but 1200 bytes once encoded.
+        options.generateKey = () => 'é'.repeat(600);
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await expectAsync(
+          s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+        ).toBeRejectedWithError(/at most 1024 bytes/);
+      });
+
+      it('should reject when an asynchronous generator rejects', async () => {
+        options.generateKey = () => Promise.reject(new Error('lookup failed'));
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await expectAsync(
+          s3.createFile('file.txt', 'hello world', 'text/utf8', {})
+        ).toBeRejectedWithError('lookup failed');
+      });
+    });
+
     it('should save a stream with metadata added', async () => {
       const rewiredModule = rewire('../index');
       let uploadParams;
