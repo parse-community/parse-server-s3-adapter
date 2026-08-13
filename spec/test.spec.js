@@ -905,6 +905,77 @@ describe('S3Adapter tests', () => {
       expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
     });
 
+    describe('blob uploads', () => {
+      // Rewires Upload so the multipart path can be observed, and returns the
+      // params it was handed.
+      const captureUpload = async (data, adapterOptions) => {
+        const rewiredModule = rewire('../index');
+        let uploadParams;
+        rewiredModule.__set__('Upload', function (config) {
+          uploadParams = config.params;
+          this.done = () => Promise.resolve();
+          this.abort = () => Promise.resolve();
+        });
+        const RewiredS3Adapter = rewiredModule;
+        const s3 = new RewiredS3Adapter(adapterOptions);
+        s3._s3Client = s3ClientMock;
+        s3._hasBucket = true;
+
+        await s3.createFile('file.txt', data, 'text/plain', {});
+        return uploadParams;
+      };
+
+      it('should upload a blob through the multipart path', async () => {
+        // Not through PutObject, which would hold the whole blob in memory.
+        const uploadParams = await captureUpload(new Blob(['hello world']), options);
+
+        expect(uploadParams).toBeDefined();
+        expect(uploadParams.Key).toBe('test/file.txt');
+        expect(s3ClientMock.send).not.toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
+      });
+
+      it('should hand the upload a readable rather than the blob', async () => {
+        const uploadParams = await captureUpload(new Blob(['hello world']), options);
+
+        // The SDK cannot consume a Blob directly in Node.
+        expect(uploadParams.Body instanceof Readable).toBe(true);
+      });
+
+      it('should preserve the blob contents', async () => {
+        const uploadParams = await captureUpload(new Blob(['hello', ' ', 'world']), options);
+
+        const chunks = [];
+        for await (const chunk of uploadParams.Body) {
+          chunks.push(chunk);
+        }
+        expect(Buffer.concat(chunks).toString()).toBe('hello world');
+      });
+
+      it('should read the blob lazily rather than draining it', async () => {
+        const total = 100;
+        let pulled = 0;
+        // Stands in for a blob too large to hold in memory. Converting it must
+        // not read it to the end, otherwise the whole point is lost.
+        const lazy = {
+          stream: () => new ReadableStream({
+            pull(controller) {
+              pulled += 1;
+              if (pulled >= total) {
+                controller.close();
+                return;
+              }
+              controller.enqueue(new TextEncoder().encode('chunk'));
+            },
+          }),
+        };
+
+        const uploadParams = await captureUpload(lazy, options);
+
+        expect(uploadParams.Body instanceof Readable).toBe(true);
+        expect(pulled).toBeLessThan(total);
+      });
+    });
+
     it('should save a stream with metadata added', async () => {
       const rewiredModule = rewire('../index');
       let uploadParams;
