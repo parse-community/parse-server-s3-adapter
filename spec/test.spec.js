@@ -639,20 +639,23 @@ describe('S3Adapter tests', () => {
       expect(fileLocation).toContain('X-Amz-SignedHeaders=host');
     });
 
-    it('should not double-encode special characters in presigned URLs', async () => {
-      delete options.baseUrl;
-      options.presignedUrl = true;
-      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+    // The SDK encodes the key itself, so a pre-encoded key comes back encoded
+    // twice: the percent sign of the first encoding is escaped to %25.
+    [
+      { characters: 'brackets', filename: 'doc[123].pdf', once: 'doc%5B123%5D.pdf', twice: 'doc%255B123%255D.pdf' },
+      { characters: 'spaces', filename: 'doc 123.pdf', once: 'doc%20123.pdf', twice: 'doc%2520123.pdf' },
+      { characters: 'ampersands', filename: 'doc&123.pdf', once: 'doc%26123.pdf', twice: 'doc%2526123.pdf' },
+    ].forEach(({ characters, filename, once, twice }) => {
+      it(`should not double-encode ${characters} in presigned URLs`, async () => {
+        delete options.baseUrl;
+        options.presignedUrl = true;
+        const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
 
-      // Test filename with special characters that need URL encoding
-      const specialFilename = 'doc[123].pdf';
-      const fileLocation = await s3.getFileLocation(testConfig, specialFilename);
+        const fileLocation = await s3.getFileLocation(testConfig, filename);
 
-      // Should be encoded once (not double-encoded)
-      // %5B and %5D are correct encoding for [ and ]
-      // Double encoding would be %255B and %255D
-      expect(fileLocation).toContain('doc%5B123%5D.pdf');
-      expect(fileLocation).not.toContain('doc%255B123%255D.pdf');
+        expect(fileLocation).toContain(once);
+        expect(fileLocation).not.toContain(twice);
+      });
     });
 
     it('should keep the path separator in presigned URLs for nested filenames', async () => {
