@@ -77,6 +77,7 @@ class S3Adapter {
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
     this._endpoint = options.s3overrides?.endpoint;
+    this._forcePathStyle = options.s3overrides?.forcePathStyle;
     // Optional FilesAdaptor method
     this.validateFilename = options.validateFilename;
 
@@ -179,11 +180,31 @@ class S3Adapter {
     return params;
   }
 
+  // The url prefix the S3 client addresses this bucket at, mirroring how the
+  // SDK resolves the bucket: as a leading path segment when forcePathStyle is
+  // set, otherwise as a host prefix. Without this the bucket is missing from
+  // the url whenever a custom endpoint does not already contain it.
+  _buildLocationBase() {
+    const endpoint = this._endpoint || `https://s3.${this._region}.amazonaws.com`;
+    try {
+      const { protocol, host, pathname } = new URL(endpoint);
+      const basePath = pathname.replace(/\/+$/, '');
+      return this._forcePathStyle
+        ? `${protocol}//${host}${basePath}/${this._bucket}`
+        : `${protocol}//${this._bucket}.${host}${basePath}`;
+    } catch {
+      // An endpoint that is not a url string, for example an object or a
+      // provider function, cannot be resolved here. Fall back to the bucket's
+      // default host.
+      return `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    }
+  }
+
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
     const params = this._buildCreateFileParams(filename, data, contentType, options);
-    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    const endpoint = this._buildLocationBase();
 
     // Streaming upload path
     if (typeof data?.pipe === 'function') {
