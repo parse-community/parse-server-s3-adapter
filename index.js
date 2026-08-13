@@ -179,15 +179,19 @@ class S3Adapter {
     return params;
   }
 
+  // An S3 key is raw, a url is not, so each segment is percent-encoded while
+  // the separators stay separators. Applied to the whole key, bucket prefix
+  // included, so every url naming an object agrees.
+  _encodeKey(key) {
+    return key.split('/').map(encodeURIComponent).join('/');
+  }
+
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
     const params = this._buildCreateFileParams(filename, data, contentType, options);
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
-    // params.Key is a raw S3 key, but Location is a URL, so every segment has
-    // to be percent-encoded while the separators stay separators. Same encoding
-    // getFileLocation() applies.
-    const location = `${endpoint}/${params.Key.split('/').map(encodeURIComponent).join('/')}`;
+    const location = `${endpoint}/${this._encodeKey(params.Key)}`;
 
     // Streaming upload path
     if (typeof data?.pipe === 'function') {
@@ -251,12 +255,16 @@ class S3Adapter {
   // The location is the direct S3 link if the option is set,
   // otherwise we serve the file through parse-server
   async getFileLocation(config, filename) {
-    const fileName = filename.split('/').map(encodeURIComponent).join('/');
+    const fileName = this._encodeKey(filename);
     if (!this._directAccess) {
       return `${config.mount}/files/${config.applicationId}/${fileName}`;
     }
 
     const fileKey = `${this._bucketPrefix}${fileName}`;
+    // The prefix belongs to the url too, so it is encoded with the filename
+    // rather than concatenated raw. Otherwise a prefix containing a space
+    // produces a different url here than the location createFile reports.
+    const encodedFileKey = this._encodeKey(`${this._bucketPrefix}${filename}`);
 
     let presignedUrl = '';
     if (this._presignedUrl) {
@@ -272,10 +280,10 @@ class S3Adapter {
     }
 
     if (!this._baseUrl) {
-      return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
+      return `https://${this._bucket}.s3.amazonaws.com/${encodedFileKey}`;
     }
 
-    const baseUrlFileKey = this._baseUrlDirect ? fileName : fileKey;
+    const baseUrlFileKey = this._baseUrlDirect ? fileName : encodedFileKey;
     return await buildDirectAccessUrl(this._baseUrl, baseUrlFileKey, presignedUrl, config, filename);
   }
 

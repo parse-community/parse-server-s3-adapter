@@ -919,6 +919,25 @@ describe('S3Adapter tests', () => {
       expect(new URL(Location).pathname).toBe('/test/my%20file%20(1).txt');
     });
 
+    it('should encode the bucket prefix in both urls that name the object', async () => {
+      const s3 = new S3Adapter({
+        bucket: 'bucket-1',
+        bucketPrefix: 'my folder/',
+        directAccess: true,
+      });
+      s3._s3Client = s3ClientMock;
+
+      const { Location } = await s3.createFile('a b.txt', 'hello world', 'text/utf8', {});
+      const url = await s3.getFileLocation(
+        { mount: 'http://my.server.com/parse', applicationId: 'xxxx' },
+        'a b.txt'
+      );
+
+      // Previously getFileLocation left the prefix raw, so the two disagreed.
+      expect(Location).toContain('/my%20folder/a%20b.txt');
+      expect(url).toContain('/my%20folder/a%20b.txt');
+    });
+
     it('should url encode the returned location for a stream', async () => {
       const rewiredModule = rewire('../index');
       rewiredModule.__set__('Upload', function () {
