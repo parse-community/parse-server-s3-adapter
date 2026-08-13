@@ -210,8 +210,12 @@ asynchronous, so a key can be derived from a lookup:
 
 ```javascript
 generateKey: async (filename, contentType, options) => {
-  const folder = await folderForTenant(options.metadata.tenantId);
-  return `${folder}/${Date.now()}_${filename}`;
+  // metadata is whatever was attached to the file, for example in a
+  // beforeSave(Parse.File) trigger
+  const { userId } = options.metadata || {};
+  // a lookup, which is why the generator has to be able to be asynchronous
+  const prefix = await folderForUser(userId);
+  return `${prefix}/${userId}/${Date.now()}_${filename}`;
 }
 ```
 
