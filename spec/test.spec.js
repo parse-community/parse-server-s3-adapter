@@ -956,7 +956,7 @@ describe('S3Adapter tests', () => {
         // Otherwise the key silently becomes "test/undefined".
         await expectAsync(
           s3.createFile('file.txt', 'hello world', 'text/utf8', {})
-        ).toBeRejectedWithError('generateKey must return a non-empty string');
+        ).toBeRejectedWithError(/generateKey must return a non-empty string/);
       });
 
       it('should reject when the generator returns a blank string', async () => {
@@ -966,7 +966,7 @@ describe('S3Adapter tests', () => {
 
         await expectAsync(
           s3.createFile('file.txt', 'hello world', 'text/utf8', {})
-        ).toBeRejectedWithError('generateKey must return a non-empty string');
+        ).toBeRejectedWithError(/generateKey must return a non-empty string/);
       });
 
       it('should accept a key at the S3 length limit', async () => {
@@ -987,9 +987,7 @@ describe('S3Adapter tests', () => {
 
         await expectAsync(
           s3.createFile('file.txt', 'hello world', 'text/utf8', {})
-        ).toBeRejectedWithError(
-          'generateKey must return a key of at most 1024 bytes including the bucket prefix'
-        );
+        ).toBeRejectedWithError(/at most 1024 bytes/);
       });
 
       it('should measure the key limit in bytes rather than characters', async () => {
@@ -1001,6 +999,71 @@ describe('S3Adapter tests', () => {
         await expectAsync(
           s3.createFile('file.txt', 'hello world', 'text/utf8', {})
         ).toBeRejectedWithError(/at most 1024 bytes/);
+      });
+
+      it('should still accept a generator that returns a number', async () => {
+        // Concatenated into a usable key before the result was validated.
+        options.generateKey = () => 20260813;
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        expect(keyUsed()).toBe('test/20260813');
+      });
+
+      it('should use the generated key on the streaming path', async () => {
+        const rewiredModule = rewire('../index');
+        let uploadParams;
+        rewiredModule.__set__('Upload', function (config) {
+          uploadParams = config.params;
+          this.done = () => Promise.resolve();
+          this.abort = () => Promise.resolve();
+        });
+        const RewiredS3Adapter = rewiredModule;
+        options.generateKey = async filename => `async_${filename}`;
+        const s3 = new RewiredS3Adapter(options);
+        s3._s3Client = s3ClientMock;
+        s3._hasBucket = true;
+
+        const stream = new Readable();
+        stream.push('hello world');
+        stream.push(null);
+
+        await s3.createFile('file.txt', stream, 'text/plain', {});
+
+        expect(uploadParams.Key).toBe('test/async_file.txt');
+      });
+
+      it('should reject rather than throw when a stream errors while the key is generated', async () => {
+        let releaseKey;
+        options.generateKey = () => new Promise(resolve => {
+          releaseKey = () => resolve('late.txt');
+        });
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const stream = new Readable({ read() {} });
+        const promise = s3.createFile('file.txt', stream, 'text/plain', {});
+        // The stream fails before the key resolves. The listener has to be
+        // attached by now, otherwise this throws instead of rejecting.
+        stream.destroy(new Error('client disconnected'));
+
+        await expectAsync(promise).toBeRejectedWithError('client disconnected');
+        releaseKey();
+      });
+
+      it('should close the stream when the generator rejects', async () => {
+        options.generateKey = () => Promise.reject(new Error('lookup failed'));
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const stream = new Readable({ read() {} });
+
+        await expectAsync(
+          s3.createFile('file.txt', stream, 'text/plain', {})
+        ).toBeRejectedWithError('lookup failed');
+        expect(stream.destroyed).toBe(true);
       });
 
       it('should reject when an asynchronous generator rejects', async () => {

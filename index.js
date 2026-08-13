@@ -157,19 +157,31 @@ class S3Adapter {
       // depends on a lookup. A synchronous generator is unaffected. The content
       // type and options are passed as well, so a key can be derived from more
       // than the filename.
-      const key = await this._generateKey(filename, contentType, options);
-      if (typeof key !== 'string' || key.trim().length === 0) {
-        // Without this the key silently becomes the prefix plus "undefined",
-        // and the file is stored under a name nothing can resolve.
-        throw new Error('generateKey must return a non-empty string');
+      const generated = await this._generateKey(filename, contentType, options);
+      // A generator returning a number concatenated into a usable key before
+      // this validation existed, so it keeps working. What is rejected is the
+      // set of values that silently produced a broken key, such as undefined
+      // becoming "undefined" or a promise becoming "[object Promise]".
+      const usable =
+        typeof generated === 'string' ||
+        generated instanceof String ||
+        (typeof generated === 'number' && Number.isFinite(generated));
+      const key = usable ? String(generated) : '';
+      if (key.trim().length === 0) {
+        throw new Error(
+          `generateKey must return a non-empty string, received ${
+            usable ? 'a blank string' : typeof generated
+          }`
+        );
       }
       const generatedKey = this._bucketPrefix + key;
       // An S3 key is at most 1024 bytes of UTF-8, counting the bucket prefix.
       // Checking here reports the offending key, rather than letting S3 reject
       // the upload with an error that does not say which part was too long.
-      if (Buffer.byteLength(generatedKey, 'utf8') > MAX_S3_KEY_BYTES) {
+      const keyBytes = Buffer.byteLength(generatedKey, 'utf8');
+      if (keyBytes > MAX_S3_KEY_BYTES) {
         throw new Error(
-          `generateKey must return a key of at most ${MAX_S3_KEY_BYTES} bytes including the bucket prefix`
+          `generateKey must return a key of at most ${MAX_S3_KEY_BYTES} bytes including the bucket prefix, received ${keyBytes} bytes for "${generatedKey}"`
         );
       }
       params.Key = generatedKey;
@@ -204,27 +216,42 @@ class S3Adapter {
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
-    const params = await this._buildCreateFileParams(filename, data, contentType, options);
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
 
     // Streaming upload path
     if (typeof data?.pipe === 'function') {
-      const upload = new Upload({ client: this._s3Client, params });
       return new Promise((resolve, reject) => {
+        let upload;
+        // Attached synchronously, before the key is built, because building it
+        // may await a caller supplied generateKey. A stream erroring in that
+        // window would otherwise emit with no listener attached, which throws
+        // rather than rejecting.
         data.on('error', (err) => {
-          upload.abort().catch(() => {});
+          if (upload) {
+            upload.abort().catch(() => {});
+          }
           reject(err);
         });
-        this.createBucket()
-          .then(() => upload.done())
-          .then(
-            (response) => resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` })),
-            reject
-          );
+        this._buildCreateFileParams(filename, data, contentType, options)
+          .then(params => {
+            upload = new Upload({ client: this._s3Client, params });
+            return this.createBucket()
+              .then(() => upload.done())
+              .then((response) =>
+                resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` }))
+              );
+          })
+          .catch(err => {
+            // Nothing consumed the stream, so close it rather than leaving the
+            // caller's request body open.
+            data.destroy();
+            reject(err);
+          });
       });
     }
 
     // Buffer upload path
+    const params = await this._buildCreateFileParams(filename, data, contentType, options);
     await this.createBucket();
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
