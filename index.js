@@ -289,7 +289,11 @@ class S3Adapter {
     }
 
     if (!this._baseUrl) {
-      return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
+      // Same base as the location reported by createFile, so both name the
+      // object at the url the S3 client actually addresses it at. Previously
+      // this hardcoded the AWS host and ignored both the custom endpoint and
+      // the region.
+      return `${this._buildLocationBase()}/${fileKey}`;
     }
 
     const baseUrlFileKey = this._baseUrlDirect ? fileName : fileKey;
