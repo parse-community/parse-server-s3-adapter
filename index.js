@@ -184,6 +184,10 @@ class S3Adapter {
   async createFile(filename, data, contentType, options = {}) {
     const params = this._buildCreateFileParams(filename, data, contentType, options);
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    // params.Key is a raw S3 key, but Location is a URL, so every segment has
+    // to be percent-encoded while the separators stay separators. Same encoding
+    // getFileLocation() applies.
+    const location = `${endpoint}/${params.Key.split('/').map(encodeURIComponent).join('/')}`;
 
     // Streaming upload path
     if (typeof data?.pipe === 'function') {
@@ -196,7 +200,7 @@ class S3Adapter {
         this.createBucket()
           .then(() => upload.done())
           .then(
-            (response) => resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` })),
+            (response) => resolve(Object.assign(response || {}, { Location: location })),
             reject
           );
       });
@@ -206,7 +210,7 @@ class S3Adapter {
     await this.createBucket();
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
-    return Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` });
+    return Object.assign(response || {}, { Location: location });
   }
 
   async deleteFile(filename) {
