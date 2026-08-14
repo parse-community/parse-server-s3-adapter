@@ -981,10 +981,43 @@ describe('S3Adapter tests', () => {
         expect(url).toBe(Location);
       });
 
-      it('should fall back to the bucket host when the endpoint is not a url', async () => {
-        // The SDK also accepts an endpoint object or provider, which cannot be
-        // resolved to a url here.
-        options.s3overrides = { endpoint: { hostname: 'example.com', protocol: 'https:', path: '/' } };
+      it('should resolve an endpoint given as an object', async () => {
+        // The SDK accepts this form as well as a url string.
+        options.s3overrides = {
+          endpoint: { hostname: 'example.com', protocol: 'https:', path: '/' },
+        };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/test/file.txt');
+      });
+
+      it('should keep the port and path of an endpoint object', async () => {
+        options.s3overrides = {
+          endpoint: { hostname: 'example.com', protocol: 'http:', port: 9000, path: '/s3' },
+          forcePathStyle: true,
+        };
+
+        expect(await locationOf(options)).toBe(
+          'http://example.com:9000/s3/bucket-1/test/file.txt'
+        );
+      });
+
+      it('should resolve an EndpointV2 carrying a url', async () => {
+        options.s3overrides = { endpoint: { url: new URL('https://example.com/s3') } };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/s3/test/file.txt');
+      });
+
+      it('should resolve an endpoint provider', async () => {
+        // Providers are resolved per request by the SDK, and may be async.
+        options.s3overrides = {
+          endpoint: async () => ({ hostname: 'example.com', protocol: 'https:' }),
+        };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/test/file.txt');
+      });
+
+      it('should fall back to the bucket host when the endpoint names no host', async () => {
+        options.s3overrides = { endpoint: {} };
         const s3 = new S3Adapter(options);
 
         expect(await locationOf(options)).toBe(
