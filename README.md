@@ -29,6 +29,9 @@ The official AWS S3 file storage adapter for Parse Server. See [Parse Server S3 
   - [Using Environment Variables](#using-environment-variables)
   - [Passing as an Instance](#passing-as-an-instance)
   - [Adding Metadata and Tags](#adding-metadata-and-tags)
+- [Retry Behavior](#retry-behavior)
+  - [Tuning Retries](#tuning-retries)
+  - [Sustained Throttling](#sustained-throttling)
 - [Compatibility with other Storage Providers](#compatibility-with-other-storage-providers)
   - [Digital Ocean Spaces](#digital-ocean-spaces)
 - [Migration Guide from 3.x to 4.x](#migration-guide-from-3x-to-4x)
@@ -275,6 +278,58 @@ s3Adapter.createFile(filename, data, contentType, options);
 ```
 
 **Note:** This adapter will **automatically** add the "x-amz-meta-" prefix to the beginning of metadata tags as stated in [S3 Documentation](https://docs.aws.amazon.com/AmazonS3/latest/user-guide/add-object-metadata.html).
+
+
+# Retry Behavior
+
+The adapter does not implement its own retries. Requests are retried by the AWS
+SDK, using its defaults unless you override them: **3 attempts** in **standard**
+mode, with exponential backoff and jitter between them.
+
+The SDK retries throttling responses, server errors of `500`, `502`, `503` and
+`504`, and transient network failures. A `503 SlowDown`, which is what S3 returns
+when a prefix is receiving more requests than it will serve, is therefore retried
+twice and then surfaced to Parse Server, which reports it to the client as a
+generic `FILE_SAVE_ERROR`. The underlying error is in the Parse Server log.
+
+Two details worth knowing when diagnosing a throttled upload:
+
+- The first upload made by an adapter instance also issues a `HeadBucket` to
+  confirm the bucket exists, and the result is cached on the instance. A
+  throttled response there fails the upload before any object data is sent.
+- That failure is logged without an error code, because a `HEAD` response has no
+  body for the SDK to read one from. A throttled `HeadBucket` appears as an
+  unclassified `503` rather than as `SlowDown`.
+
+## Tuning Retries
+
+Retry settings are passed straight through `s3overrides` to the S3 client:
+
+```javascript
+var s3Options = {
+  bucket: "bucket-name",
+  s3overrides: {
+    maxAttempts: 8,          // total attempts, including the first
+    retryMode: "adaptive",   // "standard" (default), "adaptive", or "legacy"
+  }
+};
+```
+
+## Sustained Throttling
+
+Raising `maxAttempts` helps with brief spikes. It does not help when a prefix is
+persistently over its request rate, because every client keeps retrying at the
+same pace and adds to the load.
+
+For that case use `retryMode: "adaptive"`, which adds a client side rate limiter
+that slows outgoing requests in response to throttling instead of simply retrying
+them. It is the mode AWS recommends when throttling is expected rather than
+exceptional.
+
+S3 request rates are measured per key prefix, so spreading objects across
+prefixes raises the ceiling. See
+[Optimizing Amazon S3 performance](https://docs.aws.amazon.com/AmazonS3/latest/userguide/optimizing-performance.html)
+for how prefixes and request rates relate.
 
 
 # Compatibility with other Storage Providers
