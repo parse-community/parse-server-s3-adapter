@@ -204,6 +204,35 @@ var api = new ParseServer({
   filesAdapter: s3adapter
 })
 ```
+
+***Note*** `generateKey` receives `(filename, contentType, options)` and may be
+asynchronous, so a key can be derived from a lookup:
+
+```javascript
+generateKey: async (filename, contentType, options) => {
+  // metadata is whatever was attached to the file, for example in a
+  // beforeSave(Parse.File) trigger
+  const { userId } = options.metadata || {};
+  // a lookup, which is why the generator has to be able to be asynchronous
+  const folder = await folderForUser(userId);
+  return `${folder}/${filename}`;
+}
+```
+
+The key must be a non-empty string, and including `bucketPrefix` it must be at
+most 1024 bytes of UTF-8, which is the S3 limit for an object key. A generator
+that returns anything else rejects the upload instead of storing the file under
+a name that cannot be resolved.
+
+***Note*** `generateKey` applies to writes only. Parse Server records the
+original filename and resolves reads, deletes and urls from it, so an object
+stored under a different key cannot be read back through Parse Server. That is a
+pre-existing limitation of `generateKey`, not of the asynchronous form, and it is
+tracked in
+[#237](https://github.com/parse-community/parse-server-s3-adapter/issues/237).
+Until it is resolved, use `generateKey` only where the stored key is reached by
+something other than Parse Server's file route, for example a CDN configured
+through `baseUrl`.
 **Note:** there are a few ways you can pass arguments:
 
 ```
