@@ -905,6 +905,96 @@ describe('S3Adapter tests', () => {
       expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
     });
 
+    describe('returned name and url', () => {
+      const testConfig = {
+        mount: 'http://my.server.com/parse',
+        applicationId: 'xxxx',
+      };
+
+      it('should return the filename it stored', async () => {
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const result = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        // Without the bucket prefix, which is not the caller's concern.
+        expect(result.name).toBe('file.txt');
+      });
+
+      it('should return the filename generateKey produced', async () => {
+        options.generateKey = filename => `stamped_${filename}`;
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const result = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        expect(result.name).toBe('stamped_file.txt');
+        expect(result.Location).toContain('/test/stamped_file.txt');
+      });
+
+      it('should return a url when a server config is supplied', async () => {
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const result = await s3.createFile('file.txt', 'hello world', 'text/utf8', {}, testConfig);
+
+        expect(result.url).toBe(await s3.getFileLocation(testConfig, 'file.txt'));
+      });
+
+      it('should return a url built from the generated filename', async () => {
+        options.generateKey = filename => `stamped_${filename}`;
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const result = await s3.createFile('file.txt', 'hello world', 'text/utf8', {}, testConfig);
+
+        expect(result.url).toContain('stamped_file.txt');
+      });
+
+      it('should omit the url when no server config is supplied', async () => {
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const result = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        // Omitted rather than null, so a caller merging this into file
+        // metadata does not overwrite a good url.
+        expect('url' in result).toBe(false);
+      });
+
+      it('should keep returning the S3 response and Location', async () => {
+        s3ClientMock.send.and.returnValue(Promise.resolve({ ETag: '"abc123"' }));
+        const s3 = new S3Adapter(options);
+        s3._s3Client = s3ClientMock;
+
+        const result = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+
+        expect(result.ETag).toBe('"abc123"');
+        expect(result.Location).toBe(`https://bucket-1.s3.${s3._region}.amazonaws.com/test/file.txt`);
+      });
+
+      it('should return the name and url for a stream', async () => {
+        const rewiredModule = rewire('../index');
+        rewiredModule.__set__('Upload', function () {
+          this.done = () => Promise.resolve();
+          this.abort = () => Promise.resolve();
+        });
+        const RewiredS3Adapter = rewiredModule;
+        const s3 = new RewiredS3Adapter(options);
+        s3._s3Client = s3ClientMock;
+        s3._hasBucket = true;
+
+        const stream = new Readable();
+        stream.push('hello world');
+        stream.push(null);
+
+        const result = await s3.createFile('file.txt', stream, 'text/plain', {}, testConfig);
+
+        expect(result.name).toBe('file.txt');
+        expect(result.url).toContain('file.txt');
+      });
+    });
+
     it('should save a stream with metadata added', async () => {
       const rewiredModule = rewire('../index');
       let uploadParams;

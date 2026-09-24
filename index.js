@@ -180,10 +180,32 @@ class S3Adapter {
   }
 
   // For a given config object, filename, and data, store a file in S3
-  // Returns a promise containing the S3 object creation response
-  async createFile(filename, data, contentType, options = {}) {
+  // Returns a promise containing the S3 object creation response, extended with
+  // the name the file was stored under and, when a server config is supplied,
+  // the url it can be read from. Callers that ignore those keys are unaffected.
+  async createFile(filename, data, contentType, options = {}, config = {}) {
     const params = this._buildCreateFileParams(filename, data, contentType, options);
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    // The name the file was actually stored under, which generateKey may have
+    // changed. The bucket prefix is the adapter's own concern, so it is not
+    // part of the name the caller knows the file by.
+    const name = params.Key.startsWith(this._bucketPrefix)
+      ? params.Key.slice(this._bucketPrefix.length)
+      : params.Key;
+
+    const buildResult = async (response) => {
+      // A url is only resolvable when the caller passed a server config;
+      // getFileLocation needs mount and applicationId to build one.
+      const url =
+        config && config.mount && config.applicationId
+          ? await this.getFileLocation(config, name)
+          : undefined;
+      return Object.assign(response || {}, {
+        Location: `${endpoint}/${params.Key}`,
+        name,
+        ...(url ? { url } : {}),
+      });
+    };
 
     // Streaming upload path
     if (typeof data?.pipe === 'function') {
@@ -195,10 +217,7 @@ class S3Adapter {
         });
         this.createBucket()
           .then(() => upload.done())
-          .then(
-            (response) => resolve(Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` })),
-            reject
-          );
+          .then((response) => buildResult(response).then(resolve, reject), reject);
       });
     }
 
@@ -206,7 +225,7 @@ class S3Adapter {
     await this.createBucket();
     const command = new PutObjectCommand(params);
     const response = await this._s3Client.send(command);
-    return Object.assign(response || {}, { Location: `${endpoint}/${params.Key}` });
+    return buildResult(response);
   }
 
   async deleteFile(filename) {
