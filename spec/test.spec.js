@@ -489,7 +489,7 @@ describe('S3Adapter tests', () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
-        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+        'https://my-bucket.s3.us-east-1.amazonaws.com/foo/bar/test.png'
       );
     });
   });
@@ -540,7 +540,7 @@ describe('S3Adapter tests', () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
-        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+        'https://my-bucket.s3.us-east-1.amazonaws.com/foo/bar/test.png'
       );
     });
   });
@@ -616,7 +616,7 @@ describe('S3Adapter tests', () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
-        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+        'https://my-bucket.s3.us-east-1.amazonaws.com/foo/bar/test.png'
       );
     });
 
@@ -903,6 +903,127 @@ describe('S3Adapter tests', () => {
       await s3.createFile('file.txt', Buffer.from('hello world'), 'text/utf8', {});
 
       expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
+    });
+
+    describe('location for custom endpoints', () => {
+      // Each expectation is the url the S3 client itself addresses the object
+      // at for the same options, so the reported location is where the file
+      // actually is.
+      const locationOf = async adapterOptions => {
+        const s3 = new S3Adapter(adapterOptions);
+        s3._s3Client = s3ClientMock;
+        const { Location } = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+        return Location;
+      };
+
+      it('should keep the bucket in the host without a custom endpoint', async () => {
+        const s3 = new S3Adapter(options);
+
+        expect(await locationOf(options)).toBe(
+          `https://bucket-1.s3.${s3._region}.amazonaws.com/test/file.txt`
+        );
+      });
+
+      it('should put the bucket in the path without a custom endpoint when path style', async () => {
+        options.s3overrides = { forcePathStyle: true };
+        const s3 = new S3Adapter(options);
+
+        expect(await locationOf(options)).toBe(
+          `https://s3.${s3._region}.amazonaws.com/bucket-1/test/file.txt`
+        );
+      });
+
+      it('should prefix a custom endpoint host with the bucket', async () => {
+        options.s3overrides = { endpoint: 'https://nyc3.digitaloceanspaces.com' };
+
+        expect(await locationOf(options)).toBe(
+          'https://bucket-1.nyc3.digitaloceanspaces.com/test/file.txt'
+        );
+      });
+
+      it('should put the bucket in the path of a custom endpoint when path style', async () => {
+        options.s3overrides = { endpoint: 'http://localhost:9000', forcePathStyle: true };
+
+        expect(await locationOf(options)).toBe('http://localhost:9000/bucket-1/test/file.txt');
+      });
+
+      it('should preserve a base path on the custom endpoint', async () => {
+        options.s3overrides = { endpoint: 'https://example.com/s3' };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/s3/test/file.txt');
+      });
+
+      it('should not double the separator when the endpoint has a trailing slash', async () => {
+        options.s3overrides = { endpoint: 'https://example.com/s3/' };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/s3/test/file.txt');
+      });
+
+      it('should use the same base for the url getFileLocation returns', async () => {
+        // Otherwise createFile reports one url for the object and
+        // getFileLocation reports another, and the second is the one a client
+        // is handed.
+        const s3 = new S3Adapter({
+          bucket: 'bucket-1',
+          bucketPrefix: 'test/',
+          directAccess: true,
+          s3overrides: { endpoint: 'http://localhost:9000', forcePathStyle: true },
+        });
+        s3._s3Client = s3ClientMock;
+
+        const { Location } = await s3.createFile('file.txt', 'hello world', 'text/utf8', {});
+        const url = await s3.getFileLocation(
+          { mount: 'http://my.server.com/parse', applicationId: 'xxxx' },
+          'file.txt'
+        );
+
+        expect(Location).toBe('http://localhost:9000/bucket-1/test/file.txt');
+        expect(url).toBe(Location);
+      });
+
+      it('should resolve an endpoint given as an object', async () => {
+        // The SDK accepts this form as well as a url string.
+        options.s3overrides = {
+          endpoint: { hostname: 'example.com', protocol: 'https:', path: '/' },
+        };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/test/file.txt');
+      });
+
+      it('should keep the port and path of an endpoint object', async () => {
+        options.s3overrides = {
+          endpoint: { hostname: 'example.com', protocol: 'http:', port: 9000, path: '/s3' },
+          forcePathStyle: true,
+        };
+
+        expect(await locationOf(options)).toBe(
+          'http://example.com:9000/s3/bucket-1/test/file.txt'
+        );
+      });
+
+      it('should resolve an EndpointV2 carrying a url', async () => {
+        options.s3overrides = { endpoint: { url: new URL('https://example.com/s3') } };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/s3/test/file.txt');
+      });
+
+      it('should resolve an endpoint provider', async () => {
+        // Providers are resolved per request by the SDK, and may be async.
+        options.s3overrides = {
+          endpoint: async () => ({ hostname: 'example.com', protocol: 'https:' }),
+        };
+
+        expect(await locationOf(options)).toBe('https://bucket-1.example.com/test/file.txt');
+      });
+
+      it('should fall back to the bucket host when the endpoint names no host', async () => {
+        options.s3overrides = { endpoint: {} };
+        const s3 = new S3Adapter(options);
+
+        expect(await locationOf(options)).toBe(
+          `https://bucket-1.s3.${s3._region}.amazonaws.com/test/file.txt`
+        );
+      });
     });
 
     it('should save a stream with metadata added', async () => {
