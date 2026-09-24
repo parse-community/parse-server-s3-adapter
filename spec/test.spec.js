@@ -216,6 +216,24 @@ describe('S3Adapter tests', () => {
       expect(options.bucket).toEqual('bucket');
     });
 
+    it('should accept a region alongside a bucket string', () => {
+      const args = ['bucket', { region: 'ap-east-1' }];
+      const options = optionsFromArguments(args);
+      expect(options.region).toEqual('ap-east-1');
+    });
+
+    it('should accept a region alongside key, secret and bucket', () => {
+      const args = ['key', 'secret', 'bucket', { region: 'ap-east-1' }];
+      const options = optionsFromArguments(args);
+      expect(options.region).toEqual('ap-east-1');
+    });
+
+    it('should still default the region when the options object omits it', () => {
+      const args = ['key', 'secret', 'bucket', { bucketPrefix: 'test/' }];
+      const options = optionsFromArguments(args);
+      expect(options.region).toEqual('us-east-1');
+    });
+
     it('should accept key, secret, bucket, and options object as args', () => {
       const confObj = { bucketPrefix: 'test/' };
       const args = ['key', 'secret', 'bucket', confObj];
@@ -489,7 +507,21 @@ describe('S3Adapter tests', () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
-        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+        'https://my-bucket.s3.us-east-1.amazonaws.com/foo/bar/test.png'
+      );
+    });
+
+    it('should address an opt-in region directly', async () => {
+      // The global endpoint does not reach buckets in regions that are not
+      // enabled by default, so the region has to be in the host.
+      const s3 = new S3Adapter({
+        bucket: 'my-bucket',
+        region: 'ap-east-1',
+        directAccess: true,
+        bucketPrefix: 'foo/bar/',
+      });
+      await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
+        'https://my-bucket.s3.ap-east-1.amazonaws.com/foo/bar/test.png'
       );
     });
   });
@@ -540,7 +572,7 @@ describe('S3Adapter tests', () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
-        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+        'https://my-bucket.s3.us-east-1.amazonaws.com/foo/bar/test.png'
       );
     });
   });
@@ -616,7 +648,7 @@ describe('S3Adapter tests', () => {
       delete options.baseUrl;
       const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
       await expectAsync(s3.getFileLocation(testConfig, 'test.png')).toBeResolvedTo(
-        'https://my-bucket.s3.amazonaws.com/foo/bar/test.png'
+        'https://my-bucket.s3.us-east-1.amazonaws.com/foo/bar/test.png'
       );
     });
 
