@@ -7,5 +7,7 @@
     "support/helper.js",
     "support/jasmine.js"
   ],
-  "random": true
+  "env": {
+    "random": true
+  }
 }
