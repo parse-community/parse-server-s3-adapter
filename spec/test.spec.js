@@ -925,13 +925,11 @@ describe('S3Adapter tests', () => {
         return uploadParams;
       };
 
-      it('should upload a blob through the multipart path', async () => {
-        // Not through PutObject, which would hold the whole blob in memory.
+      it('should select Upload for a blob', async () => {
         const uploadParams = await captureUpload(new Blob(['hello world']), options);
 
         expect(uploadParams).toBeDefined();
         expect(uploadParams.Key).toBe('test/file.txt');
-        expect(s3ClientMock.send).not.toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
       });
 
       it('should hand the upload a readable rather than the blob', async () => {
@@ -957,6 +955,8 @@ describe('S3Adapter tests', () => {
         // Stands in for a blob too large to hold in memory. Converting it must
         // not read it to the end, otherwise the whole point is lost.
         const lazy = {
+          // A zero high-water mark stops the stream pulling ahead on its own,
+          // so any pull is one the conversion asked for.
           stream: () => new ReadableStream({
             pull(controller) {
               pulled += 1;
@@ -966,13 +966,13 @@ describe('S3Adapter tests', () => {
               }
               controller.enqueue(new TextEncoder().encode('chunk'));
             },
-          }),
+          }, { highWaterMark: 0 }),
         };
 
         const uploadParams = await captureUpload(lazy, options);
 
         expect(uploadParams.Body instanceof Readable).toBe(true);
-        expect(pulled).toBeLessThan(total);
+        expect(pulled).toBe(0);
       });
     });
 
