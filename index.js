@@ -77,6 +77,7 @@ class S3Adapter {
     this._encryption = options.ServerSideEncryption;
     this._generateKey = options.generateKey;
     this._endpoint = options.s3overrides?.endpoint;
+    this._forcePathStyle = options.s3overrides?.forcePathStyle;
     // Optional FilesAdaptor method
     this.validateFilename = options.validateFilename;
 
@@ -179,11 +180,57 @@ class S3Adapter {
     return params;
   }
 
+  // The SDK accepts an endpoint as a url string, as an object carrying
+  // protocol, hostname, port and path, or as an EndpointV2 carrying a url. Each
+  // has to be reduced to a url here, because falling back to the AWS host would
+  // point a custom deployment at Amazon.
+  _endpointToUrl(endpoint) {
+    if (!endpoint) {
+      return `https://s3.${this._region}.amazonaws.com`;
+    }
+    if (typeof endpoint === 'string') {
+      return endpoint;
+    }
+    if (endpoint.url) {
+      return String(endpoint.url);
+    }
+    if (endpoint.hostname) {
+      const protocol = endpoint.protocol
+        ? endpoint.protocol.replace(/:?$/, ':')
+        : 'https:';
+      const port = endpoint.port ? `:${endpoint.port}` : '';
+      return `${protocol}//${endpoint.hostname}${port}${endpoint.path || ''}`;
+    }
+    return null;
+  }
+
+  // The url prefix the S3 client addresses this bucket at, mirroring how the
+  // SDK resolves the bucket: as a leading path segment when forcePathStyle is
+  // set, otherwise as a host prefix. Without this the bucket is missing from
+  // the url whenever a custom endpoint does not already contain it.
+  async _buildLocationBase() {
+    let endpoint = this._endpoint;
+    if (typeof endpoint === 'function') {
+      // An endpoint provider, which the SDK resolves per request.
+      endpoint = await endpoint();
+    }
+    try {
+      const { protocol, host, pathname } = new URL(this._endpointToUrl(endpoint));
+      const basePath = pathname.replace(/\/+$/, '');
+      return this._forcePathStyle
+        ? `${protocol}//${host}${basePath}/${this._bucket}`
+        : `${protocol}//${this._bucket}.${host}${basePath}`;
+    } catch {
+      // An endpoint that names no host at all leaves nothing to build from.
+      return `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    }
+  }
+
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
     const params = this._buildCreateFileParams(filename, data, contentType, options);
-    const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
+    const endpoint = await this._buildLocationBase();
 
     // Streaming upload path
     if (typeof data?.pipe === 'function') {
@@ -268,7 +315,11 @@ class S3Adapter {
     }
 
     if (!this._baseUrl) {
-      return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
+      // Same base as the location reported by createFile, so both name the
+      // object at the url the S3 client actually addresses it at. Previously
+      // this hardcoded the AWS host and ignored both the custom endpoint and
+      // the region.
+      return `${await this._buildLocationBase()}/${fileKey}`;
     }
 
     const baseUrlFileKey = this._baseUrlDirect ? fileName : fileKey;
