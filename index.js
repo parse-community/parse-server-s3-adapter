@@ -268,7 +268,10 @@ class S3Adapter {
     }
 
     if (!this._baseUrl) {
-      return `https://${this._bucket}.s3.amazonaws.com/${fileKey}`;
+      // The region has to be in the host. The global endpoint only reaches
+      // buckets in regions that are enabled by default, so an opt-in region
+      // such as ap-east-1 is unreachable without it.
+      return `https://${this._bucket}.s3.${this._region}.amazonaws.com/${fileKey}`;
     }
 
     const baseUrlFileKey = this._baseUrlDirect ? fileName : fileKey;
