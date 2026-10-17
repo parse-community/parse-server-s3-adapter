@@ -12,6 +12,7 @@ const {
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { Upload } = require('@aws-sdk/lib-storage');
+const { Readable } = require('stream');
 const optionsFromArguments = require('./lib/optionsFromArguments');
 
 const awsCredentialsDeprecationNotice = function awsCredentialsDeprecationNotice() {
@@ -182,6 +183,14 @@ class S3Adapter {
   // For a given config object, filename, and data, store a file in S3
   // Returns a promise containing the S3 object creation response
   async createFile(filename, data, contentType, options = {}) {
+    // A Blob, and anything else exposing a web stream such as a File, is read
+    // through that stream rather than handed over whole. Buffering it would
+    // materialize the entire file in memory, which is the thing that fails for
+    // uploads past the V8 buffer limit. Converting here means the existing
+    // multipart upload path carries it.
+    if (data && typeof data.stream === 'function' && typeof data.pipe !== 'function') {
+      data = Readable.fromWeb(data.stream());
+    }
     const params = this._buildCreateFileParams(filename, data, contentType, options);
     const endpoint = this._endpoint || `https://${this._bucket}.s3.${this._region}.amazonaws.com`;
 
