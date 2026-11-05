@@ -638,6 +638,38 @@ describe('S3Adapter tests', () => {
       expect(fileLocation).toContain('X-Amz-Algorithm=AWS4-HMAC-SHA256');
       expect(fileLocation).toContain('X-Amz-SignedHeaders=host');
     });
+
+    // The SDK encodes the key itself, so a pre-encoded key comes back encoded
+    // twice: the percent sign of the first encoding is escaped to %25.
+    [
+      { characters: 'brackets', filename: 'doc[123].pdf', once: 'doc%5B123%5D.pdf', twice: 'doc%255B123%255D.pdf' },
+      { characters: 'spaces', filename: 'doc 123.pdf', once: 'doc%20123.pdf', twice: 'doc%2520123.pdf' },
+      { characters: 'ampersands', filename: 'doc&123.pdf', once: 'doc%26123.pdf', twice: 'doc%2526123.pdf' },
+    ].forEach(({ characters, filename, once, twice }) => {
+      it(`should not double-encode ${characters} in presigned URLs`, async () => {
+        delete options.baseUrl;
+        options.presignedUrl = true;
+        const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+
+        const fileLocation = await s3.getFileLocation(testConfig, filename);
+
+        expect(fileLocation).toContain(once);
+        expect(fileLocation).not.toContain(twice);
+      });
+    });
+
+    it('should keep the path separator in presigned URLs for nested filenames', async () => {
+      delete options.baseUrl;
+      options.presignedUrl = true;
+      const s3 = new S3Adapter('accessKey', 'secretKey', 'my-bucket', options);
+
+      // The key is now handed to the SDK unencoded, so the separator has to
+      // survive as a separator rather than becoming %2F.
+      const fileLocation = await s3.getFileLocation(testConfig, 'folder/doc[123].pdf');
+
+      expect(fileLocation).toContain('folder/doc%5B123%5D.pdf');
+      expect(fileLocation).not.toContain('folder%2Fdoc');
+    });
   });
 
   describe('getFileLocation with async baseUrl', () => {
