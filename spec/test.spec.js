@@ -905,6 +905,60 @@ describe('S3Adapter tests', () => {
       expect(s3ClientMock.send).toHaveBeenCalledWith(jasmine.any(PutObjectCommand));
     });
 
+    it('should url encode the returned location', async () => {
+      const s3 = new S3Adapter(options);
+      s3._s3Client = s3ClientMock;
+
+      const { Location } = await s3.createFile('my file (1).txt', 'hello world', 'text/utf8', {});
+
+      // The key keeps its raw form for S3, only the URL is encoded, and the
+      // prefix separator stays a separator.
+      expect(Location).toContain('/test/my%20file%20(1).txt');
+      expect(Location).not.toContain('my file (1).txt');
+      expect(Location).not.toContain('test%2Fmy');
+      expect(new URL(Location).pathname).toBe('/test/my%20file%20(1).txt');
+    });
+
+    it('should encode the bucket prefix in both urls that name the object', async () => {
+      const s3 = new S3Adapter({
+        bucket: 'bucket-1',
+        bucketPrefix: 'my folder/',
+        directAccess: true,
+      });
+      s3._s3Client = s3ClientMock;
+
+      const { Location } = await s3.createFile('a b.txt', 'hello world', 'text/utf8', {});
+      const url = await s3.getFileLocation(
+        { mount: 'http://my.server.com/parse', applicationId: 'xxxx' },
+        'a b.txt'
+      );
+
+      // Previously getFileLocation left the prefix raw, so the two disagreed.
+      expect(Location).toContain('/my%20folder/a%20b.txt');
+      expect(url).toContain('/my%20folder/a%20b.txt');
+    });
+
+    it('should url encode the returned location for a stream', async () => {
+      const rewiredModule = rewire('../index');
+      rewiredModule.__set__('Upload', function () {
+        this.done = () => Promise.resolve();
+        this.abort = () => Promise.resolve();
+      });
+      const RewiredS3Adapter = rewiredModule;
+      const s3 = new RewiredS3Adapter(options);
+      s3._s3Client = s3ClientMock;
+      s3._hasBucket = true;
+
+      const stream = new Readable();
+      stream.push('hello world');
+      stream.push(null);
+
+      const { Location } = await s3.createFile('my file (1).txt', stream, 'text/plain', {});
+
+      expect(Location).toContain('/test/my%20file%20(1).txt');
+      expect(Location).not.toContain('my file (1).txt');
+    });
+
     it('should save a stream with metadata added', async () => {
       const rewiredModule = rewire('../index');
       let uploadParams;
